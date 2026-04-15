@@ -1,0 +1,47 @@
+anomaly-detection/
+│
+├── docker-compose.yml                  # Orchestration des containers
+├── README.md                           # Instructions de lancement
+│
+├── frontend/                           # Container 1 — Streamlit
+│   ├── Dockerfile
+│   ├── app.py                          # Application Streamlit principale
+│   ├── requirements.txt
+│   └── pages/
+│       ├── 01_visualisation.py
+│       ├── 02_anomalies.py
+│       └── 03_evaluation.py
+│
+├── backend/                            # Container 2 — Flask API
+│   ├── Dockerfile
+│   ├── main.py                         # Point d'entrée Flask
+│   ├── requirements.txt
+│   ├── config.py                       # Constantes et configuration
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   ├── data_loader.py
+│   │   ├── preprocessing.py
+│   │   ├── feature_engineering.py
+│   │   ├── models.py
+│   │   └── visualization.py
+│   ├── routes/
+│   │   ├── __init__.py
+│   │   ├── upload.py                   # POST /api/upload
+│   │   ├── predict.py                  # POST /api/predict
+│   │   └── metrics.py                  # GET  /api/metrics
+│   └── models_saved/                   # Modèles entraînés (.joblib)
+│       ├── isolation_forest.joblib
+│       └── dbscan.joblib
+│
+├── notebooks/                          # Exploration & prototypage
+│   ├── 01_eda.ipynb
+│   ├── 02_preprocessing.ipynb
+│   ├── 03_feature_engineering.ipynb
+│   ├── 04_isolation_forest.ipynb
+│   ├── 05_dbscan.ipynb
+│   ├── 06_visualization.ipynb
+│   └── 07_evaluation.ipynb
+│
+└── data/
+    ├── UNSW_NB15_training-set.csv
+    └── UNSW_NB15_testing-set.csv

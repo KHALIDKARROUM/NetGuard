@@ -1,0 +1,5 @@
+{
+  "contamination": 0.4,
+  "n_estimators": 200,
+  "random_state": 42
+}
