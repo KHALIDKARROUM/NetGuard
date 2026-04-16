@@ -20,7 +20,7 @@ from pathlib import Path
 
 from config import (
     QT_FILE, IF_FILE, LOF_FILE, ENS2_FILE,
-    AE_FILE, ENS3_FILE, BEST_CONFIG_FILE,
+    AE_FILE, ENS3_FILE, BEST_CONFIG_FILE, SCALER_FILE,
     AE_INPUT_DIM, CONTAMINATION,
 )
 from utils.exceptions import ModelError
@@ -76,6 +76,19 @@ def load_qt():
     qt = joblib.load(QT_FILE)
     logger.info(f"QuantileTransformer chargé depuis {QT_FILE}")
     return qt
+
+
+def load_scaler():
+    """
+    Charge le RobustScaler du notebook 02.
+    Utilisé pour remettre les inputs bruts du formulaire dans le même espace
+    que `test_clean.csv` avant le feature engineering.
+    """
+    if not SCALER_FILE.exists():
+        raise ModelError(f"RobustScaler introuvable : {SCALER_FILE}")
+    scaler = joblib.load(SCALER_FILE)
+    logger.info(f"RobustScaler chargé depuis {SCALER_FILE}")
+    return scaler
 
 
 # ── Chargement des modèles individuels ────────────────────────────────────────

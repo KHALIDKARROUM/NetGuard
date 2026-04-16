@@ -10,7 +10,7 @@ import pandas as pd
 from pathlib import Path
 
 from config import (
-    TEST_FEATURED_FILE, TRAIN_FEATURED_FILE,
+    RAW_TEST_FILE, TEST_FEATURED_FILE, TEST_CLEAN_FILE, TRAIN_FEATURED_FILE,
     MODEL_COMPARISON_FILE, TARGET_COLUMN,
 )
 from utils.exceptions import DataLoadError
@@ -46,6 +46,42 @@ def load_test_data() -> tuple[np.ndarray, np.ndarray, pd.DataFrame]:
 
     logger.info(f"Test set chargé : {X.shape[0]:,} lignes × {X.shape[1]} features")
     return X.astype(np.float32), y.astype(np.int8), df
+
+
+def load_test_clean_data() -> pd.DataFrame:
+    """
+    Charge le jeu de test prétraité du notebook 02.
+
+    Ce fichier contient les 42 variables après encodage + RobustScaler.
+    Il sert de base cohérente pour reconstruire une observation unitaire
+    avant le feature engineering du notebook 03.
+    """
+    if not TEST_CLEAN_FILE.exists():
+        raise DataLoadError(
+            f"Fichier test_clean introuvable : {TEST_CLEAN_FILE}\n"
+            "Lance d'abord les notebooks 01 → 02."
+        )
+
+    logger.info(f"Chargement de {TEST_CLEAN_FILE}")
+    return pd.read_csv(TEST_CLEAN_FILE)
+
+
+def load_raw_test_data() -> pd.DataFrame:
+    """
+    Charge le dataset de test brut UNSW-NB15.
+
+    Sert uniquement à retrouver des voisins proches sur les champs éditables
+    du formulaire afin d'inférer les features non exposées comme `dinpkt`
+    et `ct_state_ttl`.
+    """
+    if not RAW_TEST_FILE.exists():
+        raise DataLoadError(
+            f"Fichier brut introuvable : {RAW_TEST_FILE}\n"
+            "Le dataset UNSW-NB15 de test est requis pour la prédiction unitaire."
+        )
+
+    logger.info(f"Chargement de {RAW_TEST_FILE}")
+    return pd.read_csv(RAW_TEST_FILE)
 
 
 def load_train_data() -> tuple[np.ndarray, np.ndarray]:

@@ -21,10 +21,13 @@ LOGS_DIR.mkdir(parents=True, exist_ok=True)
 # Fichiers produits par les notebooks
 TRAIN_FEATURED_FILE    = DATA_DIR / "featured" / "train_featured.csv"
 TEST_FEATURED_FILE     = DATA_DIR / "featured" / "test_featured.csv"
+TEST_CLEAN_FILE        = DATA_DIR / "preprocessed" / "test_clean.csv"
+RAW_TEST_FILE          = DATA_DIR / "UNSW_NB15_testing-set.csv"
 MODEL_COMPARISON_FILE  = DATA_DIR / "reports"  / "model_comparison.csv"
 
 # ── Modèles sauvegardés (produits par notebook 06) ─────────────────────────────
 QT_FILE            = MODELS_DIR / "qt_improvements.pkl"   # QuantileTransformer
+SCALER_FILE        = MODELS_DIR / "scaler.pkl"            # RobustScaler notebook 02
 IF_FILE            = MODELS_DIR / "if_base.pkl"           # Isolation Forest
 LOF_FILE           = MODELS_DIR / "lof.pkl"               # Local Outlier Factor
 ENS2_FILE          = MODELS_DIR / "ensemble_if_lof.pkl"   # Config Ensemble IF+LOF

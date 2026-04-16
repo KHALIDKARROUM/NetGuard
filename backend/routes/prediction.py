@@ -20,11 +20,16 @@ from pydantic import BaseModel, Field
 
 from config import ENS3_FILE, CONTAMINATION, TARGET_COLUMN
 from utils.model_loader import (
-    load_qt, load_isolation_forest, load_lof, load_autoencoder,
+    load_qt, load_scaler, load_isolation_forest, load_lof, load_autoencoder,
     load_ensemble_config, get_ensemble3_scores, normalize_with_reference,
     get_if_raw_scores, get_lof_raw_scores, get_ae_raw_scores,
 )
-from utils.data_loader import load_model_comparison, load_test_data
+from utils.data_loader import (
+    load_model_comparison,
+    load_raw_test_data,
+    load_test_clean_data,
+    load_test_data,
+)
 from utils.exceptions import ModelError
 
 logger = logging.getLogger(__name__)
@@ -43,6 +48,8 @@ EDITABLE_INPUTS = (
     {"name": "sttl", "label": "TTL source", "type": "int"},
     {"name": "dttl", "label": "TTL destination", "type": "int"},
 )
+EDITABLE_INPUT_NAMES = tuple(item["name"] for item in EDITABLE_INPUTS)
+INFERRED_RAW_FIELDS = ("ct_state_ttl", "smean", "dmean", "dinpkt")
 
 
 def get_state(request: Request) -> dict:
@@ -60,6 +67,139 @@ def _percentile_rank(value: float, sorted_reference: np.ndarray) -> float:
     return float(rank / len(sorted_reference))
 
 
+def _build_scaler_stats(scaler) -> dict[str, tuple[float, float]]:
+    names = list(getattr(scaler, "feature_names_in_", []))
+    centers = getattr(scaler, "center_", np.zeros(len(names), dtype=np.float32))
+    scales = getattr(scaler, "scale_", np.ones(len(names), dtype=np.float32))
+    return {
+        name: (float(centers[idx]), float(scales[idx]) if float(scales[idx]) != 0 else 1.0)
+        for idx, name in enumerate(names)
+    }
+
+
+def _scale_raw_feature(raw_value: float, feature_name: str, scaler_stats: dict[str, tuple[float, float]]) -> float:
+    center, scale = scaler_stats[feature_name]
+    return float((raw_value - center) / scale)
+
+
+def _infer_hidden_raw_features(
+    form: dict,
+    raw_lookup_matrix: np.ndarray,
+    raw_lookup_hidden: pd.DataFrame,
+    scaler_stats: dict[str, tuple[float, float]],
+    k_neighbors: int = 5,
+) -> dict[str, float]:
+    """
+    Infère les variables non exposées du formulaire à partir des connexions les
+    plus proches dans le jeu de test brut.
+
+    On travaille dans l'espace RobustScaler des 10 champs éditables afin de
+    comparer des grandeurs hétérogènes (bytes, TTL, durées, charges) sans
+    qu'une seule domine artificiellement la distance.
+    """
+    query = np.array(
+        [_scale_raw_feature(float(form[name]), name, scaler_stats) for name in EDITABLE_INPUT_NAMES],
+        dtype=np.float32,
+    )
+
+    distances = np.sum((raw_lookup_matrix - query) ** 2, axis=1)
+    k = min(k_neighbors, len(distances))
+    nearest_idx = np.argpartition(distances, kth=k - 1)[:k]
+    nearest_idx = nearest_idx[np.argsort(distances[nearest_idx])]
+    nearest_rows = raw_lookup_hidden.iloc[nearest_idx]
+
+    if distances[nearest_idx[0]] < 1e-12:
+        return {
+            key: float(nearest_rows.iloc[0][key])
+            for key in INFERRED_RAW_FIELDS
+        }
+
+    inferred = {}
+    for key in INFERRED_RAW_FIELDS:
+        vals = nearest_rows[key].astype(float).values
+        if key in {"ct_state_ttl", "smean", "dmean"}:
+            inferred[key] = float(np.round(np.median(vals)))
+        else:
+            inferred[key] = float(np.median(vals))
+    return inferred
+
+
+def _build_prediction_row(
+    form: dict,
+    clean_feature_defaults: dict[str, float],
+    selected_feature_names: list[str],
+    scaler_stats: dict[str, tuple[float, float]],
+    raw_lookup_matrix: np.ndarray,
+    raw_lookup_hidden: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Recrée une observation dans le même espace que `test_clean.csv`, puis
+    reconstruit les 20 features sélectionnées du notebook 03.
+
+    Important :
+    - les champs saisis dans le formulaire sont des valeurs brutes ;
+    - le notebook 03 fait son feature engineering APRÈS le RobustScaler ;
+    - on doit donc d'abord remettre l'observation dans l'espace `test_clean`.
+    """
+    row_clean = {
+        key: float(value)
+        for key, value in clean_feature_defaults.items()
+    }
+
+    for key, value in form.items():
+        if key in scaler_stats:
+            row_clean[key] = _scale_raw_feature(float(value), key, scaler_stats)
+
+    spkts_raw = max(float(form["spkts"]), 1.0)
+    dpkts_raw = float(form["dpkts"])
+    dpkts_safe = max(dpkts_raw, 1.0)
+    sbytes_raw = float(form["sbytes"])
+    dbytes_raw = float(form["dbytes"])
+    dur_raw = float(form["dur"])
+
+    approximated_originals = _infer_hidden_raw_features(
+        form,
+        raw_lookup_matrix,
+        raw_lookup_hidden,
+        scaler_stats,
+    )
+    approximated_originals.setdefault("smean", float(np.round(sbytes_raw / spkts_raw)))
+    approximated_originals.setdefault("dmean", float(np.round(dbytes_raw / dpkts_safe if dpkts_raw > 0 else 0.0)))
+    approximated_originals.setdefault("dinpkt", dur_raw / (dpkts_raw + 1.0))
+
+    for key, value in approximated_originals.items():
+        if key in scaler_stats:
+            row_clean[key] = _scale_raw_feature(float(value), key, scaler_stats)
+
+    sb = float(row_clean.get("sbytes", 0.0))
+    db = float(row_clean.get("dbytes", 0.0))
+    sp = float(row_clean.get("spkts", 0.0))
+    dp = float(row_clean.get("dpkts", 0.0))
+
+    derived = {
+        "bytes_total":        sb + db,
+        "bytes_per_pkt_src":  sb / (sp + 1.0),
+        "bytes_ratio":        sb / (db + 1.0),
+        "bytes_diff_norm":    abs(sb - db) / (sb + db + 1.0),
+        "bytes_per_pkt_dst":  db / (dp + 1.0),
+        "pkts_total":         sp + dp,
+        "log1p_dbytes":       np.log1p(np.clip(db, 0.0, None)),
+    }
+
+    row_featured = {
+        key: float(row_clean.get(key, 0.0))
+        for key in selected_feature_names
+    }
+    for key, value in derived.items():
+        if key in row_featured:
+            row_featured[key] = float(value)
+
+    return pd.DataFrame(
+        [{col: row_featured[col] for col in selected_feature_names}],
+        columns=selected_feature_names,
+    )
+
+
 def _ensure_best_model(state: dict) -> None:
     """
     Charge le meilleur modèle (Ensemble 3) et le QT en mémoire si besoin.
@@ -70,6 +210,10 @@ def _ensure_best_model(state: dict) -> None:
 
     qt = load_qt()
     state["qt"] = qt
+
+    scaler = load_scaler()
+    state["scaler"] = scaler
+    state["scaler_stats"] = _build_scaler_stats(scaler)
 
     if_model = load_isolation_forest()
     state["if_model"] = if_model
@@ -101,9 +245,13 @@ def _ensure_prediction_reference(state: dict) -> None:
         return
 
     _, _, df_test = load_test_data()
+    df_test_clean = load_test_clean_data()
+    df_test_raw = load_raw_test_data()
+
     feature_names = [c for c in df_test.columns if c != TARGET_COLUMN]
-    feature_defaults = (
-        df_test[feature_names]
+    clean_feature_names = list(getattr(state["scaler"], "feature_names_in_", []))
+    clean_feature_defaults = (
+        df_test_clean[clean_feature_names]
         .median(numeric_only=True)
         .astype(float)
         .to_dict()
@@ -132,7 +280,15 @@ def _ensure_prediction_reference(state: dict) -> None:
     sc_final_ref = get_ensemble3_scores(sc_if_ref, sc_lof_ref, sc_ae_ref, cfg3)
 
     state["feature_names"] = feature_names
-    state["feature_defaults"] = feature_defaults
+    state["clean_feature_defaults"] = clean_feature_defaults
+    state["raw_lookup_matrix"] = np.column_stack([
+        [
+            _scale_raw_feature(float(value), name, state["scaler_stats"])
+            for value in df_test_raw[name].astype(float).values
+        ]
+        for name in EDITABLE_INPUT_NAMES
+    ]).astype(np.float32)
+    state["raw_lookup_hidden"] = df_test_raw.loc[:, list(INFERRED_RAW_FIELDS)].copy()
     state["prediction_reference_scores"] = {
         "if_raw": raw_if_ref,
         "lof_raw": raw_lof_ref,
@@ -281,7 +437,10 @@ def predict_single(request: Request, data: ConnectionRequest):
     cfg3      = state["ens3_cfg"]
 
     feature_names = state["feature_names"]
-    feature_defaults = state["feature_defaults"]
+    clean_feature_defaults = state["clean_feature_defaults"]
+    raw_lookup_matrix = state["raw_lookup_matrix"]
+    raw_lookup_hidden = state["raw_lookup_hidden"]
+    scaler_stats = state["scaler_stats"]
     reference_scores = state["prediction_reference_scores"]
     threshold = state["prediction_threshold"]
     contamination = state["prediction_contamination"]
@@ -291,34 +450,14 @@ def predict_single(request: Request, data: ConnectionRequest):
     # non exposées, puis on remplace avec les variables éditables et les
     # dérivations exactes du notebook 03 quand elles sont disponibles.
     form = data.model_dump()
-    spkts  = max(form["spkts"], 1)
-    dpkts  = form["dpkts"]
-    sbytes = form["sbytes"]
-    dbytes = form["dbytes"]
-    dur    = form["dur"]
-    dpkts_safe = max(dpkts, 1)
-
-    derived = {
-        "bytes_total":        sbytes + dbytes,
-        "bytes_per_pkt_src":  sbytes / (spkts + 1),
-        "bytes_ratio":        sbytes / (dbytes + 1),
-        "bytes_diff_norm":    abs(sbytes - dbytes) / (sbytes + dbytes + 1),
-        "bytes_per_pkt_dst":  dbytes / (dpkts + 1),
-        "smean":              sbytes / spkts,
-        "log1p_dbytes":       np.log1p(max(dbytes, 0)),
-        "dmean":              dbytes / dpkts_safe if dpkts > 0 else 0.0,
-        "pkts_total":         spkts + dpkts,
-        "dinpkt":             dur / (dpkts + 1),
-    }
-
-    all_fields = {
-        key: float(feature_defaults.get(key, 0.0))
-        for key in feature_names
-    }
-    all_fields.update({key: float(value) for key, value in form.items() if key in all_fields})
-    all_fields.update({key: float(value) for key, value in derived.items() if key in all_fields})
-
-    row_df = pd.DataFrame([{col: all_fields[col] for col in feature_names}], columns=feature_names)
+    row_df = _build_prediction_row(
+        form,
+        clean_feature_defaults,
+        feature_names,
+        scaler_stats,
+        raw_lookup_matrix,
+        raw_lookup_hidden,
+    )
 
     # ── Transformer avec le QuantileTransformer ────────────────────────────────
     try:
