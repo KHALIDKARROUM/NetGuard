@@ -8,5 +8,10 @@ pandas==2.2.2
 numpy==1.26.4
 scikit-learn==1.5.1
 joblib==1.4.2
+<<<<<<< HEAD
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch==2.11.0+cpu
+=======
+plotly==5.22.0
+gunicorn==22.0.0
+>>>>>>> e6ce9d0872e163a69c0ca60ee5c2951a91710736

@@ -190,7 +190,11 @@ with tab_classes:
                     values=pie_data["values"],
                     hole=0.62,
                     marker=dict(
+<<<<<<< HEAD
                         colors=["#2563eb","#dc2626"],
+=======
+                        colors=[ACCENT, DANGER],
+>>>>>>> e6ce9d0872e163a69c0ca60ee5c2951a91710736
                         line=dict(color="#091423", width=3),
                     ),
                     textinfo="percent",
@@ -293,7 +297,11 @@ with tab_distributions:
                     go.Histogram(
                         x=normal_values,
                         name="Normal",
+<<<<<<< HEAD
                         marker_color="#2563eb",
+=======
+                        marker_color=ACCENT,
+>>>>>>> e6ce9d0872e163a69c0ca60ee5c2951a91710736
                         opacity=0.70,
                         nbinsx=45,
                         histnorm="probability density",
@@ -303,7 +311,11 @@ with tab_distributions:
                     go.Histogram(
                         x=anomaly_values,
                         name="Anomalie",
+<<<<<<< HEAD
                         marker_color="#dc2626",
+=======
+                        marker_color=DANGER,
+>>>>>>> e6ce9d0872e163a69c0ca60ee5c2951a91710736
                         opacity=0.60,
                         nbinsx=45,
                         histnorm="probability density",
@@ -427,4 +439,8 @@ with tab_sample:
             </div>
             """,
             unsafe_allow_html=True,
+<<<<<<< HEAD
         )
+=======
+        )
+>>>>>>> e6ce9d0872e163a69c0ca60ee5c2951a91710736

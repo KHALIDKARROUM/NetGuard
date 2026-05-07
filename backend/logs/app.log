@@ -1,0 +1,738 @@
+2026-04-14 16:46:12 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-14 16:46:13 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-14 16:46:13 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-14 16:47:46 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-14 16:49:03 — utils.model_loader — INFO — QuantileTransformer chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/qt_improvements.pkl
+2026-04-14 16:49:03 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-14 16:49:03 — utils.model_loader — INFO — LOF chargé
+2026-04-14 16:49:06 — utils.model_loader — INFO — QuantileTransformer chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/qt_improvements.pkl
+2026-04-14 16:49:07 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-14 16:49:07 — utils.model_loader — INFO — LOF chargé
+2026-04-14 16:49:09 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-14 16:49:09 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-14 16:49:09 — routes.prediction — INFO — Meilleur modèle (Ensemble 3) chargé en mémoire
+2026-04-14 16:49:09 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-14 16:49:09 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-14 16:49:09 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-14 16:49:09 — routes.prediction — INFO — Meilleur modèle (Ensemble 3) chargé en mémoire
+2026-04-14 16:49:09 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-14 16:49:09 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-14 16:49:10 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-14 16:55:42 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-14 17:00:16 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-14 17:05:07 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-14 17:05:07 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-14 17:05:07 — utils.model_loader — INFO — QuantileTransformer chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/qt_improvements.pkl
+2026-04-14 17:05:08 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-14 17:05:10 — utils.evaluator — INFO — [Isolation Forest]  P=0.6322  R=0.6327  F1=0.6325  AUC=0.6171
+2026-04-14 17:05:10 — routes.comparison — INFO — IF scores calculés
+2026-04-14 17:05:10 — utils.model_loader — INFO — LOF chargé
+2026-04-14 17:06:07 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-14 17:06:10 — utils.evaluator — INFO — [Isolation Forest]  P=0.6322  R=0.6327  F1=0.6325  AUC=0.6171
+2026-04-14 17:06:10 — routes.comparison — INFO — IF scores calculés
+2026-04-14 17:06:10 — utils.model_loader — INFO — LOF chargé
+2026-04-14 17:07:04 — utils.evaluator — INFO — [LOF]  P=0.6464  R=0.6469  F1=0.6467  AUC=0.6961
+2026-04-14 17:07:04 — routes.comparison — INFO — LOF scores calculés
+2026-04-14 17:07:04 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_if_lof.pkl → {'w_if': 0.3, 'w_lof': 0.7, 'contamination': 0.5506000097167566}
+2026-04-14 17:07:05 — utils.evaluator — INFO — [Ensemble IF(0.3)+LOF(0.7)]  P=0.6865  R=0.688  F1=0.6872  AUC=0.7598
+2026-04-14 17:07:05 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-14 17:07:06 — utils.evaluator — INFO — [Autoencoder (PyTorch)]  P=0.8247  R=0.8253  F1=0.825  AUC=0.8714
+2026-04-14 17:07:06 — routes.comparison — INFO — Autoencoder scores calculés
+2026-04-14 17:07:06 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-14 17:07:08 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-14 17:07:08 — utils.evaluator — INFO — [Ensemble IF(0.1)+LOF(0.2)+AE(0.7)]  P=0.8395  R=0.8401  F1=0.8398  AUC=0.8988
+2026-04-14 17:07:08 — routes.comparison — INFO — Ensemble 3 modèles scores calculés
+2026-04-14 17:07:11 — utils.evaluator — INFO — [Isolation Forest]  P=0.6322  R=0.6327  F1=0.6325  AUC=0.6171
+2026-04-14 17:07:11 — routes.comparison — INFO — IF scores calculés
+2026-04-14 17:07:11 — utils.model_loader — INFO — LOF chargé
+2026-04-14 17:08:19 — utils.evaluator — INFO — [LOF]  P=0.6464  R=0.6469  F1=0.6467  AUC=0.6961
+2026-04-14 17:08:19 — routes.comparison — INFO — LOF scores calculés
+2026-04-14 17:08:19 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_if_lof.pkl → {'w_if': 0.3, 'w_lof': 0.7, 'contamination': 0.5506000097167566}
+2026-04-14 17:08:20 — utils.evaluator — INFO — [Ensemble IF(0.3)+LOF(0.7)]  P=0.6865  R=0.688  F1=0.6872  AUC=0.7598
+2026-04-14 17:08:20 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-14 17:08:21 — utils.evaluator — INFO — [Autoencoder (PyTorch)]  P=0.8247  R=0.8253  F1=0.825  AUC=0.8714
+2026-04-14 17:08:21 — routes.comparison — INFO — Autoencoder scores calculés
+2026-04-14 17:08:21 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-14 17:08:22 — utils.evaluator — INFO — [Ensemble IF(0.1)+LOF(0.2)+AE(0.7)]  P=0.8395  R=0.8401  F1=0.8398  AUC=0.8988
+2026-04-14 17:08:22 — routes.comparison — INFO — Ensemble 3 modèles scores calculés
+2026-04-14 17:09:00 — utils.evaluator — INFO — [LOF]  P=0.6464  R=0.6469  F1=0.6467  AUC=0.6961
+2026-04-14 17:09:00 — routes.comparison — INFO — LOF scores calculés
+2026-04-14 17:09:00 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_if_lof.pkl → {'w_if': 0.3, 'w_lof': 0.7, 'contamination': 0.5506000097167566}
+2026-04-14 17:09:01 — utils.evaluator — INFO — [Ensemble IF(0.3)+LOF(0.7)]  P=0.6865  R=0.688  F1=0.6872  AUC=0.7598
+2026-04-14 17:09:01 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-14 17:09:02 — utils.evaluator — INFO — [Autoencoder (PyTorch)]  P=0.8247  R=0.8253  F1=0.825  AUC=0.8714
+2026-04-14 17:09:02 — routes.comparison — INFO — Autoencoder scores calculés
+2026-04-14 17:09:02 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-14 17:09:03 — utils.evaluator — INFO — [Ensemble IF(0.1)+LOF(0.2)+AE(0.7)]  P=0.8395  R=0.8401  F1=0.8398  AUC=0.8988
+2026-04-14 17:09:03 — routes.comparison — INFO — Ensemble 3 modèles scores calculés
+2026-04-14 17:12:59 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-14 17:19:43 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-14 17:56:14 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-15 16:42:40 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-15 16:42:41 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-15 16:42:53 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-15 16:42:53 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-15 16:42:53 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-15 16:42:53 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-15 16:42:54 — utils.model_loader — INFO — QuantileTransformer chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/qt_improvements.pkl
+2026-04-15 16:42:54 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-15 16:42:54 — utils.model_loader — INFO — QuantileTransformer chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/qt_improvements.pkl
+2026-04-15 16:42:54 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-15 16:42:54 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-15 16:42:56 — utils.evaluator — INFO — [Isolation Forest]  P=0.6322  R=0.6327  F1=0.6325  AUC=0.6171
+2026-04-15 16:42:56 — routes.comparison — INFO — IF scores calculés
+2026-04-15 16:42:56 — utils.evaluator — INFO — [Isolation Forest]  P=0.6322  R=0.6327  F1=0.6325  AUC=0.6171
+2026-04-15 16:42:56 — routes.comparison — INFO — IF scores calculés
+2026-04-15 16:42:56 — utils.model_loader — INFO — LOF chargé
+2026-04-15 16:42:56 — utils.model_loader — INFO — LOF chargé
+2026-04-15 16:44:15 — utils.evaluator — INFO — [LOF]  P=0.6464  R=0.6469  F1=0.6467  AUC=0.6961
+2026-04-15 16:44:15 — routes.comparison — INFO — LOF scores calculés
+2026-04-15 16:44:15 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_if_lof.pkl → {'w_if': 0.3, 'w_lof': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 16:44:15 — utils.evaluator — INFO — [Ensemble IF(0.3)+LOF(0.7)]  P=0.6865  R=0.688  F1=0.6872  AUC=0.7598
+2026-04-15 16:44:20 — utils.evaluator — INFO — [LOF]  P=0.6464  R=0.6469  F1=0.6467  AUC=0.6961
+2026-04-15 16:44:20 — routes.comparison — INFO — LOF scores calculés
+2026-04-15 16:44:20 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_if_lof.pkl → {'w_if': 0.3, 'w_lof': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 16:44:20 — utils.evaluator — INFO — [Ensemble IF(0.3)+LOF(0.7)]  P=0.6865  R=0.688  F1=0.6872  AUC=0.7598
+2026-04-15 16:44:23 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-15 16:44:23 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-15 16:44:24 — utils.evaluator — INFO — [Autoencoder (PyTorch)]  P=0.8247  R=0.8253  F1=0.825  AUC=0.8714
+2026-04-15 16:44:24 — routes.comparison — INFO — Autoencoder scores calculés
+2026-04-15 16:44:24 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 16:44:24 — utils.evaluator — INFO — [Autoencoder (PyTorch)]  P=0.8247  R=0.8253  F1=0.825  AUC=0.8714
+2026-04-15 16:44:24 — routes.comparison — INFO — Autoencoder scores calculés
+2026-04-15 16:44:24 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 16:44:24 — utils.evaluator — INFO — [Ensemble IF(0.1)+LOF(0.2)+AE(0.7)]  P=0.8395  R=0.8401  F1=0.8398  AUC=0.8988
+2026-04-15 16:44:24 — routes.comparison — INFO — Ensemble 3 modèles scores calculés
+2026-04-15 16:44:24 — routes.comparison — INFO — [COMPARE] Cache scores préchauffé en arrière-plan.
+2026-04-15 16:44:24 — utils.evaluator — INFO — [Ensemble IF(0.1)+LOF(0.2)+AE(0.7)]  P=0.8395  R=0.8401  F1=0.8398  AUC=0.8988
+2026-04-15 16:44:24 — routes.comparison — INFO — Ensemble 3 modèles scores calculés
+2026-04-15 16:45:14 — utils.model_loader — INFO — QuantileTransformer chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/qt_improvements.pkl
+2026-04-15 16:45:15 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-15 16:45:15 — utils.model_loader — INFO — LOF chargé
+2026-04-15 16:45:15 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-15 16:45:15 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 16:45:15 — routes.prediction — INFO — Meilleur modèle (Ensemble 3) chargé en mémoire
+2026-04-15 16:45:15 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-15 16:45:15 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-15 17:21:44 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-15 17:21:44 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-15 17:21:44 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-15 17:21:44 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-15 17:21:44 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 17:21:44 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-15 17:21:44 — utils.model_loader — INFO — QuantileTransformer chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/qt_improvements.pkl
+2026-04-15 17:21:45 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-15 17:21:45 — utils.model_loader — INFO — LOF chargé
+2026-04-15 17:21:46 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-15 17:21:46 — utils.model_loader — INFO — QuantileTransformer chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/qt_improvements.pkl
+2026-04-15 17:21:47 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-15 17:21:48 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-15 17:21:48 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 17:21:48 — routes.prediction — INFO — Meilleur modèle (Ensemble 3) chargé en mémoire
+2026-04-15 17:21:48 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-15 17:21:49 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-15 17:21:49 — utils.evaluator — INFO — [Isolation Forest]  P=0.4669  R=0.4673  F1=0.4671  AUC=0.3829
+2026-04-15 17:21:49 — routes.comparison — INFO — IF scores calculés
+2026-04-15 17:21:49 — utils.model_loader — INFO — LOF chargé
+2026-04-15 17:22:10 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-15 17:22:10 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-15 17:22:10 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-15 17:22:10 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-15 17:22:10 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 17:22:10 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-15 17:22:10 — utils.model_loader — INFO — QuantileTransformer chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/qt_improvements.pkl
+2026-04-15 17:22:11 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-15 17:22:11 — utils.model_loader — INFO — LOF chargé
+2026-04-15 17:22:12 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-15 17:22:12 — utils.model_loader — INFO — QuantileTransformer chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/qt_improvements.pkl
+2026-04-15 17:22:12 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-15 17:22:14 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-15 17:22:14 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 17:22:14 — routes.prediction — INFO — Meilleur modèle (Ensemble 3) chargé en mémoire
+2026-04-15 17:22:14 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-15 17:22:15 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-15 17:22:15 — utils.evaluator — INFO — [Isolation Forest]  P=0.4669  R=0.4673  F1=0.4671  AUC=0.3829
+2026-04-15 17:22:15 — routes.comparison — INFO — IF scores calculés
+2026-04-15 17:22:15 — utils.model_loader — INFO — LOF chargé
+2026-04-15 17:22:32 — routes.prediction — INFO — [PREDICT] Cache de référence préchauffé en arrière-plan.
+2026-04-15 17:22:55 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-15 17:22:56 — utils.evaluator — INFO — [Isolation Forest]  P=0.4669  R=0.4673  F1=0.4671  AUC=0.3829
+2026-04-15 17:22:56 — routes.comparison — INFO — IF scores calculés
+2026-04-15 17:22:56 — utils.model_loader — INFO — LOF chargé
+2026-04-15 17:23:27 — utils.evaluator — INFO — [LOF]  P=0.6464  R=0.6469  F1=0.6467  AUC=0.6961
+2026-04-15 17:23:27 — routes.comparison — INFO — LOF scores calculés
+2026-04-15 17:23:27 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_if_lof.pkl → {'w_if': 0.3, 'w_lof': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 17:23:27 — utils.evaluator — INFO — [Ensemble IF(0.3)+LOF(0.7)]  P=0.6589  R=0.6594  F1=0.6592  AUC=0.6788
+2026-04-15 17:23:27 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-15 17:23:27 — utils.evaluator — INFO — [Autoencoder (PyTorch)]  P=0.8247  R=0.8253  F1=0.825  AUC=0.8714
+2026-04-15 17:23:27 — routes.comparison — INFO — Autoencoder scores calculés
+2026-04-15 17:23:27 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 17:23:28 — utils.evaluator — INFO — [Ensemble IF(0.1)+LOF(0.2)+AE(0.7)]  P=0.7653  R=0.7658  F1=0.7655  AUC=0.8067
+2026-04-15 17:23:28 — routes.comparison — INFO — Ensemble 3 modèles scores calculés
+2026-04-15 17:23:28 — routes.comparison — INFO — [COMPARE] Cache scores préchauffé en arrière-plan.
+2026-04-15 17:24:04 — utils.evaluator — INFO — [LOF]  P=0.6464  R=0.6469  F1=0.6467  AUC=0.6961
+2026-04-15 17:24:04 — routes.comparison — INFO — LOF scores calculés
+2026-04-15 17:24:04 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_if_lof.pkl → {'w_if': 0.3, 'w_lof': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 17:24:04 — utils.evaluator — INFO — [Ensemble IF(0.3)+LOF(0.7)]  P=0.6589  R=0.6594  F1=0.6592  AUC=0.6788
+2026-04-15 17:24:04 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-15 17:24:05 — utils.evaluator — INFO — [Autoencoder (PyTorch)]  P=0.8247  R=0.8253  F1=0.825  AUC=0.8714
+2026-04-15 17:24:05 — routes.comparison — INFO — Autoencoder scores calculés
+2026-04-15 17:24:05 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 17:24:05 — utils.evaluator — INFO — [Ensemble IF(0.1)+LOF(0.2)+AE(0.7)]  P=0.7653  R=0.7658  F1=0.7655  AUC=0.8067
+2026-04-15 17:24:05 — routes.comparison — INFO — Ensemble 3 modèles scores calculés
+2026-04-15 17:30:53 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 17:30:53 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-15 17:31:55 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-15 17:52:08 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-15 17:52:09 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-15 17:52:09 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-15 17:52:09 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-15 17:52:09 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 17:52:09 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-15 17:52:09 — utils.model_loader — INFO — QuantileTransformer chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/qt_improvements.pkl
+2026-04-15 17:52:10 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-15 17:52:10 — utils.model_loader — INFO — LOF chargé
+2026-04-15 17:52:11 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-15 17:52:11 — utils.model_loader — INFO — QuantileTransformer chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/qt_improvements.pkl
+2026-04-15 17:52:12 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-15 17:52:13 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-15 17:52:13 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 17:52:13 — routes.prediction — INFO — Meilleur modèle (Ensemble 3) chargé en mémoire
+2026-04-15 17:52:13 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-15 17:52:13 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-15 17:52:15 — utils.evaluator — INFO — [Isolation Forest]  P=0.4669  R=0.4673  F1=0.4671  AUC=0.3829
+2026-04-15 17:52:15 — routes.comparison — INFO — IF scores calculés
+2026-04-15 17:52:15 — utils.model_loader — INFO — LOF chargé
+2026-04-15 17:52:33 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-15 17:52:33 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-15 17:52:34 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-15 17:52:34 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-15 17:52:34 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 17:52:34 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-15 17:52:34 — utils.model_loader — INFO — QuantileTransformer chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/qt_improvements.pkl
+2026-04-15 17:52:34 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-15 17:52:34 — utils.model_loader — INFO — LOF chargé
+2026-04-15 17:52:36 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-15 17:52:36 — utils.model_loader — INFO — QuantileTransformer chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/qt_improvements.pkl
+2026-04-15 17:52:37 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-15 17:52:40 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-15 17:52:40 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 17:52:40 — routes.prediction — INFO — Meilleur modèle (Ensemble 3) chargé en mémoire
+2026-04-15 17:52:40 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-15 17:52:40 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-15 17:52:41 — utils.evaluator — INFO — [Isolation Forest]  P=0.4669  R=0.4673  F1=0.4671  AUC=0.3829
+2026-04-15 17:52:41 — routes.comparison — INFO — IF scores calculés
+2026-04-15 17:52:41 — utils.model_loader — INFO — LOF chargé
+2026-04-15 17:52:59 — routes.prediction — INFO — [PREDICT] Cache de référence préchauffé en arrière-plan.
+2026-04-15 17:53:32 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-15 17:53:34 — utils.evaluator — INFO — [Isolation Forest]  P=0.4669  R=0.4673  F1=0.4671  AUC=0.3829
+2026-04-15 17:53:34 — routes.comparison — INFO — IF scores calculés
+2026-04-15 17:53:34 — utils.model_loader — INFO — LOF chargé
+2026-04-15 17:54:00 — utils.evaluator — INFO — [LOF]  P=0.6464  R=0.6469  F1=0.6467  AUC=0.6961
+2026-04-15 17:54:00 — routes.comparison — INFO — LOF scores calculés
+2026-04-15 17:54:00 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_if_lof.pkl → {'w_if': 0.3, 'w_lof': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 17:54:01 — utils.evaluator — INFO — [Ensemble IF(0.3)+LOF(0.7)]  P=0.6589  R=0.6594  F1=0.6592  AUC=0.6788
+2026-04-15 17:54:01 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-15 17:54:02 — utils.evaluator — INFO — [Autoencoder (PyTorch)]  P=0.8247  R=0.8253  F1=0.825  AUC=0.8714
+2026-04-15 17:54:02 — routes.comparison — INFO — Autoencoder scores calculés
+2026-04-15 17:54:02 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 17:54:02 — utils.evaluator — INFO — [Ensemble IF(0.1)+LOF(0.2)+AE(0.7)]  P=0.7653  R=0.7658  F1=0.7655  AUC=0.8067
+2026-04-15 17:54:02 — routes.comparison — INFO — Ensemble 3 modèles scores calculés
+2026-04-15 17:54:02 — routes.comparison — INFO — [COMPARE] Cache scores préchauffé en arrière-plan.
+2026-04-15 17:54:50 — utils.evaluator — INFO — [LOF]  P=0.6464  R=0.6469  F1=0.6467  AUC=0.6961
+2026-04-15 17:54:50 — routes.comparison — INFO — LOF scores calculés
+2026-04-15 17:54:50 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_if_lof.pkl → {'w_if': 0.3, 'w_lof': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 17:54:51 — utils.evaluator — INFO — [Ensemble IF(0.3)+LOF(0.7)]  P=0.6589  R=0.6594  F1=0.6592  AUC=0.6788
+2026-04-15 17:54:51 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-15 17:54:51 — utils.evaluator — INFO — [Autoencoder (PyTorch)]  P=0.8247  R=0.8253  F1=0.825  AUC=0.8714
+2026-04-15 17:54:51 — routes.comparison — INFO — Autoencoder scores calculés
+2026-04-15 17:54:51 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 17:54:51 — utils.evaluator — INFO — [Ensemble IF(0.1)+LOF(0.2)+AE(0.7)]  P=0.7653  R=0.7658  F1=0.7655  AUC=0.8067
+2026-04-15 17:54:51 — routes.comparison — INFO — Ensemble 3 modèles scores calculés
+2026-04-15 18:01:19 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 18:01:19 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-15 18:17:24 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-15 18:17:24 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-15 18:17:25 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-15 18:17:25 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-15 18:17:25 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 18:17:25 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-15 18:17:25 — utils.model_loader — INFO — QuantileTransformer chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/qt_improvements.pkl
+2026-04-15 18:17:25 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-15 18:17:25 — utils.model_loader — INFO — LOF chargé
+2026-04-15 18:17:28 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-15 18:17:28 — utils.model_loader — INFO — QuantileTransformer chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/qt_improvements.pkl
+2026-04-15 18:17:29 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-15 18:17:31 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-15 18:17:31 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 18:17:31 — routes.prediction — INFO — Meilleur modèle (Ensemble 3) chargé en mémoire
+2026-04-15 18:17:31 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-15 18:17:32 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-15 18:17:33 — utils.evaluator — INFO — [Isolation Forest]  P=0.4669  R=0.4673  F1=0.4671  AUC=0.3829
+2026-04-15 18:17:33 — routes.comparison — INFO — IF scores calculés
+2026-04-15 18:17:33 — utils.model_loader — INFO — LOF chargé
+2026-04-15 18:17:50 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-15 18:17:50 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 18:17:50 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-15 18:17:50 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-15 18:17:54 — utils.evaluator — INFO — [Isolation Forest]  P=0.4669  R=0.4673  F1=0.4671  AUC=0.3829
+2026-04-15 18:17:54 — routes.comparison — INFO — IF scores calculés
+2026-04-15 18:17:54 — utils.model_loader — INFO — LOF chargé
+2026-04-15 18:17:57 — routes.prediction — INFO — [PREDICT] Cache de référence préchauffé en arrière-plan.
+2026-04-15 18:18:19 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-15 18:18:22 — utils.evaluator — INFO — [Isolation Forest]  P=0.4669  R=0.4673  F1=0.4671  AUC=0.3829
+2026-04-15 18:18:22 — routes.comparison — INFO — IF scores calculés
+2026-04-15 18:18:22 — utils.model_loader — INFO — LOF chargé
+2026-04-15 18:20:15 — utils.evaluator — INFO — [LOF]  P=0.6464  R=0.6469  F1=0.6467  AUC=0.6961
+2026-04-15 18:20:15 — routes.comparison — INFO — LOF scores calculés
+2026-04-15 18:20:15 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_if_lof.pkl → {'w_if': 0.3, 'w_lof': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 18:20:15 — utils.evaluator — INFO — [Ensemble IF(0.3)+LOF(0.7)]  P=0.6589  R=0.6594  F1=0.6592  AUC=0.6788
+2026-04-15 18:20:15 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-15 18:20:17 — utils.evaluator — INFO — [Autoencoder (PyTorch)]  P=0.8247  R=0.8253  F1=0.825  AUC=0.8714
+2026-04-15 18:20:17 — routes.comparison — INFO — Autoencoder scores calculés
+2026-04-15 18:20:17 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 18:20:18 — utils.evaluator — INFO — [Ensemble IF(0.1)+LOF(0.2)+AE(0.7)]  P=0.7653  R=0.7658  F1=0.7655  AUC=0.8067
+2026-04-15 18:20:18 — routes.comparison — INFO — Ensemble 3 modèles scores calculés
+2026-04-15 18:20:18 — routes.comparison — INFO — [COMPARE] Cache scores préchauffé en arrière-plan.
+2026-04-15 18:20:31 — utils.evaluator — INFO — [LOF]  P=0.6464  R=0.6469  F1=0.6467  AUC=0.6961
+2026-04-15 18:20:31 — routes.comparison — INFO — LOF scores calculés
+2026-04-15 18:20:31 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_if_lof.pkl → {'w_if': 0.3, 'w_lof': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 18:20:32 — utils.evaluator — INFO — [Ensemble IF(0.3)+LOF(0.7)]  P=0.6589  R=0.6594  F1=0.6592  AUC=0.6788
+2026-04-15 18:20:32 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-15 18:20:33 — utils.evaluator — INFO — [Autoencoder (PyTorch)]  P=0.8247  R=0.8253  F1=0.825  AUC=0.8714
+2026-04-15 18:20:33 — routes.comparison — INFO — Autoencoder scores calculés
+2026-04-15 18:20:33 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 18:20:34 — utils.evaluator — INFO — [Ensemble IF(0.1)+LOF(0.2)+AE(0.7)]  P=0.7653  R=0.7658  F1=0.7655  AUC=0.8067
+2026-04-15 18:20:34 — routes.comparison — INFO — Ensemble 3 modèles scores calculés
+2026-04-15 18:20:34 — routes.comparison — INFO — [COMPARE] Cache scores préchauffé en arrière-plan.
+2026-04-15 18:20:49 — utils.evaluator — INFO — [LOF]  P=0.6464  R=0.6469  F1=0.6467  AUC=0.6961
+2026-04-15 18:20:49 — routes.comparison — INFO — LOF scores calculés
+2026-04-15 18:20:49 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_if_lof.pkl → {'w_if': 0.3, 'w_lof': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 18:20:50 — utils.evaluator — INFO — [Ensemble IF(0.3)+LOF(0.7)]  P=0.6589  R=0.6594  F1=0.6592  AUC=0.6788
+2026-04-15 18:20:50 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-15 18:20:50 — utils.evaluator — INFO — [Autoencoder (PyTorch)]  P=0.8247  R=0.8253  F1=0.825  AUC=0.8714
+2026-04-15 18:20:50 — routes.comparison — INFO — Autoencoder scores calculés
+2026-04-15 18:20:50 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 18:20:51 — utils.evaluator — INFO — [Ensemble IF(0.1)+LOF(0.2)+AE(0.7)]  P=0.7653  R=0.7658  F1=0.7655  AUC=0.8067
+2026-04-15 18:20:51 — routes.comparison — INFO — Ensemble 3 modèles scores calculés
+2026-04-15 18:24:33 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-15 18:25:05 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 18:25:05 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-15 18:51:47 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-15 18:51:47 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-15 18:51:47 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-16 14:40:00 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-16 14:40:01 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-16 14:40:01 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-16 14:40:01 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-16 14:40:01 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-16 14:40:01 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-16 14:40:01 — utils.model_loader — INFO — QuantileTransformer chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/qt_improvements.pkl
+2026-04-16 14:40:02 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-16 14:40:02 — utils.model_loader — INFO — LOF chargé
+2026-04-16 14:40:08 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-16 14:40:08 — utils.model_loader — INFO — QuantileTransformer chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/qt_improvements.pkl
+2026-04-16 14:40:09 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-16 14:40:11 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-16 14:40:11 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-16 14:40:11 — routes.prediction — INFO — Meilleur modèle (Ensemble 3) chargé en mémoire
+2026-04-16 14:40:11 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-16 14:40:11 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-16 14:40:12 — utils.evaluator — INFO — [Isolation Forest]  P=0.4669  R=0.4673  F1=0.4671  AUC=0.3829
+2026-04-16 14:40:12 — routes.comparison — INFO — IF scores calculés
+2026-04-16 14:40:12 — utils.model_loader — INFO — LOF chargé
+2026-04-16 14:40:31 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-16 14:40:35 — utils.evaluator — INFO — [Isolation Forest]  P=0.4669  R=0.4673  F1=0.4671  AUC=0.3829
+2026-04-16 14:40:35 — routes.comparison — INFO — IF scores calculés
+2026-04-16 14:40:35 — utils.model_loader — INFO — LOF chargé
+2026-04-16 14:40:39 — routes.prediction — INFO — [PREDICT] Cache de référence préchauffé en arrière-plan.
+2026-04-16 14:41:48 — utils.evaluator — INFO — [LOF]  P=0.6464  R=0.6469  F1=0.6467  AUC=0.6961
+2026-04-16 14:41:48 — routes.comparison — INFO — LOF scores calculés
+2026-04-16 14:41:48 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_if_lof.pkl → {'w_if': 0.3, 'w_lof': 0.7, 'contamination': 0.5506000097167566}
+2026-04-16 14:41:48 — utils.evaluator — INFO — [Ensemble IF(0.3)+LOF(0.7)]  P=0.6589  R=0.6594  F1=0.6592  AUC=0.6788
+2026-04-16 14:41:48 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-16 14:41:49 — utils.evaluator — INFO — [Autoencoder (PyTorch)]  P=0.8247  R=0.8253  F1=0.825  AUC=0.8714
+2026-04-16 14:41:49 — routes.comparison — INFO — Autoencoder scores calculés
+2026-04-16 14:41:49 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-16 14:41:49 — utils.evaluator — INFO — [Ensemble IF(0.1)+LOF(0.2)+AE(0.7)]  P=0.7653  R=0.7658  F1=0.7655  AUC=0.8067
+2026-04-16 14:41:49 — routes.comparison — INFO — Ensemble 3 modèles scores calculés
+2026-04-16 14:41:49 — routes.comparison — INFO — [COMPARE] Cache scores préchauffé en arrière-plan.
+2026-04-16 14:41:56 — utils.evaluator — INFO — [LOF]  P=0.6464  R=0.6469  F1=0.6467  AUC=0.6961
+2026-04-16 14:41:56 — routes.comparison — INFO — LOF scores calculés
+2026-04-16 14:41:56 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_if_lof.pkl → {'w_if': 0.3, 'w_lof': 0.7, 'contamination': 0.5506000097167566}
+2026-04-16 14:41:57 — utils.evaluator — INFO — [Ensemble IF(0.3)+LOF(0.7)]  P=0.6589  R=0.6594  F1=0.6592  AUC=0.6788
+2026-04-16 14:41:57 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-16 14:41:57 — utils.evaluator — INFO — [Autoencoder (PyTorch)]  P=0.8247  R=0.8253  F1=0.825  AUC=0.8714
+2026-04-16 14:41:57 — routes.comparison — INFO — Autoencoder scores calculés
+2026-04-16 14:41:57 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-16 14:41:57 — utils.evaluator — INFO — [Ensemble IF(0.1)+LOF(0.2)+AE(0.7)]  P=0.7653  R=0.7658  F1=0.7655  AUC=0.8067
+2026-04-16 14:41:57 — routes.comparison — INFO — Ensemble 3 modèles scores calculés
+2026-04-16 14:45:02 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-16 14:45:02 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-16 14:46:44 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-16 15:05:58 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-16 15:05:58 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-16 15:05:58 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-16 15:23:32 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-16 15:23:32 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-16 15:37:29 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-16 15:37:29 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-16 15:43:52 — utils.model_loader — INFO — QuantileTransformer chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/qt_improvements.pkl
+2026-04-16 15:43:52 — utils.model_loader — INFO — RobustScaler chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/scaler.pkl
+2026-04-16 15:43:52 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-16 15:43:52 — utils.model_loader — INFO — LOF chargé
+2026-04-16 15:43:57 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-16 15:43:57 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-16 15:43:57 — routes.prediction — INFO — Meilleur modèle (Ensemble 3) chargé en mémoire
+2026-04-16 15:43:57 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-16 15:43:58 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-16 15:43:58 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/preprocessed/test_clean.csv
+2026-04-16 15:44:19 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:44:19 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:44:19 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:44:52 — utils.model_loader — INFO — QuantileTransformer chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/qt_improvements.pkl
+2026-04-16 15:44:52 — utils.model_loader — INFO — RobustScaler chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/scaler.pkl
+2026-04-16 15:44:53 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-16 15:44:53 — utils.model_loader — INFO — LOF chargé
+2026-04-16 15:44:57 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-16 15:44:57 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-16 15:44:57 — routes.prediction — INFO — Meilleur modèle (Ensemble 3) chargé en mémoire
+2026-04-16 15:44:57 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-16 15:44:58 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-16 15:44:58 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/preprocessed/test_clean.csv
+2026-04-16 15:45:16 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:16 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:16 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:16 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:16 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:16 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:16 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:16 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:16 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:16 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:16 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:16 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:16 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:16 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:17 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:17 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:17 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:17 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:17 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:17 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:17 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:17 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:17 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:17 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:17 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:17 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:17 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:17 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:17 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:18 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:18 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:18 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:18 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:18 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:18 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:18 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:18 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:18 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:18 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:18 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:18 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:18 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:18 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:18 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:19 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:19 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:19 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:19 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:19 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:19 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:19 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:19 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:19 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:19 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:19 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:19 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:20 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:20 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:20 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:20 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:20 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:20 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:21 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:21 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:21 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:21 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:21 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:21 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:21 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:21 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:21 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:21 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:21 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:21 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:21 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:21 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:22 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:22 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:22 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:22 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:22 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:22 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:22 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:22 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:22 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:22 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:22 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:22 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:22 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:22 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:22 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:22 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:23 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:23 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:23 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:23 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:23 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:23 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:23 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:23 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:23 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:23 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:23 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:23 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:23 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:23 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:23 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:23 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:23 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:24 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:24 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:24 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:24 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:24 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:24 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:24 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:24 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:24 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:24 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:24 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:24 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:24 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:24 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:24 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:24 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:25 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:25 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:25 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:25 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:25 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:25 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:25 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:25 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:25 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:25 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:25 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:25 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:25 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:25 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:25 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:26 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:26 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:26 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:26 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:26 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:27 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:27 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:27 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:27 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:27 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:27 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:27 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:27 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:27 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:28 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:28 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:28 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:28 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:28 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:28 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:28 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:28 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:28 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:28 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:28 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:28 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:29 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:29 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:29 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:29 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:29 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:29 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:29 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:29 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:29 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:29 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:29 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:29 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:29 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:29 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:29 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:30 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:30 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:30 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:30 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:30 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:30 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:30 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:30 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:30 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:30 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:30 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:30 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:30 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:30 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:30 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:30 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:31 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:31 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:31 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:31 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:31 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:31 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:31 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:31 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:31 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:31 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:31 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:32 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:32 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:32 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:32 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:32 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:32 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:32 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:32 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:32 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:32 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:32 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:32 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:32 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:33 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:33 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:33 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:33 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:33 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:33 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:33 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:33 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:33 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:33 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:33 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:33 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:33 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:33 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:34 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:34 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:34 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:34 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:34 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:34 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:35 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:35 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:35 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:35 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:35 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:35 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:35 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:35 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:35 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:35 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:35 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:35 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:35 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:35 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:36 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:36 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:36 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:36 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:36 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:36 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:36 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:36 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:36 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:36 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:36 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:36 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:36 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:36 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:36 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:37 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:37 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:37 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:37 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:37 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:37 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:37 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:37 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:37 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:37 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:37 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:37 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:37 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:37 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:37 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:37 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:37 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:37 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:38 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:38 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:38 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:38 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:38 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:38 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:38 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:38 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:38 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:38 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:38 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:45:38 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:51:23 — utils.model_loader — INFO — QuantileTransformer chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/qt_improvements.pkl
+2026-04-16 15:51:23 — utils.model_loader — INFO — RobustScaler chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/scaler.pkl
+2026-04-16 15:51:23 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-16 15:51:23 — utils.model_loader — INFO — LOF chargé
+2026-04-16 15:51:30 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-16 15:51:30 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-16 15:51:30 — routes.prediction — INFO — Meilleur modèle (Ensemble 3) chargé en mémoire
+2026-04-16 15:51:30 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-16 15:51:31 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-16 15:51:31 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/preprocessed/test_clean.csv
+2026-04-16 15:51:59 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:51:59 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:51:59 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:52:00 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:52:00 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:52:00 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:52:01 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:52:01 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:52:01 — httpx — INFO — HTTP Request: POST http://testserver/api/predict/single "HTTP/1.1 200 OK"
+2026-04-16 15:53:36 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-16 15:53:36 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-16 15:57:14 — utils.model_loader — INFO — QuantileTransformer chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/qt_improvements.pkl
+2026-04-16 15:57:14 — utils.model_loader — INFO — RobustScaler chargé depuis /home/karroum-khalid/Documents/anomaly/models_saved/scaler.pkl
+2026-04-16 15:57:15 — utils.model_loader — INFO — Isolation Forest chargé
+2026-04-16 15:57:15 — utils.model_loader — INFO — LOF chargé
+2026-04-16 15:57:22 — utils.model_loader — INFO — Autoencoder PyTorch chargé (cpu)
+2026-04-16 15:57:22 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-16 15:57:22 — routes.prediction — INFO — Meilleur modèle (Ensemble 3) chargé en mémoire
+2026-04-16 15:57:22 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/featured/test_featured.csv
+2026-04-16 15:57:23 — utils.data_loader — INFO — Test set chargé : 82,332 lignes × 20 features
+2026-04-16 15:57:23 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/preprocessed/test_clean.csv
+2026-04-16 15:57:25 — utils.data_loader — INFO — Chargement de /home/karroum-khalid/Documents/anomaly/data/UNSW_NB15_testing-set.csv
+2026-04-16 16:00:39 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-16 16:00:39 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles
+2026-04-16 16:05:53 — utils.model_loader — INFO — Config ensemble chargée depuis /home/karroum-khalid/Documents/anomaly/models_saved/ensemble_3models.pkl → {'w_if': 0.1, 'w_lof': 0.2, 'w_ae': 0.7, 'contamination': 0.5506000097167566}
+2026-04-16 16:05:53 — utils.data_loader — INFO — Rapport de comparaison chargé : 6 modèles

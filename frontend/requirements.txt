@@ -1,4 +1,12 @@
+<<<<<<< HEAD
 streamlit==1.36.0
 requests==2.32.3
 plotly==5.22.0
 pandas==2.2.2
+=======
+streamlit==1.32.0
+pandas==2.2.0
+numpy==1.26.4
+plotly==5.19.0
+requests==2.31.0
+>>>>>>> e6ce9d0872e163a69c0ca60ee5c2951a91710736
