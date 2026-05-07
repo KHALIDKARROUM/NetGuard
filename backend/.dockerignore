@@ -1,0 +1,34 @@
+# Exclut les fichiers inutiles de l'image Docker backend
+
+# Environnements virtuels
+backend_venv/
+.venv/
+venv/
+
+# Notebooks et données (montés en volumes)
+../notebooks/
+../data/
+../models_saved/
+
+# Logs locaux
+logs/
+
+# Fichiers Python compilés
+__pycache__/
+*.pyc
+*.pyo
+
+# Tests
+test_*.py
+*_test.py
+
+# IDE et OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# Git
+.git/
+.gitignore

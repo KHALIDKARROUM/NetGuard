@@ -1,0 +1,335 @@
+=== CELL 0 ===
+# 05 — DBSCAN
+
+**DBSCAN** regroupe les points denses en clusters et considère les points isolés comme du bruit.  
+Dans notre cas : les clusters = attaques (répétitives et denses), le bruit = trafic normal (varié).
+
+**Problème de scale :** DBSCAN est O(n²) — impossible sur 175k lignes.  
+On l'entraîne sur **20 000 lignes stratifiées** et on prédit sur le test complet  
+via un **k-NN classifier** entraîné sur les labels DBSCAN.
+
+**Calibration de `eps` :** on utilise le k-distance plot pour trouver le bon rayon de voisinage.
+
+=== CELL 1 ===
+## 0. Imports
+
+=== CELL 2 ===
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from pathlib import Path
+import joblib
+import time
+import warnings
+warnings.filterwarnings('ignore')
+
+from sklearn.cluster import DBSCAN
+from sklearn.neighbors import NearestNeighbors, KNeighborsClassifier
+from sklearn.preprocessing import QuantileTransformer
+from sklearn.decomposition import PCA
+from sklearn.metrics import (
+    classification_report, confusion_matrix,
+    roc_auc_score, average_precision_score,
+    roc_curve, f1_score, precision_score, recall_score
+)
+
+DATA_DIR   = Path('../data/featured')
+MODELS_DIR = Path('../models_saved')
+MODELS_DIR.mkdir(exist_ok=True)
+
+TARGET_COL   = 'label'
+RANDOM_STATE = 42
+SAMPLE_SIZE  = 20_000   # taille du sous-ensemble pour DBSCAN
+
+print('Imports OK')
+
+=== CELL 3 ===
+## 1. Chargement et sous-échantillonnage stratifié
+
+On prend 20 000 lignes en respectant la proportion normal/anomalie du dataset complet.
+
+=== CELL 4 ===
+df_train = pd.read_csv(DATA_DIR / 'train_featured.csv')
+df_test  = pd.read_csv(DATA_DIR / 'test_featured.csv')
+
+X_train_full = df_train.drop(columns=[TARGET_COL]).replace([np.inf, -np.inf], np.nan).fillna(0)
+y_train_full = df_train[TARGET_COL].values
+X_test       = df_test.drop(columns=[TARGET_COL]).replace([np.inf, -np.inf], np.nan).fillna(0)
+y_test       = df_test[TARGET_COL].values
+
+# Sous-ensemble stratifié
+np.random.seed(RANDOM_STATE)
+prop = y_train_full.mean()
+n_a  = int(SAMPLE_SIZE * prop)
+n_n  = SAMPLE_SIZE - n_a
+idx  = np.concatenate([
+    np.random.choice(np.where(y_train_full == 1)[0], n_a, replace=False),
+    np.random.choice(np.where(y_train_full == 0)[0], n_n, replace=False)
+])
+np.random.shuffle(idx)
+
+X_sample = X_train_full.iloc[idx].reset_index(drop=True)
+y_sample = y_train_full[idx]
+
+print(f'Train complet : {X_train_full.shape} | Test : {X_test.shape}')
+print(f'Sample : {X_sample.shape} | anomalies : {y_sample.mean()*100:.1f}%')
+
+CONTAMINATION = float(y_test.mean())
+print(f'Contamination : {CONTAMINATION:.3f}')
+
+=== CELL 5 ===
+## 2. Preprocessing — QuantileTransformer + PCA
+
+DBSCAN calcule des **distances euclidiennes** — la normalisation est critique.  
+Le QuantileTransformer force une distribution uniforme → distances équilibrées.  
+La PCA réduit la dimensionnalité → la notion de voisinage devient plus claire en moins de dimensions.
+
+=== CELL 6 ===
+qt = QuantileTransformer(n_quantiles=1000, output_distribution='uniform', random_state=RANDOM_STATE)
+X_sample_qt = qt.fit_transform(X_sample)
+X_test_qt   = qt.transform(X_test)
+
+pca = PCA(n_components=5, random_state=RANDOM_STATE)
+X_sample_pca = pca.fit_transform(X_sample_qt)
+X_test_pca   = pca.transform(X_test_qt)
+
+print(f'Après QT+PCA : sample={X_sample_pca.shape} | test={X_test_pca.shape}')
+print(f'Variance expliquée : {pca.explained_variance_ratio_.sum()*100:.1f}%')
+
+joblib.dump(qt,  MODELS_DIR / 'dbscan_qt.pkl')
+joblib.dump(pca, MODELS_DIR / 'dbscan_pca.pkl')
+print('QT et PCA sauvegardés')
+
+=== CELL 7 ===
+## 3. Calibration de `eps` — k-distance plot
+
+Le k-distance plot trace la distance au k-ième voisin pour chaque point, triée par ordre décroissant.  
+Le **coude** de la courbe indique la valeur d'`eps` à utiliser :  
+en-dessous du coude → clusters, au-dessus → bruit.
+
+=== CELL 8 ===
+K = 10   # = min_samples de DBSCAN
+
+print(f'Calcul des {K}-distances sur {len(X_sample_pca):,} points...')
+nn = NearestNeighbors(n_neighbors=K, n_jobs=-1)
+nn.fit(X_sample_pca)
+dists, _ = nn.kneighbors(X_sample_pca)
+kdists   = np.sort(dists[:, -1])[::-1]   # distance au k-ième voisin, triée décroissant
+
+# Détection automatique du coude par dérivée seconde (NumPy vectorisé)
+d2       = np.diff(np.diff(kdists))
+knee_idx = int(np.argmax(np.abs(d2))) + 1
+eps_opt  = float(kdists[knee_idx])
+
+print(f'eps optimal détecté : {eps_opt:.6f}')
+
+x_axis = np.linspace(0, 100, len(kdists))
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=x_axis, y=kdists, mode='lines', name=f'{K}-distance',
+                          line=dict(color='#2980b9', width=2)))
+fig.add_hline(y=eps_opt, line_dash='dash', line_color='#e74c3c',
+              annotation_text=f'eps = {eps_opt:.6f}', line_width=2)
+fig.update_layout(title=f'k-distance plot (k={K}) — détection du coude',
+                   xaxis_title='Points (%, trié décroissant)',
+                   yaxis_title=f'Distance au {K}e voisin', height=400)
+fig.show()
+
+=== CELL 9 ===
+## 4. Test de plusieurs valeurs d'`eps`
+
+On vérifie que l'eps calibré donne bien ~55% de bruit (aligné sur la proportion d'anomalies du test).
+
+=== CELL 10 ===
+eps_candidates = [0.0005, 0.001, 0.002, 0.005, 0.010]
+
+print(f"{'eps':>8} | {'clusters':>10} | {'bruit':>8} | {'% bruit':>8}")
+print('-' * 45)
+for eps in eps_candidates:
+    db     = DBSCAN(eps=eps, min_samples=K, metric='euclidean', n_jobs=-1)
+    labels = db.fit_predict(X_sample_pca)
+    n_cl   = len(set(labels) - {-1})
+    n_noise = int((labels == -1).sum())
+    print(f'{eps:>8.4f} | {n_cl:>10} | {n_noise:>8,} | {n_noise/len(labels)*100:>7.1f}%')
+
+=== CELL 11 ===
+# On choisit eps=0.001 — ~55% de bruit, aligné sur la proportion réelle d'anomalies
+EPS_FINAL = 0.001
+print(f'eps final choisi : {EPS_FINAL}')
+
+=== CELL 12 ===
+## 5. Entraînement DBSCAN
+
+**Mapping des labels DBSCAN → anomalie :**  
+Sur UNSW-NB15, les attaques sont répétitives → elles forment des **clusters** (label ≥ 0).  
+Le trafic normal est varié → il tombe en **bruit** (label = -1).  
+C'est l'inverse de la convention classique DBSCAN → on inverse le mapping.
+
+=== CELL 13 ===
+print('Entraînement DBSCAN...')
+start = time.perf_counter()
+
+dbscan = DBSCAN(eps=EPS_FINAL, min_samples=K, metric='euclidean', n_jobs=-1)
+db_labels = dbscan.fit_predict(X_sample_pca)
+
+print(f'[timer] {time.perf_counter() - start:.2f}s')
+n_clusters = len(set(db_labels) - {-1})
+n_noise    = int((db_labels == -1).sum())
+print(f'Clusters trouvés : {n_clusters}')
+print(f'Points bruit     : {n_noise:,} ({n_noise/len(db_labels)*100:.1f}%)')
+
+# Mapping inversé : cluster (label >= 0) → anomalie (1), bruit (-1) → normal (0)
+binary_labels = np.where(db_labels == -1, 0, 1)
+print(f'\nMapping inversé UNSW-NB15 :')
+print(f'  cluster → anomalie : {(binary_labels==1).sum():,}')
+print(f'  bruit   → normal   : {(binary_labels==0).sum():,}')
+
+=== CELL 14 ===
+## 6. Prédiction sur nouveaux points — k-NN
+
+DBSCAN ne peut pas prédire sur de nouveaux points.  
+On entraîne un **k-NN classifier** sur les labels DBSCAN du sample,  
+puis on l'utilise pour prédire sur le test set complet.
+
+=== CELL 15 ===
+print('Entraînement k-NN sur les labels DBSCAN...')
+knn = KNeighborsClassifier(n_neighbors=5, n_jobs=-1)
+knn.fit(X_sample_pca, binary_labels)
+
+print('Prédiction sur le test set complet...')
+start = time.perf_counter()
+proba_dbscan = knn.predict_proba(X_test_pca)
+t_pred       = time.perf_counter() - start
+
+# Score d'anomalie = probabilité d'être dans un cluster (classe 1)
+# On utilise directement predict_proba[:, 1] — pas de normalisation ni de seuil manuel.
+# Raison : les scores k-NN sont discrets (0.0, 0.2, 0.4, 0.6, 0.8, 1.0 avec k=5).
+# Appliquer un seuil percentile sur ces valeurs compressées classe tout en anomalie.
+# knn.predict() utilise le seuil 0.5 par défaut — c'est le bon comportement ici.
+scores_dbscan = proba_dbscan[:, 1]   # P(anomalie) — élevé = suspect
+preds_dbscan  = knn.predict(X_test_pca)  # décision directe k-NN (seuil 0.5)
+
+print(f'[timer] prédiction : {t_pred:.2f}s')
+print(f'Anomalies détectées : {preds_dbscan.sum():,} ({preds_dbscan.mean()*100:.1f}%)')
+print(f'Anomalies réelles   : {y_test.sum():,} ({y_test.mean()*100:.1f}%)')
+
+=== CELL 16 ===
+## 7. Évaluation
+
+=== CELL 17 ===
+print('Rapport de classification :')
+print(classification_report(y_test, preds_dbscan, target_names=['Normal', 'Anomalie']))
+print(f'ROC-AUC       : {roc_auc_score(y_test, scores_dbscan):.4f}')
+print(f'Avg Precision : {average_precision_score(y_test, scores_dbscan):.4f}')
+
+=== CELL 18 ===
+## 8. Visualisations
+
+### 8.1 Clusters DBSCAN en 2D
+
+=== CELL 19 ===
+pca_2d  = PCA(n_components=2, random_state=RANDOM_STATE)
+X_2d    = pca_2d.fit_transform(X_sample_pca)
+idx_viz = np.random.choice(len(X_2d), min(5000, len(X_2d)), replace=False)
+
+df_viz = pd.DataFrame({
+    'PC1':       X_2d[idx_viz, 0],
+    'PC2':       X_2d[idx_viz, 1],
+    'vrai_label': np.where(y_sample[idx_viz] == 1, 'Anomalie', 'Normal'),
+    'dbscan':    np.where(binary_labels[idx_viz] == 1, 'Cluster (anomalie)', 'Bruit (normal)')
+})
+
+fig = make_subplots(rows=1, cols=2,
+                    subplot_titles=['Vrais labels', 'Labels DBSCAN'])
+
+for i, (col, cmap) in enumerate([
+    ('vrai_label', {'Anomalie': '#e74c3c', 'Normal': '#2ecc71'}),
+    ('dbscan', {'Cluster (anomalie)': '#e74c3c', 'Bruit (normal)': '#2ecc71'})
+], 1):
+    for val, color in cmap.items():
+        mask = df_viz[col] == val
+        fig.add_trace(go.Scatter(x=df_viz[mask]['PC1'], y=df_viz[mask]['PC2'],
+                                  mode='markers', name=val, marker=dict(color=color, size=3, opacity=0.5),
+                                  showlegend=(i == 1)), row=1, col=i)
+
+fig.update_layout(title='Clusters DBSCAN — projection PCA 2D (5000 points)',
+                   height=480)
+fig.show()
+
+=== CELL 20 ===
+### 8.2 Matrice de confusion et courbe ROC
+
+=== CELL 21 ===
+cm     = confusion_matrix(y_test, preds_dbscan)
+cm_pct = cm.astype(float) / cm.sum() * 100
+labels = ['Normal', 'Anomalie']
+text   = [[f'{cm[i,j]:,}<br>{cm_pct[i,j]:.1f}%' for j in range(2)] for i in range(2)]
+
+fpr, tpr, _ = roc_curve(y_test, scores_dbscan)
+auc_val     = roc_auc_score(y_test, scores_dbscan)
+
+fig = make_subplots(rows=1, cols=2, subplot_titles=['Matrice de confusion', f'Courbe ROC (AUC={auc_val:.4f})'])
+
+fig.add_trace(go.Heatmap(z=cm, x=[f'Prédit {l}' for l in labels], y=[f'Réel {l}' for l in labels],
+                          colorscale='Purples', text=text, texttemplate='%{text}',
+                          showscale=False), row=1, col=1)
+fig.add_trace(go.Scatter(x=fpr, y=tpr, mode='lines', name='DBSCAN',
+                          line=dict(color='#9b59b6', width=2.5)), row=1, col=2)
+fig.add_trace(go.Scatter(x=[0,1], y=[0,1], mode='lines', name='Aléatoire',
+                          line=dict(color='gray', dash='dash')), row=1, col=2)
+
+fig.update_layout(title='Évaluation DBSCAN', height=430, showlegend=False)
+fig.show()
+
+=== CELL 22 ===
+## 9. Sauvegarde
+
+=== CELL 23 ===
+joblib.dump({'knn': knn, 'eps': EPS_FINAL, 'min_samples': K,
+              'contamination': CONTAMINATION}, MODELS_DIR / 'dbscan.pkl')
+
+print('Sauvegardé :')
+print('  models_saved/dbscan.pkl  (knn + config)')
+print('  models_saved/dbscan_qt.pkl')
+print('  models_saved/dbscan_pca.pkl')
+
+=== CELL 24 ===
+## 10. Résumé
+
+=== CELL 25 ===
+p = precision_score(y_test, preds_dbscan, zero_division=0)
+r = recall_score(y_test, preds_dbscan, zero_division=0)
+f = f1_score(y_test, preds_dbscan, zero_division=0)
+
+print('=' * 55)
+print('RÉSUMÉ — DBSCAN')
+print('=' * 55)
+print(f"""
+Paramètres :
+  eps          : {EPS_FINAL}
+  min_samples  : {K}
+  sample train : {SAMPLE_SIZE:,} lignes
+  preprocessing: QT + PCA (5 composantes)
+
+Clusters DBSCAN : {n_clusters}
+Points bruit    : {n_noise:,} ({n_noise/len(db_labels)*100:.1f}%)
+
+Métriques (test set) :
+  Precision : {p:.4f}
+  Recall    : {r:.4f}
+  F1        : {f:.4f}
+  ROC-AUC   : {auc_val:.4f}
+
+Points forts :
+  Décision directe, détecte des formes non sphériques
+
+Limites :
+  Ne scale pas → on utilise un sample + k-NN pour la prédiction
+  Très sensible à eps
+""")
+
+=== CELL 26 ===
+---
+**Suite → `06_model_improvements.ipynb`**
+

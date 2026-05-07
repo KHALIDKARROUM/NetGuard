@@ -1,0 +1,27 @@
+# Exclut les fichiers inutiles de l'image Docker frontend
+
+# Environnements virtuels
+frontend_venv/
+.venv/
+venv/
+
+# Notebooks et données
+../notebooks/
+../data/
+../models_saved/
+
+# Fichiers Python compilés
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE et OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# Git
+.git/
+.gitignore

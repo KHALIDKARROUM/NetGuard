@@ -1,0 +1,80 @@
+{
+  "visualizations": [
+    {
+      "id": "01_class_distribution",
+      "filename": "01_class_distribution.json",
+      "size_kb": 7.2
+    },
+    {
+      "id": "02_attack_types",
+      "filename": "02_attack_types.json",
+      "size_kb": 8.0
+    },
+    {
+      "id": "03_feature_distributions",
+      "filename": "03_feature_distributions.json",
+      "size_kb": 13847.8
+    },
+    {
+      "id": "04_correlation_matrix",
+      "filename": "04_correlation_matrix.json",
+      "size_kb": 12.7
+    },
+    {
+      "id": "05_score_distribution_if",
+      "filename": "05_score_distribution_if.json",
+      "size_kb": 1537.9
+    },
+    {
+      "id": "07_pca_2d",
+      "filename": "07_pca_2d.json",
+      "size_kb": 558.8
+    },
+    {
+      "id": "08_pca_3d",
+      "filename": "08_pca_3d.json",
+      "size_kb": 391.3
+    },
+    {
+      "id": "09_tsne_2d",
+      "filename": "09_tsne_2d.json",
+      "size_kb": 229.7
+    },
+    {
+      "id": "10_roc_curve",
+      "filename": "10_roc_curve.json",
+      "size_kb": 756.8
+    },
+    {
+      "id": "11_precision_recall",
+      "filename": "11_precision_recall.json",
+      "size_kb": 2213.9
+    },
+    {
+      "id": "12_confusion_matrix",
+      "filename": "12_confusion_matrix.json",
+      "size_kb": 7.7
+    },
+    {
+      "id": "13_error_types",
+      "filename": "13_error_types.json",
+      "size_kb": 7.4
+    },
+    {
+      "id": "14_error_features",
+      "filename": "14_error_features.json",
+      "size_kb": 6134.6
+    },
+    {
+      "id": "15_score_timeline",
+      "filename": "15_score_timeline.json",
+      "size_kb": 121.6
+    },
+    {
+      "id": "16_feature_importance",
+      "filename": "16_feature_importance.json",
+      "size_kb": 8.8
+    }
+  ],
+  "total": 15
+}

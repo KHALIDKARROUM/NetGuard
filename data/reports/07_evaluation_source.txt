@@ -1,0 +1,522 @@
+=== CELL 0 ===
+# 07 — Évaluation et sélection du modèle final
+
+On charge tous les modèles sauvegardés dans le notebook 06  
+et on les compare pour choisir le meilleur à déployer.
+
+**Critères de sélection — performance pure :**
+- ROC-AUC (capacité discriminante globale, robuste au seuil)
+- F1 (équilibre précision/rappel)
+- Recall (détecter les attaques prime sur la vitesse)
+- Precision
+
+On ignore volontairement la vitesse et la taille — en détection d'anomalies réseau,  
+rater une attaque est bien plus coûteux qu'une seconde de latence.
+
+=== CELL 1 ===
+## 0. Imports et configuration
+
+=== CELL 2 ===
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from pathlib import Path
+import joblib
+import time
+import shutil
+import warnings
+warnings.filterwarnings('ignore')
+
+from sklearn.metrics import (
+    classification_report, confusion_matrix,
+    roc_auc_score, average_precision_score,
+    f1_score, precision_score, recall_score,
+    roc_curve
+)
+
+DATA_DIR    = Path('../data/featured')
+MODELS_DIR  = Path('../models_saved')
+REPORTS_DIR = Path('../data/reports')
+REPORTS_DIR.mkdir(exist_ok=True)
+
+TARGET_COL   = 'label'
+RANDOM_STATE = 42
+COLOR_PALETTE = ['#2980b9','#e74c3c','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22']
+
+# Registre global des résultats
+RESULTS = {}
+
+
+def normalize_scores(scores):
+    s_min, s_max = scores.min(), scores.max()
+    if s_max == s_min:
+        return np.zeros_like(scores)
+    return (scores - s_min) / (s_max - s_min)
+
+
+def scores_to_preds(scores, contamination):
+    threshold = np.percentile(scores, 100 * (1 - contamination))
+    return np.where(scores >= threshold, 1, 0)
+
+
+def register(name, y_true, y_pred, y_scores, t_infer=0.0, size_kb=0.0):
+    """Enregistre les métriques d'un modèle dans RESULTS."""
+    report = classification_report(y_true, y_pred, output_dict=True, zero_division=0)
+    RESULTS[name] = {
+        'precision':     round(report.get('1',{}).get('precision', 0), 4),
+        'recall':        round(report.get('1',{}).get('recall', 0), 4),
+        'f1':            round(report.get('1',{}).get('f1-score', 0), 4),
+        'roc_auc':       round(roc_auc_score(y_true, y_scores), 4),
+        'avg_precision': round(average_precision_score(y_true, y_scores), 4),
+        'inference_s':   round(t_infer, 4),
+        'size_kb':       round(size_kb, 1),
+    }
+    m = RESULTS[name]
+    print(f'[{name}]  P={m["precision"]}  R={m["recall"]}  F1={m["f1"]}  AUC={m["roc_auc"]}')
+
+
+def get_kb(path):
+    return path.stat().st_size / 1024 if path.exists() else 0.0
+
+
+print('Configuration OK')
+
+=== CELL 3 ===
+## 1. Chargement des données
+
+=== CELL 4 ===
+df_test = pd.read_csv(DATA_DIR / 'test_featured.csv')
+X_test  = df_test.drop(columns=[TARGET_COL]).replace([np.inf, -np.inf], np.nan).fillna(0)
+y_test  = df_test[TARGET_COL].values
+
+# QuantileTransformer commun sauvegardé dans le notebook 06
+qt        = joblib.load(MODELS_DIR / 'qt_improvements.pkl')
+X_test_qt = qt.transform(X_test)
+
+CONTAMINATION = float(y_test.mean())
+print(f'Test : {X_test.shape} | anomalies : {CONTAMINATION*100:.1f}%')
+
+=== CELL 5 ===
+---
+## 2. Évaluation — Isolation Forest
+
+=== CELL 6 ===
+IF_PKL   = MODELS_DIR / 'if_base.pkl'
+if_model = joblib.load(IF_PKL)
+
+t0 = time.perf_counter()
+scores_if = normalize_scores(if_model.decision_function(X_test_qt))
+t_if      = time.perf_counter() - t0
+preds_if  = scores_to_preds(scores_if, CONTAMINATION)
+
+register('Isolation Forest', y_test, preds_if, scores_if, t_if, get_kb(IF_PKL))
+
+=== CELL 7 ===
+---
+## 3. Évaluation — LOF
+
+=== CELL 8 ===
+LOF_PKL   = MODELS_DIR / 'lof.pkl'
+lof_model = joblib.load(LOF_PKL)
+
+t0 = time.perf_counter()
+scores_lof = normalize_scores(-lof_model.score_samples(X_test_qt))
+t_lof      = time.perf_counter() - t0
+preds_lof  = scores_to_preds(scores_lof, CONTAMINATION)
+
+register('LOF', y_test, preds_lof, scores_lof, t_lof, get_kb(LOF_PKL))
+
+=== CELL 9 ===
+---
+## 4. Évaluation — Ensemble IF + LOF
+
+=== CELL 10 ===
+ENS_PKL = MODELS_DIR / 'ensemble_if_lof.pkl'
+cfg_ens = joblib.load(ENS_PKL)
+w_if, w_lof = cfg_ens['w_if'], cfg_ens['w_lof']
+
+t0 = time.perf_counter()
+scores_ens = w_if * scores_if + w_lof * scores_lof
+t_ens      = time.perf_counter() - t0
+preds_ens  = scores_to_preds(scores_ens, CONTAMINATION)
+
+register(f'Ensemble IF({w_if})+LOF({w_lof})', y_test, preds_ens, scores_ens,
+          t_if + t_lof + t_ens, get_kb(IF_PKL) + get_kb(LOF_PKL))
+
+=== CELL 11 ===
+---
+## 5. Évaluation — Autoencoder PyTorch
+
+=== CELL 12 ===
+AE_PT    = MODELS_DIR / 'autoencoder.pt'
+TORCH_OK = False
+
+if AE_PT.exists():
+    try:
+        import torch
+        import torch.nn as nn
+
+        device    = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        input_dim = X_test_qt.shape[1]
+
+        # Même architecture que le notebook 06
+        ae = nn.Sequential(
+            nn.Linear(input_dim, 16), nn.ReLU(), nn.Linear(16, 8), nn.ReLU(), nn.Linear(8, 4),
+            nn.Linear(4, 8),          nn.ReLU(), nn.Linear(8, 16), nn.ReLU(), nn.Linear(16, input_dim)
+        ).to(device)
+        ae.load_state_dict(torch.load(AE_PT, map_location=device))
+        ae.eval()
+
+        X_t = torch.FloatTensor(X_test_qt).to(device)
+        t0  = time.perf_counter()
+        with torch.no_grad():
+            recon_err = ((X_t - ae(X_t)) ** 2).mean(dim=1).cpu().numpy()
+        t_ae = time.perf_counter() - t0
+
+        scores_ae = normalize_scores(recon_err)
+        preds_ae  = scores_to_preds(scores_ae, CONTAMINATION)
+        TORCH_OK  = True
+
+        register('Autoencoder (PyTorch)', y_test, preds_ae, scores_ae, t_ae, get_kb(AE_PT))
+
+    except ImportError:
+        print('PyTorch non installé — section ignorée.')
+else:
+    print('autoencoder.pt non trouvé — section ignorée.')
+
+=== CELL 13 ===
+---
+## 6. Évaluation — Ensemble IF + LOF + Autoencoder
+
+=== CELL 14 ===
+ENS3_PKL = MODELS_DIR / 'ensemble_3models.pkl'
+
+if ENS3_PKL.exists() and TORCH_OK:
+    cfg3 = joblib.load(ENS3_PKL)
+    w_if3, w_lof3, w_ae3 = cfg3['w_if'], cfg3['w_lof'], cfg3['w_ae']
+
+    t0 = time.perf_counter()
+    scores_ens3 = w_if3 * scores_if + w_lof3 * scores_lof + w_ae3 * scores_ae
+    t_ens3      = time.perf_counter() - t0
+    preds_ens3  = scores_to_preds(scores_ens3, CONTAMINATION)
+
+    register(f'Ensemble IF({w_if3})+LOF({w_lof3})+AE({w_ae3})', y_test, preds_ens3, scores_ens3,
+              t_if + t_lof + t_ae + t_ens3, get_kb(IF_PKL) + get_kb(LOF_PKL) + get_kb(AE_PT))
+else:
+    print('Ensemble 3 modèles non disponible — ignoré.')
+
+=== CELL 15 ===
+---
+## 7. Évaluation — IF par protocole
+
+=== CELL 16 ===
+PROTO_PKL = MODELS_DIR / 'if_by_proto.pkl'
+
+if PROTO_PKL.exists():
+    try:
+        proto_data = joblib.load(PROTO_PKL)
+        models_by_proto = proto_data['models']
+        feature_cols    = proto_data['features']
+
+        df_test_raw = pd.read_csv(Path('../data/preprocessed') / 'test_clean.csv')
+        proto_test  = df_test_raw['proto'].values
+
+        scores_proto = np.zeros(len(y_test))
+        covered      = np.zeros(len(y_test), dtype=bool)
+
+        t0 = time.perf_counter()
+        for proto, bundle in models_by_proto.items():
+            mask = proto_test == proto
+            if mask.sum() == 0:
+                continue
+            X_p = df_test_raw.loc[mask, feature_cols].replace([np.inf,-np.inf], np.nan).fillna(0)
+            scores_proto[mask] = normalize_scores(bundle['model'].decision_function(bundle['qt'].transform(X_p)))
+            covered[mask]      = True
+
+        if (~covered).sum() > 0:
+            scores_proto[~covered] = scores_if[~covered]
+        t_proto = time.perf_counter() - t0
+
+        preds_proto = scores_to_preds(scores_proto, CONTAMINATION)
+        register('IF par protocole', y_test, preds_proto, scores_proto, t_proto, get_kb(PROTO_PKL))
+
+    except Exception as e:
+        print(f'Erreur chargement IF par protocole : {e}')
+else:
+    print('if_by_proto.pkl non trouvé — section ignorée.')
+
+=== CELL 17 ===
+---
+## 8. Tableau comparatif
+
+=== CELL 18 ===
+df_res = pd.DataFrame(RESULTS).T.sort_values('f1', ascending=False)
+
+print('=' * 70)
+print('TABLEAU COMPARATIF — TOUS LES MODÈLES')
+print('=' * 70)
+display(
+    df_res.style
+    .background_gradient(cmap='Greens', subset=['f1', 'roc_auc', 'avg_precision'])
+    .background_gradient(cmap='Blues',  subset=['precision', 'recall'])
+    .background_gradient(cmap='Reds_r', subset=['inference_s'])
+    .format({'precision':'{:.4f}','recall':'{:.4f}','f1':'{:.4f}',
+              'roc_auc':'{:.4f}','avg_precision':'{:.4f}',
+              'inference_s':'{:.4f}s','size_kb':'{:.1f} KB'})
+    .set_caption('Évaluation sur le test set UNSW-NB15 (82,332 connexions)')
+)
+
+=== CELL 19 ===
+## 9. Visualisations comparatives
+
+### 9.1 Barres groupées
+
+=== CELL 20 ===
+df_melt = (
+    df_res[['precision','recall','f1','roc_auc']]
+    .reset_index().rename(columns={'index':'modèle'})
+    .melt(id_vars='modèle', var_name='métrique', value_name='score')
+)
+fig = px.bar(df_melt, x='modèle', y='score', color='métrique', barmode='group',
+              title='Comparaison des modèles — métriques clés',
+              color_discrete_sequence=COLOR_PALETTE)
+fig.update_layout(height=460, xaxis_tickangle=-25)
+fig.show()
+
+=== CELL 21 ===
+### 9.2 Radar chart
+
+=== CELL 22 ===
+metrics_r = ['precision', 'recall', 'f1', 'roc_auc', 'avg_precision']
+fig = go.Figure()
+for i, (name, row) in enumerate(df_res.iterrows()):
+    vals = [row[m] for m in metrics_r] + [row[metrics_r[0]]]
+    fig.add_trace(go.Scatterpolar(r=vals, theta=metrics_r+[metrics_r[0]],
+                                   fill='toself', name=name, opacity=0.7,
+                                   line=dict(color=COLOR_PALETTE[i%len(COLOR_PALETTE)], width=2)))
+fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0,1])),
+                   title='Radar — tous les modèles', height=530)
+fig.show()
+
+=== CELL 23 ===
+### 9.3 Courbes ROC comparatives
+
+=== CELL 24 ===
+# Dictionnaire des scores disponibles
+all_scores = {'Isolation Forest': scores_if, 'LOF': scores_lof,
+               f'Ensemble IF({w_if})+LOF({w_lof})': scores_ens}
+if TORCH_OK:
+    all_scores['Autoencoder (PyTorch)'] = scores_ae
+    if ENS3_PKL.exists():
+        all_scores[f'Ensemble IF({w_if3})+LOF({w_lof3})+AE({w_ae3})'] = scores_ens3
+if PROTO_PKL.exists():
+    all_scores['IF par protocole'] = scores_proto
+
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=[0,1], y=[0,1], mode='lines', name='Aléatoire',
+                          line=dict(color='gray', dash='dash')))
+for i, (name, sc) in enumerate(all_scores.items()):
+    fpr, tpr, _ = roc_curve(y_test, sc)
+    auc_v = roc_auc_score(y_test, sc)
+    fig.add_trace(go.Scatter(x=fpr, y=tpr, mode='lines',
+                              name=f'{name} (AUC={auc_v:.4f})',
+                              line=dict(color=COLOR_PALETTE[i%len(COLOR_PALETTE)], width=2)))
+fig.update_layout(title='Courbes ROC — comparaison', xaxis_title='FPR',
+                   yaxis_title='TPR', height=500, legend=dict(x=0.5, y=0.05))
+fig.show()
+
+=== CELL 25 ===
+## 10. Score de sélection — performance pure
+
+$$\text{Score} = 0.35 \times \text{ROC-AUC} + 0.30 \times F1 + 0.20 \times \text{Recall} + 0.15 \times \text{Precision}$$
+
+On normalise chaque métrique entre 0 et 1 avant d'appliquer les poids.  
+On ignore la vitesse et la taille — la performance prime en détection d'anomalies.
+
+=== CELL 26 ===
+def norm_col(series):
+    """Normalisation min-max vectorisée NumPy."""
+    s = series.values.astype(float)
+    return (s - s.min()) / (s.max() - s.min() + 1e-9)
+
+df_score = df_res.copy()
+df_score['perf_score'] = (
+    0.35 * norm_col(df_score['roc_auc']) +
+    0.30 * norm_col(df_score['f1']) +
+    0.20 * norm_col(df_score['recall']) +
+    0.15 * norm_col(df_score['precision'])
+).round(4)
+
+df_score = df_score.sort_values('perf_score', ascending=False)
+
+display(
+    df_score[['roc_auc','f1','recall','precision','avg_precision','perf_score']]
+    .style
+    .background_gradient(cmap='Greens', subset=['roc_auc','f1','recall','perf_score'])
+    .format('{:.4f}')
+    .set_caption('Score = ROC-AUC×0.35 + F1×0.30 + Recall×0.20 + Precision×0.15')
+)
+
+=== CELL 27 ===
+# Bar chart du score composite
+fig = px.bar(
+    df_score.reset_index(), x='perf_score', y='index', orientation='h',
+    color='perf_score', color_continuous_scale='Greens',
+    title='Score de sélection — performance pure',
+    labels={'perf_score': 'Score', 'index': 'Modèle'}, text='perf_score'
+)
+fig.update_traces(texttemplate='%{text:.4f}', textposition='outside')
+fig.update_layout(height=400, coloraxis_showscale=False)
+fig.show()
+
+=== CELL 28 ===
+## 11. Modèle sélectionné — analyse détaillée
+
+=== CELL 29 ===
+best_name    = df_score['perf_score'].idxmax()
+best_metrics = df_score.loc[best_name]
+
+# Prédictions du meilleur modèle
+best_scores = all_scores.get(best_name, scores_if)
+best_preds  = scores_to_preds(best_scores, CONTAMINATION)
+
+print('=' * 60)
+print(f'MODÈLE SÉLECTIONNÉ : {best_name}')
+print('=' * 60)
+print(classification_report(y_test, best_preds, target_names=['Normal', 'Anomalie']))
+print(f'ROC-AUC       : {best_metrics["roc_auc"]:.4f}')
+print(f'Avg Precision : {best_metrics["avg_precision"]:.4f}')
+print(f'Score sélection : {best_metrics["perf_score"]:.4f}')
+
+=== CELL 30 ===
+# Matrice de confusion du meilleur modèle
+cm     = confusion_matrix(y_test, best_preds)
+cm_pct = cm.astype(float) / cm.sum() * 100
+labels = ['Normal', 'Anomalie']
+text   = [[f'{cm[i,j]:,}<br>{cm_pct[i,j]:.1f}%' for j in range(2)] for i in range(2)]
+
+fig = go.Figure(go.Heatmap(z=cm, x=[f'Prédit {l}' for l in labels],
+                             y=[f'Réel {l}' for l in labels],
+                             colorscale='Greens', text=text, texttemplate='%{text}',
+                             textfont={'size': 13}))
+fig.update_layout(title=f'Matrice de confusion — {best_name}', height=400)
+fig.show()
+
+=== CELL 31 ===
+## 12. Sauvegarde du modèle final
+
+=== CELL 32 ===
+# Mapping nom → fichier
+file_map = {
+    'Isolation Forest': 'if_base.pkl',
+    'LOF':              'lof.pkl',
+    'IF par protocole': 'if_by_proto.pkl',
+}
+
+best_file = None
+for key, fname in file_map.items():
+    if key.lower() in best_name.lower():
+        candidate = MODELS_DIR / fname
+        if candidate.exists():
+            best_file = candidate
+            break
+
+if best_file:
+    shutil.copy(best_file, MODELS_DIR / f'best_model{best_file.suffix}')
+    print(f'Meilleur modèle copié → best_model{best_file.suffix}')
+elif 'AE' in best_name and TORCH_OK:
+    shutil.copy(MODELS_DIR / 'ensemble_3models.pkl', MODELS_DIR / 'best_model_config.pkl')
+    shutil.copy(MODELS_DIR / 'autoencoder.pt',       MODELS_DIR / 'best_autoencoder.pt')
+    print('Config ensemble 3 modèles sauvegardée → best_model_config.pkl')
+elif 'LOF' in best_name:
+    shutil.copy(MODELS_DIR / 'ensemble_if_lof.pkl', MODELS_DIR / 'best_model_config.pkl')
+    print('Config ensemble IF+LOF sauvegardée → best_model_config.pkl')
+
+# Export CSV du rapport de comparaison
+df_score[['roc_auc','f1','recall','precision','avg_precision','inference_s','size_kb','perf_score']]\
+    .to_csv(REPORTS_DIR / 'model_comparison.csv')
+print(f'Rapport CSV → data/reports/model_comparison.csv')
+
+=== CELL 33 ===
+## 13. Résumé final
+
+=== CELL 34 ===
+print('=' * 65)
+print('RÉSUMÉ FINAL — ÉVALUATION')
+print('=' * 65)
+print(f"""
+Dataset UNSW-NB15 — test set :
+  {len(y_test):,} connexions | {CONTAMINATION*100:.1f}% anomalies
+
+Modèles évalués : {len(RESULTS)}
+Critère de sélection : ROC-AUC×0.35 + F1×0.30 + Recall×0.20 + Precision×0.15
+
+Classement :
+""")
+for i, (name, row) in enumerate(df_score.iterrows(), 1):
+    marker = '  ← SÉLECTIONNÉ' if name == best_name else ''
+    print(f'  {i}. {name:<50s} Score={row["perf_score"]:.4f}  F1={row["f1"]:.4f}{marker}')
+
+print(f"""
+Fichiers générés :
+  data/reports/model_comparison.csv
+  models_saved/best_model.pkl (ou best_model_config.pkl)
+
+Prochaine étape → Backend Flask
+""")
+
+=== CELL 35 ===
+# Comment fonctionne notre meilleur modèle ?
+## Ensemble IF(0.1) + LOF(0.1) + Autoencoder(0.8)
+
+Notre meilleur modèle combine **3 algorithmes différents** pour détecter les anomalies réseau.
+Chaque algorithme analyse le trafic d'un angle différent, puis on fusionne leurs scores.
+
+---
+
+## La formule de décision
+
+```python
+score_final = 0.1 × score_IF + 0.1 × score_LOF + 0.8 × score_Autoencoder
+```
+
+- Chaque score est normalisé entre **0** (normal) et **1** (très suspect)
+- Si `score_final` dépasse le seuil → la connexion est classée **anomalie**
+
+---
+
+## Les 3 modèles
+
+### 1. Isolation Forest — poids 0.1
+
+Isole les connexions dans des arbres de décision aléatoires.
+Une connexion anormale est isolée en **peu de coupures** — elle est "facile à séparer" du reste.
+
+> ⚠️ Sur UNSW-NB15, les attaques sont répétitives et denses — elles ne sont pas facilement
+> isolables. C'est pourquoi ce modèle seul est limité → faible poids de 0.1.
+
+---
+
+### 2. Local Outlier Factor (LOF) — poids 0.1
+
+Compare la **densité locale** de chaque connexion à ses voisins.
+Une connexion bien moins dense que ses voisins → suspecte.
+
+> ⚠️ Même problème sur ce dataset — les attaques forment des zones denses.
+> LOF est complémentaire à IF mais reste limité seul → faible poids de 0.1.
+
+---
+
+### 3. Autoencoder (PyTorch) — poids 0.8 ⭐
+
+C'est le modèle dominant. Il a été entraîné à **reconstruire uniquement le trafic normal**.
+
+**Principe :**
+- Pendant l'entraînement → le réseau apprend la structure du trafic normal
+- Sur une connexion normale → il la reconstruit bien → erreur MSE faible → score bas
+- Sur une attaque → il ne sait pas la reconstruire → erreur MSE élevée → score élevé
+
+**Architecture :**
+

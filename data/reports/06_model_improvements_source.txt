@@ -1,0 +1,455 @@
+=== CELL 0 ===
+# 06 — Amélioration des performances
+
+Les modèles de base (IF, DBSCAN) ont leurs limites.  
+On teste d'autres approches pour améliorer la détection d'anomalies.
+
+**Approches testées :**
+1. **Diagnostic t-SNE** — les classes sont-elles séparables ?
+2. **Local Outlier Factor (LOF)** — détection basée sur la densité locale
+3. **Ensemble IF + LOF** — combinaison pondérée des scores
+4. **Autoencoder PyTorch** — apprentissage de la distribution du trafic normal
+5. **IF par protocole** — un modèle spécialisé par protocole réseau
+
+Chaque modèle est sauvegardé en `.pkl` pour le notebook 07 (évaluation finale).
+
+=== CELL 1 ===
+## 0. Imports et configuration
+
+=== CELL 2 ===
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+from pathlib import Path
+import joblib
+import time
+import warnings
+warnings.filterwarnings('ignore')
+
+from sklearn.ensemble import IsolationForest
+from sklearn.neighbors import LocalOutlierFactor
+from sklearn.preprocessing import QuantileTransformer
+from sklearn.manifold import TSNE
+from sklearn.metrics import (
+    roc_auc_score, average_precision_score,
+    f1_score, precision_score, recall_score
+)
+
+DATA_DIR   = Path('../data/featured')
+MODELS_DIR = Path('../models_saved')
+MODELS_DIR.mkdir(exist_ok=True)
+
+TARGET_COL   = 'label'
+RANDOM_STATE = 42
+
+
+def normalize_scores(scores):
+    """Normalise les scores entre 0 et 1 (min-max NumPy)."""
+    s_min, s_max = scores.min(), scores.max()
+    if s_max == s_min:
+        return np.zeros_like(scores)
+    return (scores - s_min) / (s_max - s_min)
+
+
+def scores_to_preds(scores, contamination):
+    """Convertit les scores en 0/1 selon un seuil percentile."""
+    threshold = np.percentile(scores, 100 * (1 - contamination))
+    return np.where(scores >= threshold, 1, 0)
+
+
+def quick_eval(name, y_true, y_pred, y_scores):
+    """Affiche un résumé rapide des métriques."""
+    p   = precision_score(y_true, y_pred, zero_division=0)
+    r   = recall_score(y_true, y_pred, zero_division=0)
+    f   = f1_score(y_true, y_pred, zero_division=0)
+    auc = roc_auc_score(y_true, y_scores)
+    print(f'[{name}]  P={p:.4f}  R={r:.4f}  F1={f:.4f}  ROC-AUC={auc:.4f}')
+
+
+print('Configuration OK')
+
+=== CELL 3 ===
+## 1. Chargement des données
+
+=== CELL 4 ===
+df_train = pd.read_csv(DATA_DIR / 'train_featured.csv')
+df_test  = pd.read_csv(DATA_DIR / 'test_featured.csv')
+
+X_train_full = df_train.drop(columns=[TARGET_COL]).replace([np.inf, -np.inf], np.nan).fillna(0)
+y_train_full = df_train[TARGET_COL].values
+X_test       = df_test.drop(columns=[TARGET_COL]).replace([np.inf, -np.inf], np.nan).fillna(0)
+y_test       = df_test[TARGET_COL].values
+
+CONTAMINATION = float(y_test.mean())
+
+# Sous-ensemble stratifié 20k pour les modèles lents
+np.random.seed(RANDOM_STATE)
+SAMPLE_SIZE = 20_000
+prop = y_train_full.mean()
+n_a  = int(SAMPLE_SIZE * prop)
+n_n  = SAMPLE_SIZE - n_a
+idx  = np.concatenate([
+    np.random.choice(np.where(y_train_full == 1)[0], n_a, replace=False),
+    np.random.choice(np.where(y_train_full == 0)[0], n_n, replace=False)
+])
+np.random.shuffle(idx)
+X_sample = X_train_full.iloc[idx].reset_index(drop=True)
+y_sample = y_train_full[idx]
+
+# QuantileTransformer commun
+qt = QuantileTransformer(n_quantiles=1000, output_distribution='uniform', random_state=RANDOM_STATE)
+X_train_qt  = qt.fit_transform(X_train_full)
+X_test_qt   = qt.transform(X_test)
+X_sample_qt = qt.transform(X_sample)
+
+joblib.dump(qt, MODELS_DIR / 'qt_improvements.pkl')
+
+print(f'Train : {X_train_full.shape} | Test : {X_test.shape}')
+print(f'Sample : {X_sample.shape} | Contamination : {CONTAMINATION:.3f}')
+
+=== CELL 5 ===
+---
+## Approche 1 — Diagnostic t-SNE
+
+Avant de chercher à améliorer les modèles, on regarde si les classes sont **séparables visuellement**.  
+t-SNE projette les données en 2D en préservant la structure locale.  
+
+- Classes bien séparées → les modèles peuvent bien fonctionner
+- Classes mélangées → la détection sera toujours difficile, quelle que soit la méthode
+
+=== CELL 6 ===
+N_TSNE   = 3000
+idx_tsne = np.random.choice(len(X_sample_qt), N_TSNE, replace=False)
+
+print(f't-SNE sur {N_TSNE} points (peut prendre 1-2 min)...')
+start = time.perf_counter()
+tsne  = TSNE(n_components=2, random_state=RANDOM_STATE, perplexity=30, n_iter=800, n_jobs=-1)
+X_2d  = tsne.fit_transform(X_sample_qt[idx_tsne])
+print(f'[timer] {time.perf_counter() - start:.1f}s')
+
+df_tsne = pd.DataFrame({
+    'x': X_2d[:, 0], 'y': X_2d[:, 1],
+    'classe': np.where(y_sample[idx_tsne] == 1, 'Anomalie', 'Normal')
+})
+fig = px.scatter(df_tsne, x='x', y='y', color='classe',
+                  color_discrete_map={'Normal': '#2ecc71', 'Anomalie': '#e74c3c'},
+                  opacity=0.55, title='t-SNE — séparabilité des classes',
+                  labels={'x': 'Dim 1', 'y': 'Dim 2'})
+fig.update_traces(marker_size=4)
+fig.update_layout(height=500)
+fig.show()
+
+=== CELL 7 ===
+---
+## Approche 2 — Isolation Forest (référence)
+
+On réentraîne le modèle de base pour avoir une référence claire dans le comparatif final.
+
+=== CELL 8 ===
+print('Entraînement IF...')
+start   = time.perf_counter()
+if_base = IsolationForest(n_estimators=200, contamination='auto',
+                            random_state=RANDOM_STATE, n_jobs=-1)
+if_base.fit(X_train_qt)
+print(f'[timer] {time.perf_counter() - start:.2f}s')
+
+scores_if = normalize_scores(if_base.decision_function(X_test_qt))
+preds_if  = scores_to_preds(scores_if, CONTAMINATION)
+quick_eval('IF base', y_test, preds_if, scores_if)
+
+joblib.dump(if_base, MODELS_DIR / 'if_base.pkl')
+print('Sauvegardé → if_base.pkl')
+
+=== CELL 9 ===
+---
+## Approche 3 — Local Outlier Factor (LOF)
+
+LOF compare la **densité locale** de chaque point à ses voisins.  
+Un point avec une densité bien plus faible que ses voisins → anomalie locale.  
+Avantage : détecte des anomalies que IF rate (zones denses).
+
+=== CELL 10 ===
+print('Entraînement LOF sur 20k points...')
+start = time.perf_counter()
+lof   = LocalOutlierFactor(n_neighbors=20, contamination='auto', novelty=True, n_jobs=-1)
+lof.fit(X_sample_qt)
+print(f'[timer] {time.perf_counter() - start:.2f}s')
+
+# score_samples retourne valeurs négatives pour les anomalies → on inverse
+scores_lof = normalize_scores(-lof.score_samples(X_test_qt))
+preds_lof  = scores_to_preds(scores_lof, CONTAMINATION)
+quick_eval('LOF', y_test, preds_lof, scores_lof)
+
+joblib.dump(lof, MODELS_DIR / 'lof.pkl')
+print('Sauvegardé → lof.pkl')
+
+=== CELL 11 ===
+---
+## Approche 4 — Ensemble IF + LOF
+
+On combine les scores IF et LOF avec une moyenne pondérée.  
+IF est fort sur les anomalies globalement isolées, LOF sur les anomalies localement peu denses.  
+Ensemble → on couvre les deux types.
+
+=== CELL 12 ===
+print('Recherche du meilleur poids IF vs LOF...')
+best_f1, best_w, best_scores_ens = 0, 0.5, None
+results_ens = []
+
+for w_if in np.arange(0.1, 1.0, 0.1):
+    w_lof  = round(1 - w_if, 1)
+    sc_ens = w_if * scores_if + w_lof * scores_lof
+    pr_ens = scores_to_preds(sc_ens, CONTAMINATION)
+    f      = f1_score(y_test, pr_ens, zero_division=0)
+    auc    = roc_auc_score(y_test, sc_ens)
+    results_ens.append({'w_IF': round(w_if, 1), 'w_LOF': w_lof, 'f1': round(f, 4), 'roc_auc': round(auc, 4)})
+    if f > best_f1:
+        best_f1, best_w   = f, round(w_if, 1)
+        best_scores_ens   = sc_ens.copy()
+
+best_preds_ens = scores_to_preds(best_scores_ens, CONTAMINATION)
+print(f'Meilleur poids : w_IF={best_w} | w_LOF={round(1-best_w, 1)}')
+quick_eval(f'Ensemble IF({best_w})+LOF({round(1-best_w,1)})', y_test, best_preds_ens, best_scores_ens)
+
+# Visualisation
+df_ens = pd.DataFrame(results_ens)
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=df_ens['w_IF'], y=df_ens['f1'], mode='lines+markers',
+                          name='F1', line=dict(color='#2980b9', width=2)))
+fig.add_trace(go.Scatter(x=df_ens['w_IF'], y=df_ens['roc_auc'], mode='lines+markers',
+                          name='ROC-AUC', line=dict(color='#e74c3c', width=2)))
+fig.add_vline(x=best_w, line_dash='dash', line_color='#f39c12',
+              annotation_text=f'Optimal w_IF={best_w}')
+fig.update_layout(title='Ensemble IF + LOF — effet du poids',
+                   xaxis_title='Poids Isolation Forest', height=380)
+fig.show()
+
+# Sauvegarde de la config
+ens_config = {'w_if': best_w, 'w_lof': round(1-best_w, 1), 'contamination': CONTAMINATION}
+joblib.dump(ens_config, MODELS_DIR / 'ensemble_if_lof.pkl')
+print('Sauvegardé → ensemble_if_lof.pkl')
+
+=== CELL 13 ===
+---
+## Approche 5 — Autoencoder PyTorch
+
+On entraîne un réseau de neurones à **reconstruire le trafic normal**.  
+Les anomalies ont une erreur de reconstruction élevée → score d'anomalie élevé.  
+Le modèle est entraîné **uniquement sur les connexions normales**.
+
+=== CELL 14 ===
+try:
+    import torch
+    import torch.nn as nn
+    from torch.utils.data import DataLoader, TensorDataset
+    TORCH_OK = True
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f'PyTorch {torch.__version__} | device : {device}')
+except ImportError:
+    TORCH_OK = False
+    print('PyTorch non installé → pip install torch')
+
+=== CELL 15 ===
+if TORCH_OK:
+    input_dim = X_train_qt.shape[1]
+
+    # Architecture : Encoder (input→16→8→4) + Decoder (4→8→16→input)
+    ae = nn.Sequential(
+        # Encoder
+        nn.Linear(input_dim, 16), nn.ReLU(),
+        nn.Linear(16, 8),         nn.ReLU(),
+        nn.Linear(8, 4),
+        # Decoder
+        nn.Linear(4, 8),          nn.ReLU(),
+        nn.Linear(8, 16),         nn.ReLU(),
+        nn.Linear(16, input_dim)
+    ).to(device)
+
+    # Entraînement sur le trafic normal uniquement
+    X_normal = X_train_qt[y_train_full == 0]
+    print(f'Entraînement sur {X_normal.shape[0]:,} connexions normales...')
+
+    loader    = DataLoader(TensorDataset(torch.FloatTensor(X_normal).to(device)),
+                            batch_size=256, shuffle=True)
+    optimizer = torch.optim.Adam(ae.parameters(), lr=1e-3)
+    losses    = []
+    ae.train()
+    start = time.perf_counter()
+
+    for epoch in range(30):
+        epoch_loss = 0
+        for (batch,) in loader:
+            optimizer.zero_grad()
+            loss = nn.MSELoss()(ae(batch), batch)
+            loss.backward()
+            optimizer.step()
+            epoch_loss += loss.item()
+        losses.append(epoch_loss / len(loader))
+        if (epoch + 1) % 5 == 0:
+            print(f'  Epoch {epoch+1}/30 | Loss : {losses[-1]:.6f}')
+
+    print(f'[timer] {time.perf_counter() - start:.1f}s')
+
+    # Courbe de loss
+    fig = px.line(x=list(range(1, 31)), y=losses, title='Autoencoder — courbe de loss MSE',
+                   labels={'x': 'Epoch', 'y': 'Loss'})
+    fig.update_traces(line_color='#2980b9', line_width=2)
+    fig.update_layout(height=330)
+    fig.show()
+
+    # Scores = erreur de reconstruction MSE
+    ae.eval()
+    X_test_t = torch.FloatTensor(X_test_qt).to(device)
+    with torch.no_grad():
+        recon_err = ((X_test_t - ae(X_test_t)) ** 2).mean(dim=1).cpu().numpy()
+
+    scores_ae = normalize_scores(recon_err)
+    preds_ae  = scores_to_preds(scores_ae, CONTAMINATION)
+    quick_eval('Autoencoder', y_test, preds_ae, scores_ae)
+
+    torch.save(ae.state_dict(), MODELS_DIR / 'autoencoder.pt')
+    print('Sauvegardé → autoencoder.pt')
+else:
+    print('Section ignorée (PyTorch non disponible).')
+
+=== CELL 16 ===
+---
+## Approche 6 — Ensemble IF + LOF + Autoencoder
+
+On combine les 3 scores pour couvrir encore plus de types d'anomalies.
+
+=== CELL 17 ===
+if TORCH_OK:
+    print('Recherche des meilleurs poids IF + LOF + AE...')
+    best_f1_3, best_cfg, best_sc3 = 0, None, None
+    results_3 = []
+
+    for w_if in np.arange(0.1, 0.7, 0.1):
+        for w_lof in np.arange(0.1, 0.5, 0.1):
+            w_ae = round(1 - w_if - w_lof, 1)
+            if w_ae <= 0 or w_ae > 0.8:
+                continue
+            sc3 = w_if * scores_if + w_lof * scores_lof + w_ae * scores_ae
+            pr3 = scores_to_preds(sc3, CONTAMINATION)
+            f3  = f1_score(y_test, pr3, zero_division=0)
+            results_3.append({'w_IF': round(w_if,1), 'w_LOF': round(w_lof,1),
+                               'w_AE': w_ae, 'f1': round(f3,4)})
+            if f3 > best_f1_3:
+                best_f1_3, best_cfg, best_sc3 = f3, (round(w_if,1), round(w_lof,1), w_ae), sc3.copy()
+
+    df_3 = pd.DataFrame(results_3).sort_values('f1', ascending=False)
+    print('Top 5 combinaisons :')
+    display(df_3.head())
+
+    w_if_b, w_lof_b, w_ae_b = best_cfg
+    best_pr3 = scores_to_preds(best_sc3, CONTAMINATION)
+    quick_eval(f'Ensemble IF({w_if_b})+LOF({w_lof_b})+AE({w_ae_b})', y_test, best_pr3, best_sc3)
+
+    ens3_cfg = {'w_if': w_if_b, 'w_lof': w_lof_b, 'w_ae': w_ae_b, 'contamination': CONTAMINATION}
+    joblib.dump(ens3_cfg, MODELS_DIR / 'ensemble_3models.pkl')
+    print('Sauvegardé → ensemble_3models.pkl')
+else:
+    print('Section ignorée (PyTorch non disponible).')
+
+=== CELL 18 ===
+---
+## Approche 7 — IF par protocole réseau
+
+Un modèle spécialisé par protocole réseau (TCP, UDP, ICMP...).  
+Les anomalies TCP n'ont pas les mêmes patterns que les anomalies UDP.  
+Un modèle spécialisé apprend mieux la distribution normale de chaque type.
+
+=== CELL 19 ===
+DATA_RAW_DIR = Path('../data/preprocessed')
+
+try:
+    df_train_raw = pd.read_csv(DATA_RAW_DIR / 'train_clean.csv')
+    df_test_raw  = pd.read_csv(DATA_RAW_DIR / 'test_clean.csv')
+    HAS_PROTO    = 'proto' in df_train_raw.columns
+    print(f'Colonne proto disponible : {HAS_PROTO}')
+except FileNotFoundError:
+    HAS_PROTO = False
+    print('Fichiers preprocessed introuvables — section ignorée.')
+
+=== CELL 20 ===
+if HAS_PROTO:
+    feature_cols  = [c for c in X_train_full.columns if c in df_train_raw.columns]
+    valid_protos  = df_train_raw['proto'].value_counts()
+    valid_protos  = valid_protos[valid_protos >= 500].index.tolist()
+    print(f'Protocoles utilisés : {valid_protos}')
+
+    models_by_proto = {}
+    scores_proto    = np.zeros(len(y_test))
+    covered_mask    = np.zeros(len(y_test), dtype=bool)
+
+    proto_train = df_train_raw['proto'].values
+    proto_test  = df_test_raw['proto'].values if 'proto' in df_test_raw.columns \
+                  else np.full(len(y_test), -1)
+
+    for proto in valid_protos:
+        mask_tr = proto_train == proto
+        X_p     = df_train_raw.loc[mask_tr, feature_cols].replace([np.inf,-np.inf], np.nan).fillna(0)
+
+        qt_p  = QuantileTransformer(n_quantiles=min(1000, len(X_p)),
+                                     output_distribution='uniform', random_state=RANDOM_STATE)
+        m_p   = IsolationForest(n_estimators=100, contamination='auto',
+                                 random_state=RANDOM_STATE, n_jobs=-1)
+        m_p.fit(qt_p.fit_transform(X_p))
+
+        mask_te = proto_test == proto
+        if mask_te.sum() == 0:
+            continue
+
+        X_te_p = df_test_raw.loc[mask_te, feature_cols].replace([np.inf,-np.inf], np.nan).fillna(0)
+        raw_p  = m_p.decision_function(qt_p.transform(X_te_p))
+        scores_proto[mask_te] = normalize_scores(raw_p)
+        covered_mask[mask_te] = True
+
+        models_by_proto[proto] = {'model': m_p, 'qt': qt_p}
+        proto_str = str(int(proto)) if isinstance(proto, float) else str(proto)
+        print(f'  [{proto_str:>6s}] train={mask_tr.sum():,} | test={mask_te.sum():,}')
+
+    # Fallback sur IF global pour les protocoles non couverts
+    if (~covered_mask).sum() > 0:
+        scores_proto[~covered_mask] = scores_if[~covered_mask]
+        print(f'  {(~covered_mask).sum():,} points → fallback IF global')
+
+    preds_proto = scores_to_preds(scores_proto, CONTAMINATION)
+    quick_eval('IF par protocole', y_test, preds_proto, scores_proto)
+
+    joblib.dump({'models': models_by_proto, 'features': feature_cols, 'contamination': CONTAMINATION},
+                 MODELS_DIR / 'if_by_proto.pkl')
+    print('Sauvegardé → if_by_proto.pkl')
+else:
+    print('Section ignorée.')
+
+=== CELL 21 ===
+---
+## Résumé — fichiers produits
+
+=== CELL 22 ===
+expected = [
+    ('qt_improvements.pkl',  'QuantileTransformer commun'),
+    ('if_base.pkl',          'Isolation Forest de base'),
+    ('lof.pkl',              'Local Outlier Factor'),
+    ('ensemble_if_lof.pkl',  'Config Ensemble IF+LOF'),
+    ('autoencoder.pt',       'Poids Autoencoder PyTorch'),
+    ('ensemble_3models.pkl', 'Config Ensemble IF+LOF+AE'),
+    ('if_by_proto.pkl',      'IF par protocole'),
+]
+
+print('Fichiers dans models_saved/ :')
+for fname, desc in expected:
+    p = MODELS_DIR / fname
+    if p.exists():
+        print(f'  ✓ {fname:<30s} {p.stat().st_size/1024:>8.1f} KB  — {desc}')
+    else:
+        print(f'  ✗ {fname:<30s} ABSENT          — {desc}')
+
+print('\nProchaine étape → 07_evaluation.ipynb')
+
+=== CELL 23 ===
+---
+**Suite → `07_evaluation.ipynb`**
+

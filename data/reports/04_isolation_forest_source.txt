@@ -1,0 +1,302 @@
+=== CELL 0 ===
+# 04 — Isolation Forest
+
+On entraîne un **Isolation Forest** pour détecter les anomalies réseau.  
+C'est un modèle non supervisé : il apprend sans utiliser les labels.  
+
+**Principe :** les anomalies sont plus faciles à isoler dans des arbres aléatoires.  
+Un point isolé en peu de coupures → score d'anomalie élevé.
+
+**Note sur UNSW-NB15 :** les attaques sont répétitives et denses → elles ont des scores *plus élevés*  
+que le trafic normal (inverse de la convention sklearn habituelle sur ce dataset).  
+On gère ça en passant `contamination='auto'` à sklearn et en calculant le seuil manuellement.
+
+=== CELL 1 ===
+## 0. Imports
+
+=== CELL 2 ===
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from pathlib import Path
+import joblib
+import time
+import warnings
+warnings.filterwarnings('ignore')
+
+from sklearn.ensemble import IsolationForest
+from sklearn.preprocessing import QuantileTransformer
+from sklearn.metrics import (
+    classification_report, confusion_matrix,
+    roc_auc_score, average_precision_score,
+    roc_curve, precision_recall_curve, f1_score
+)
+
+DATA_DIR   = Path('../data/featured')
+MODELS_DIR = Path('../models_saved')
+MODELS_DIR.mkdir(exist_ok=True)
+
+TARGET_COL   = 'label'
+RANDOM_STATE = 42
+
+print('Imports OK')
+
+=== CELL 3 ===
+## 1. Chargement des données
+
+=== CELL 4 ===
+df_train = pd.read_csv(DATA_DIR / 'train_featured.csv')
+df_test  = pd.read_csv(DATA_DIR / 'test_featured.csv')
+
+X_train = df_train.drop(columns=[TARGET_COL]).replace([np.inf, -np.inf], np.nan).fillna(0)
+y_train = df_train[TARGET_COL].values
+X_test  = df_test.drop(columns=[TARGET_COL]).replace([np.inf, -np.inf], np.nan).fillna(0)
+y_test  = df_test[TARGET_COL].values
+
+print(f'Train : {X_train.shape} | anomalies : {y_train.mean()*100:.1f}%')
+print(f'Test  : {X_test.shape}  | anomalies : {y_test.mean()*100:.1f}%')
+
+=== CELL 5 ===
+## 2. Preprocessing — QuantileTransformer
+
+On applique un `QuantileTransformer` qui force une distribution uniforme sur chaque feature.  
+C'est mieux qu'un simple scaler pour Isolation Forest : les coupures aléatoires des arbres  
+sont plus équilibrées quand les features sont uniformément distribuées.
+
+=== CELL 6 ===
+qt = QuantileTransformer(n_quantiles=1000, output_distribution='uniform', random_state=RANDOM_STATE)
+X_train_qt = qt.fit_transform(X_train)
+X_test_qt  = qt.transform(X_test)
+
+joblib.dump(qt, MODELS_DIR / 'qt_if.pkl')
+
+print(f'QuantileTransformer appliqué : {X_train_qt.shape}')
+
+=== CELL 7 ===
+## 3. Fonctions utilitaires
+
+Deux fonctions simples réutilisées dans toutes les cellules d'évaluation.
+
+=== CELL 8 ===
+def normalize_scores(scores):
+    """Normalise les scores entre 0 et 1 avec min-max (NumPy vectorisé)."""
+    s_min, s_max = scores.min(), scores.max()
+    if s_max == s_min:
+        return np.zeros_like(scores)
+    return (scores - s_min) / (s_max - s_min)
+
+
+def scores_to_preds(scores, contamination):
+    """Convertit les scores en 0/1 selon un seuil percentile."""
+    threshold = np.percentile(scores, 100 * (1 - contamination))
+    return np.where(scores >= threshold, 1, 0)
+
+
+# Proportion réelle d'anomalies dans le test set — utilisée comme contamination
+CONTAMINATION = float(y_test.mean())
+print(f'Contamination : {CONTAMINATION:.3f} ({CONTAMINATION*100:.1f}% d\'anomalies dans le test)')
+
+=== CELL 9 ===
+## 4. Entraînement de l'Isolation Forest
+
+On passe `contamination='auto'` à sklearn pour éviter la limite à 0.5.  
+Le seuil est calculé manuellement après avec `np.percentile` sur les scores bruts.
+
+=== CELL 10 ===
+print('Entraînement Isolation Forest...')
+start = time.perf_counter()
+
+if_model = IsolationForest(
+    n_estimators=200,
+    contamination='auto',    # seuil géré manuellement
+    max_samples='auto',
+    random_state=RANDOM_STATE,
+    n_jobs=-1
+)
+if_model.fit(X_train_qt)
+
+print(f'[timer] {time.perf_counter() - start:.2f}s')
+print(f'Modèle entraîné sur {X_train_qt.shape[0]:,} connexions')
+
+=== CELL 11 ===
+## 5. Scores et prédictions
+
+`decision_function` retourne des scores bruts sklearn.  
+Sur UNSW-NB15, les anomalies ont des scores **plus élevés** (vérifié empiriquement).  
+On normalise entre 0 et 1, puis on applique le seuil.
+
+=== CELL 12 ===
+# Scores bruts → normalisés → prédictions
+scores_raw = if_model.decision_function(X_test_qt)
+scores_if  = normalize_scores(scores_raw)
+preds_if   = scores_to_preds(scores_if, CONTAMINATION)
+
+print(f'Anomalies détectées : {preds_if.sum():,} / {len(preds_if):,} ({preds_if.mean()*100:.1f}%)')
+print(f'Anomalies réelles   : {y_test.sum():,} / {len(y_test):,} ({y_test.mean()*100:.1f}%)')
+
+=== CELL 13 ===
+## 6. Évaluation
+
+=== CELL 14 ===
+print('Rapport de classification :')
+print(classification_report(y_test, preds_if, target_names=['Normal', 'Anomalie']))
+
+print(f'ROC-AUC       : {roc_auc_score(y_test, scores_if):.4f}')
+print(f'Avg Precision : {average_precision_score(y_test, scores_if):.4f}')
+
+=== CELL 15 ===
+## 7. Analyse de sensibilité — effet de la contamination
+
+On teste différentes valeurs de contamination pour trouver le seuil optimal.
+
+=== CELL 16 ===
+contamination_values = [0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70]
+sensitivity_results  = []
+
+print(f"{'contamination':>15} | {'Precision':>10} | {'Recall':>8} | {'F1':>8} | {'ROC-AUC':>8}")
+print('-' * 60)
+
+for c in contamination_values:
+    preds_c = scores_to_preds(scores_if, c)
+    f1      = f1_score(y_test, preds_c, zero_division=0)
+    auc     = roc_auc_score(y_test, scores_if)
+    from sklearn.metrics import precision_score, recall_score
+    p = precision_score(y_test, preds_c, zero_division=0)
+    r = recall_score(y_test, preds_c, zero_division=0)
+    sensitivity_results.append({'contamination': c, 'precision': p, 'recall': r,
+                                  'f1': f1, 'roc_auc': auc})
+    print(f'{c:>15.2f} | {p:>10.4f} | {r:>8.4f} | {f1:>8.4f} | {auc:>8.4f}')
+
+df_sens  = pd.DataFrame(sensitivity_results)
+best_c   = df_sens.loc[df_sens['f1'].idxmax(), 'contamination']
+print(f'\nMeilleure contamination : {best_c}')
+
+=== CELL 17 ===
+fig = go.Figure()
+for metric, color in [('f1', '#2980b9'), ('roc_auc', '#e74c3c')]:
+    fig.add_trace(go.Scatter(x=df_sens['contamination'], y=df_sens[metric],
+                              mode='lines+markers', name=metric.upper(),
+                              line=dict(color=color, width=2), marker=dict(size=8)))
+fig.add_vline(x=best_c, line_dash='dash', line_color='#f39c12',
+              annotation_text=f'Optimal ({best_c})')
+fig.update_layout(title='Sensibilité au paramètre contamination',
+                   xaxis_title='Contamination', height=400)
+fig.show()
+
+=== CELL 18 ===
+## 8. Modèle final avec la meilleure contamination
+
+=== CELL 19 ===
+preds_final  = scores_to_preds(scores_if, best_c)
+
+print(f'Résultats avec contamination={best_c} :')
+print(classification_report(y_test, preds_final, target_names=['Normal', 'Anomalie']))
+
+=== CELL 20 ===
+## 9. Visualisations
+
+### 9.1 Distribution des scores
+
+=== CELL 21 ===
+df_scores = pd.DataFrame({'score': scores_if,
+                            'classe': np.where(y_test == 1, 'Anomalie', 'Normal')})
+threshold_val = np.percentile(scores_if, 100 * (1 - best_c))
+
+fig = px.histogram(df_scores, x='score', color='classe', barmode='overlay',
+                    nbins=80, opacity=0.75,
+                    color_discrete_map={'Normal': '#2ecc71', 'Anomalie': '#e74c3c'},
+                    title='Distribution des scores d\'anomalie — Isolation Forest',
+                    labels={'score': 'Score [0-1]', 'count': 'Nombre'})
+fig.add_vline(x=threshold_val, line_dash='dash', line_color='#f39c12',
+              annotation_text=f'Seuil ({threshold_val:.2f})')
+fig.update_layout(height=400)
+fig.show()
+
+=== CELL 22 ===
+### 9.2 Matrice de confusion
+
+=== CELL 23 ===
+cm     = confusion_matrix(y_test, preds_final)
+cm_pct = cm.astype(float) / cm.sum() * 100
+labels = ['Normal', 'Anomalie']
+text   = [[f'{cm[i,j]:,}<br>{cm_pct[i,j]:.1f}%' for j in range(2)] for i in range(2)]
+
+fig = go.Figure(go.Heatmap(z=cm, x=[f'Prédit {l}' for l in labels],
+                             y=[f'Réel {l}' for l in labels],
+                             colorscale='Blues', text=text, texttemplate='%{text}',
+                             textfont={'size': 13}))
+fig.update_layout(title='Matrice de confusion — Isolation Forest', height=400)
+fig.show()
+
+=== CELL 24 ===
+### 9.3 Courbe ROC
+
+=== CELL 25 ===
+fpr, tpr, _ = roc_curve(y_test, scores_if)
+auc_val     = roc_auc_score(y_test, scores_if)
+
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=fpr, y=tpr, mode='lines',
+                          name=f'IF (AUC={auc_val:.4f})',
+                          line=dict(color='#2980b9', width=2.5),
+                          fill='tozeroy', fillcolor='rgba(41,128,185,0.08)'))
+fig.add_trace(go.Scatter(x=[0,1], y=[0,1], mode='lines', name='Aléatoire',
+                          line=dict(color='gray', dash='dash', width=1.5)))
+fig.update_layout(title='Courbe ROC — Isolation Forest',
+                   xaxis_title='FPR', yaxis_title='TPR', height=430)
+fig.show()
+
+=== CELL 26 ===
+## 10. Sauvegarde du modèle
+
+=== CELL 27 ===
+# On sauvegarde le modèle sklearn directement — pas de classe custom
+joblib.dump(if_model, MODELS_DIR / 'if_base.pkl')
+
+# On sauvegarde aussi la config (contamination optimale)
+import json
+config = {'contamination': best_c, 'n_estimators': 200, 'random_state': RANDOM_STATE}
+(MODELS_DIR / 'if_config.json').write_text(json.dumps(config, indent=2))
+
+print(f'Modèle sauvegardé : models_saved/if_base.pkl')
+print(f'Config sauvegardée : models_saved/if_config.json')
+print(f'QuantileTransformer : models_saved/qt_if.pkl')
+
+=== CELL 28 ===
+## 11. Résumé
+
+=== CELL 29 ===
+from sklearn.metrics import precision_score, recall_score
+
+p = precision_score(y_test, preds_final, zero_division=0)
+r = recall_score(y_test, preds_final, zero_division=0)
+f = f1_score(y_test, preds_final, zero_division=0)
+
+print('=' * 55)
+print('RÉSUMÉ — ISOLATION FOREST')
+print('=' * 55)
+print(f"""
+Paramètres :
+  n_estimators  : 200
+  contamination : {best_c} (optimale)
+  preprocessing : QuantileTransformer
+
+Métriques (test set) :
+  Precision     : {p:.4f}
+  Recall        : {r:.4f}
+  F1            : {f:.4f}
+  ROC-AUC       : {auc_val:.4f}
+
+Points forts :
+  Rapide, pas besoin de labels, score continu pour le ranking
+
+Limites :
+  Sensible à contamination, moins bon sur les anomalies denses
+""")
+
+=== CELL 30 ===
+---
+**Suite → `05_dbscan.ipynb`**
+

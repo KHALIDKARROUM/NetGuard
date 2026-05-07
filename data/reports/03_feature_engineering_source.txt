@@ -1,0 +1,341 @@
+=== CELL 0 ===
+# 03 — Feature Engineering
+
+On crée de nouvelles features à partir des colonnes existantes pour donner plus d'information aux modèles.  
+Ensuite on sélectionne les features les plus utiles pour réduire le bruit.
+
+**Features créées :**
+- Ratios bytes source/destination
+- Ratios paquets
+- Transformations logarithmiques (log1p)
+- Indicateurs binaires (connexion vide, débit élevé, TTL suspect)
+
+**Sélection :** Information Mutuelle avec la variable cible
+
+=== CELL 1 ===
+## 0. Imports
+
+=== CELL 2 ===
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+from pathlib import Path
+import joblib
+import warnings
+warnings.filterwarnings('ignore')
+
+from sklearn.feature_selection import mutual_info_classif
+
+DATA_DIR   = Path('../data/preprocessed')
+OUTPUT_DIR = Path('../data/featured')
+MODELS_DIR = Path('../models_saved')
+OUTPUT_DIR.mkdir(exist_ok=True)
+
+TARGET_COL = 'label'
+TOP_N      = 20   # nombre de features à garder après sélection
+
+print('Imports OK')
+
+=== CELL 3 ===
+## 1. Chargement des données preprocessées
+
+=== CELL 4 ===
+df_train = pd.read_csv(DATA_DIR / 'train_clean.csv')
+df_test  = pd.read_csv(DATA_DIR / 'test_clean.csv')
+
+X_train = df_train.drop(columns=[TARGET_COL])
+y_train = df_train[TARGET_COL].values
+X_test  = df_test.drop(columns=[TARGET_COL])
+y_test  = df_test[TARGET_COL].values
+
+print(f'Train : {X_train.shape} | anomalies : {y_train.mean()*100:.1f}%')
+print(f'Test  : {X_test.shape}  | anomalies : {y_test.mean()*100:.1f}%')
+print(f'Features initiales : {list(X_train.columns)}')
+
+=== CELL 5 ===
+## 2. Création des nouvelles features
+
+### 2.1 Ratios bytes
+
+Un ratio bytes source/destination très asymétrique peut indiquer une exfiltration de données ou un scan.  
+On utilise des opérations NumPy vectorisées — pas de boucles Python.
+
+=== CELL 6 ===
+new_features = []  # on garde la liste de toutes les nouvelles features
+
+for df in [X_train, X_test]:
+    if 'sbytes' in df.columns and 'dbytes' in df.columns:
+        sb = df['sbytes'].values.astype(np.float32)
+        db = df['dbytes'].values.astype(np.float32)
+
+        df['bytes_ratio']     = sb / (db + 1)                        # asymétrie src/dst
+        df['bytes_total']     = sb + db                               # volume total
+        df['bytes_diff_norm'] = np.abs(sb - db) / (sb + db + 1)      # différence normalisée
+
+new_features += ['bytes_ratio', 'bytes_total', 'bytes_diff_norm']
+print(f'Ratios bytes créés : bytes_ratio, bytes_total, bytes_diff_norm')
+
+=== CELL 7 ===
+### 2.2 Ratios paquets
+
+Un scan réseau envoie beaucoup de paquets sans recevoir de réponse → ratio spkts/dpkts élevé.
+
+=== CELL 8 ===
+for df in [X_train, X_test]:
+    if 'spkts' in df.columns and 'dpkts' in df.columns:
+        sp = df['spkts'].values.astype(np.float32)
+        dp = df['dpkts'].values.astype(np.float32)
+        sb = df['sbytes'].values.astype(np.float32) if 'sbytes' in df.columns else sp
+        db = df['dbytes'].values.astype(np.float32) if 'dbytes' in df.columns else dp
+
+        df['pkts_ratio']       = sp / (dp + 1)
+        df['pkts_total']       = sp + dp
+        df['bytes_per_pkt_src'] = sb / (sp + 1)   # taille moyenne paquet source
+        df['bytes_per_pkt_dst'] = db / (dp + 1)   # taille moyenne paquet destination
+
+new_features += ['pkts_ratio', 'pkts_total', 'bytes_per_pkt_src', 'bytes_per_pkt_dst']
+print('Ratios paquets créés : pkts_ratio, pkts_total, bytes_per_pkt_src, bytes_per_pkt_dst')
+
+=== CELL 9 ===
+### 2.3 Transformations logarithmiques
+
+`log1p(x) = log(x+1)` compresse les distributions très étalées sans supprimer les outliers.  
+On l'applique aux features avec beaucoup de valeurs extrêmes.
+
+=== CELL 10 ===
+log_candidates = [c for c in ['sbytes', 'dbytes', 'dur', 'rate', 'sload', 'dload']
+                  if c in X_train.columns]
+
+for df in [X_train, X_test]:
+    for col in log_candidates:
+        # np.clip à 0 pour éviter log de valeurs négatives
+        vals = np.clip(df[col].values.astype(np.float32), 0, None)
+        df[f'log1p_{col}'] = np.log1p(vals)
+
+log_features = [f'log1p_{c}' for c in log_candidates]
+new_features += log_features
+print(f'Features log créées : {log_features}')
+
+=== CELL 11 ===
+### 2.4 Indicateurs binaires
+
+On crée des flags 0/1 pour les comportements réseau suspects.  
+`np.where` est vectorisé — c'est équivalent à un `if/else` sur tout le tableau d'un coup.
+
+=== CELL 12 ===
+# On calcule les seuils sur le train uniquement
+threshold_rate = np.percentile(X_train['rate'].values, 95) if 'rate' in X_train.columns else 0
+threshold_dur  = np.percentile(X_train['dur'].values, 95)  if 'dur'  in X_train.columns else 0
+
+for df in [X_train, X_test]:
+    # Connexion vide : aucun byte échangé
+    if 'sbytes' in df.columns and 'dbytes' in df.columns:
+        df['is_empty_conn'] = np.where(
+            (df['sbytes'].values == 0) & (df['dbytes'].values == 0), 1, 0
+        ).astype(np.int8)
+
+    # Débit anormalement élevé
+    if 'rate' in df.columns:
+        df['is_high_rate'] = np.where(df['rate'].values > threshold_rate, 1, 0).astype(np.int8)
+
+    # Connexion anormalement longue
+    if 'dur' in df.columns:
+        df['is_long_dur'] = np.where(df['dur'].values > threshold_dur, 1, 0).astype(np.int8)
+
+    # TTL très bas → scan possible
+    if 'sttl' in df.columns and 'dttl' in df.columns:
+        df['is_ttl_suspect'] = np.where(
+            (df['sttl'].values < 10) | (df['dttl'].values < 10), 1, 0
+        ).astype(np.int8)
+
+flag_features = ['is_empty_conn', 'is_high_rate', 'is_long_dur', 'is_ttl_suspect']
+flag_features = [f for f in flag_features if f in X_train.columns]
+new_features += flag_features
+print(f'Flags binaires créés : {flag_features}')
+
+=== CELL 13 ===
+## 3. Bilan des nouvelles features
+
+=== CELL 14 ===
+print(f'Features originales  : {len(df_train.columns) - 1 - len(new_features)}')
+print(f'Nouvelles features   : {len(new_features)}')
+print(f'Total avant sélection : {X_train.shape[1]}')
+
+# Statistiques des nouvelles features
+new_feats_existing = [f for f in new_features if f in X_train.columns]
+display(X_train[new_feats_existing].describe().T.style.background_gradient(cmap='Blues', subset=['mean']))
+
+=== CELL 15 ===
+## 4. Analyse des nouvelles features — Normal vs Anomalie
+
+On vérifie que les nouvelles features apportent une vraie information discriminante.
+
+=== CELL 16 ===
+# Taux d'attaque par flag binaire
+if flag_features:
+    flag_stats = []
+    for flag in flag_features:
+        mask   = X_train[flag] == 1
+        if mask.sum() == 0:
+            continue
+        rate = y_train[mask.values].mean() * 100
+        flag_stats.append({'flag': flag, 'nb_flagged': int(mask.sum()),
+                            'taux_attaque': round(rate, 1)})
+
+    df_flags = pd.DataFrame(flag_stats)
+    fig = px.bar(
+        df_flags, x='flag', y='taux_attaque',
+        color='taux_attaque', color_continuous_scale='RdYlGn_r',
+        title="Taux d'attaque quand le flag est actif",
+        labels={'flag': 'Indicateur', 'taux_attaque': "Taux d'attaque (%)"}, text='taux_attaque'
+    )
+    fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
+    fig.update_layout(height=380, coloraxis_showscale=False)
+    fig.show()
+    display(df_flags)
+
+=== CELL 17 ===
+## 5. Sélection des features — Information Mutuelle
+
+L'Information Mutuelle (MI) mesure la dépendance entre chaque feature et la cible.  
+MI = 0 → feature indépendante (inutile). MI élevé → feature informative.  
+On garde les **top 20** features.
+
+=== CELL 18 ===
+# Nettoyage avant sélection
+X_train_clean = X_train.replace([np.inf, -np.inf], np.nan).fillna(0)
+X_test_clean  = X_test.replace([np.inf, -np.inf], np.nan).fillna(0)
+
+print(f'Calcul MI sur {X_train_clean.shape[1]} features...')
+mi_scores = mutual_info_classif(X_train_clean, y_train, random_state=42, n_neighbors=3)
+
+mi_series = pd.Series(mi_scores, index=X_train_clean.columns).sort_values(ascending=False)
+selected_features = mi_series.head(TOP_N).index.tolist()
+
+print(f'\nTop {TOP_N} features sélectionnées :')
+for i, (feat, score) in enumerate(mi_series.head(TOP_N).items(), 1):
+    is_new = '(nouvelle)' if feat in new_features else ''
+    print(f'  {i:2d}. {feat:<35s} MI={score:.4f} {is_new}')
+
+=== CELL 19 ===
+# Visualisation du score MI
+mi_df = mi_series.reset_index()
+mi_df.columns = ['feature', 'mi_score']
+mi_df['type'] = mi_df['feature'].apply(
+    lambda f: 'Nouvelle (sélectionnée)' if f in new_features and f in selected_features
+         else ('Nouvelle' if f in new_features
+         else ('Originale (sélectionnée)' if f in selected_features else 'Originale'))
+)
+
+color_map = {
+    'Nouvelle (sélectionnée)':  '#e74c3c',
+    'Nouvelle':                 '#e67e22',
+    'Originale (sélectionnée)': '#2980b9',
+    'Originale':                '#bdc3c7'
+}
+
+fig = px.bar(
+    mi_df.tail(30).iloc[::-1],
+    x='mi_score', y='feature', orientation='h',
+    color='type', color_discrete_map=color_map,
+    title='Score Information Mutuelle — top 30 features',
+    labels={'mi_score': 'Score MI', 'feature': 'Feature'}
+)
+fig.update_layout(height=700, legend_title='Type')
+fig.show()
+
+=== CELL 20 ===
+## 6. Vérification des corrélations entre features sélectionnées
+
+On s'assure qu'on n'a pas de features trop redondantes (corrélation > 0.85).
+
+=== CELL 21 ===
+corr_sel = X_train_clean[selected_features].corr().abs()
+
+# Paires avec corrélation > 0.85
+high_corr = []
+for i in range(len(corr_sel.columns)):
+    for j in range(i + 1, len(corr_sel.columns)):
+        val = corr_sel.iloc[i, j]
+        if val > 0.85:
+            high_corr.append({'f1': corr_sel.columns[i], 'f2': corr_sel.columns[j],
+                               'corr': round(float(val), 3)})
+
+if high_corr:
+    print(f'{len(high_corr)} paire(s) avec corrélation > 0.85 :')
+    display(pd.DataFrame(high_corr).sort_values('corr', ascending=False))
+else:
+    print('Aucune paire avec corrélation > 0.85 — pas de redondance majeure.')
+
+# Heatmap
+fig = px.imshow(corr_sel, color_continuous_scale='RdBu_r', zmin=0, zmax=1,
+                 title='Corrélation entre les features sélectionnées', text_auto='.2f')
+fig.update_layout(height=600)
+fig.show()
+
+=== CELL 22 ===
+## 7. Dataset final — application de la sélection
+
+=== CELL 23 ===
+X_train_final = X_train_clean[selected_features].copy()
+X_test_final  = X_test_clean[selected_features].copy()
+
+# Remplacement des inf résiduels
+X_train_final = X_train_final.replace([np.inf, -np.inf], np.nan).fillna(0)
+X_test_final  = X_test_final.replace([np.inf, -np.inf], np.nan).fillna(0)
+
+print(f'X_train final : {X_train_final.shape}')
+print(f'X_test final  : {X_test_final.shape}')
+print(f'Features : {selected_features}')
+
+=== CELL 24 ===
+## 8. Export et sauvegarde
+
+=== CELL 25 ===
+# Export CSV
+train_export = X_train_final.copy()
+train_export[TARGET_COL] = y_train
+test_export  = X_test_final.copy()
+test_export[TARGET_COL]  = y_test
+
+train_export.to_csv(OUTPUT_DIR / 'train_featured.csv', index=False)
+test_export.to_csv( OUTPUT_DIR / 'test_featured.csv',  index=False)
+
+# Sauvegarde de la liste des features sélectionnées
+joblib.dump(selected_features, MODELS_DIR / 'selected_features.pkl')
+
+print('Datasets exportés :')
+for f in OUTPUT_DIR.iterdir():
+    print(f'  {f.name} ({f.stat().st_size / 1024**2:.1f} MB)')
+print('\nselected_features.pkl sauvegardé')
+
+=== CELL 26 ===
+## 9. Résumé
+
+=== CELL 27 ===
+print('=' * 55)
+print('RÉSUMÉ FEATURE ENGINEERING')
+print('=' * 55)
+print(f"""
+Nouvelles features créées ({len(new_features)}) :
+  - Ratios bytes   : bytes_ratio, bytes_total, bytes_diff_norm
+  - Ratios paquets : pkts_ratio, pkts_total, bytes_per_pkt_*
+  - Log features   : log1p_sbytes, log1p_dbytes, log1p_dur...
+  - Flags binaires : is_empty_conn, is_high_rate, is_long_dur, is_ttl_suspect
+
+Sélection par Information Mutuelle :
+  Avant : {X_train.shape[1]} features → Après : {len(selected_features)} features
+
+Dataset final :
+  Train : {X_train_final.shape[0]:,} × {X_train_final.shape[1]}
+  Test  : {X_test_final.shape[0]:,}  × {X_test_final.shape[1]}
+
+Fichiers exportés dans data/featured/ :
+  train_featured.csv, test_featured.csv
+""")
+
+=== CELL 28 ===
+---
+**Suite → `04_isolation_forest.ipynb`**
+

@@ -1,0 +1,41 @@
+# Environnements virtuels
+backend/backend_venv/
+frontend/frontend_venv/
+anomaly_venv/
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Données brutes (fichiers lourds)
+data/*.csv
+data/featured/
+data/preprocessed/
+
+# Modèles sauvegardés (régénérables via retrain_if.py)
+models_saved/*.pkl
+models_saved/*.pt
+models_saved/*.joblib
+
+# Logs
+backend/logs/
+*.log
+
+# Variables d'environnement
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
