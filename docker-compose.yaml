@@ -1,14 +1,11 @@
-version: "3.9"
-
 services:
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: netguard_backend
     ports:
-      - "5000:5000"
+      - "5001:5000"
     volumes:
       - ./data:/app/../data:ro
       - ./models_saved:/app/../models_saved:ro
@@ -19,7 +16,7 @@ services:
       API_DEBUG: "false"
       LOG_LEVEL: "INFO"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5000/health')\""]
       interval: 30s
       timeout: 10s
       start_period: 60s
@@ -30,9 +27,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: netguard_frontend
     ports:
-      - "8501:8501"
+      - "8502:8501"
     environment:
       BACKEND_URL: "http://backend:5000"
     depends_on:
