@@ -7,8 +7,10 @@ The seven standalone notebooks are also valid historical archives.
 
 ## Fresh environment
 
-Use **CPython 3.13.9**. The workflow has its own fully pinned dependency lock;
-it does not load models created with the backend's older scikit-learn version.
+Use **CPython 3.13.9**. Notebook and backend locks share the numerical versions
+in `requirements-model.in`. The notebook environment also includes the backend
+HTTP adapter so its final cell verifies API parity. Historical model files
+created with earlier library versions are not loaded by the current workflow.
 The `.in` file lists direct dependencies; the `.txt` lock pins transitive
 dependencies with package hashes and operating-system markers.
 
@@ -69,13 +71,16 @@ not by standard Jupyter itself.
 5. Evaluate the previously inspected benchmark, including category and
    seen/unseen input-signature slices.
 6. Save the fitted pipeline and threshold, verify artifact reload and
-   individual/batch parity, and demonstrate raw-input inference.
+   individual/batch parity, and demonstrate raw-input inference through both
+   Python and the API adapter. Publish the same artifact and compatibility
+   manifest under `models_saved/` for the backend.
 
 Generated outputs under `artifacts/notebook_workflow/` are ignored by Git:
 
 | Output | Purpose |
 | --- | --- |
 | `model.joblib` | Complete fitted pipeline, threshold and input contract |
+| `model.manifest.json` | Artifact hash, precise runtime versions and feature contract |
 | `benchmark_predictions.csv` | Score, decision, true label, category and overlap flag for every benchmark row |
 | `development_split.csv` | Row IDs and exact fit/validation membership |
 | `validation_comparison.csv` | Validation metrics and threshold for each candidate |
@@ -92,13 +97,12 @@ To use the artifact in a separate Python process, run from the repository root
 in this environment:
 
 ```python
-import joblib
 import pandas as pd
-from netguard_workflow import predict_raw
+from netguard_workflow import PredictionService
 
-bundle = joblib.load("artifacts/notebook_workflow/model.joblib")
+service = PredictionService("models_saved/shared_pipeline.joblib")
 measurements = pd.read_csv("your_raw_connections.csv")
-predict_raw(bundle, measurements).to_csv("predictions.csv", index=False)
+service.predict(measurements).to_csv("predictions.csv", index=False)
 ```
 
 Required measured columns are `sbytes`, `dbytes`, `spkts`, `dpkts`, `dur`, `rate`,
@@ -111,6 +115,7 @@ transformers can be deserialized.
 ```powershell
 .venv-workflow/Scripts/python.exe scripts/notebook_integrity.py
 .venv-workflow/Scripts/python.exe -m unittest discover -s tests -v
+.venv-api/Scripts/python.exe scripts/verify_prediction_parity.py --live
 ```
 
 Integrity checks validate notebook schemas, unique IDs, absence of conflict
@@ -124,10 +129,14 @@ The dated project audit remains a record of the state before this repair.
 The existing test set was previously used for development and must not be
 presented as an untouched final holdout. This workflow does not demonstrate
 future traffic or unseen attack-family performance, calibrated probabilities,
-or live dashboard accuracy. It establishes a reproducible binary-classification
+or prospective deployment accuracy. It establishes a reproducible binary-classification
 baseline. Grouping by input signature reduces one leakage route but is not
 capture-time or host isolation. Those require additional provenance.
 
-The backend still serves its historical ensemble. Connecting this new pipeline
-to the API, expanding baseline comparisons, setting an operational false-alarm
-budget, uncertainty estimates and independent final testing are subsequent work.
+The backend now serves this pipeline and its fixed threshold. Its dashboard
+metrics use the same raw benchmark inputs and full inference path. See
+[the prediction guide](../backend/PREDICTION.md) for backend setup and the exact
+HTTP contract. `data/reports/shared_prediction_parity.json` records verification
+against a separate live API process in a fresh backend-only environment.
+Expanding baseline comparisons, setting an operational false-alarm budget,
+uncertainty estimates and independent final testing remain subsequent work.

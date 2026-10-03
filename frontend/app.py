@@ -26,7 +26,6 @@ from config import (  # noqa: E402
     render_kv_panel,
     render_metric_cards,
     render_page_header,
-    render_ranking,
 )
 
 
@@ -66,7 +65,7 @@ best_metrics = best_model.get("metrics", {})
 render_page_header(
     "NetGuard Operations",
     "Live anomaly detection dashboard",
-    "UNSW-NB15 traffic, ensemble scoring, and single-connection inference in one dark control surface.",
+    "UNSW-NB15 traffic, model evaluation, and connection scoring in one control surface.",
     [
         "API online" if health and health.get("status") == "ok" else "API pending",
         best_model.get("name", "Model unavailable"),
@@ -91,7 +90,7 @@ render_metric_cards(
             "sub": f"{format_percent(test_set.get('anomaly_rate'))} anomalies" if test_set else "-",
         },
         {
-            "label": "Best F1",
+            "label": "Model F1",
             "value": format_number(best_metrics.get("f1")),
             "sub": best_model.get("name", "deployed model"),
             "tone": "success",
@@ -111,14 +110,14 @@ with left:
     st.markdown(
         """
         <div class="panel">
-            <div class="panel-title">Model ranking</div>
-            <div class="panel-heading">Composite score leaderboard</div>
+            <div class="panel-title">Model selection</div>
+            <div class="panel-heading">Chosen using validation data</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
     if metrics:
-        render_ranking(metrics)
+        render_callout("The notebook and API use the same saved model and threshold. These metrics describe a previously inspected benchmark.", "info")
     else:
         render_callout("Model comparison is not loaded yet.", "warning")
 
@@ -136,10 +135,10 @@ with right:
     if best_model:
         render_kv_panel(
             "Deployment",
-            "Current ensemble",
+            best_model.get("name", "Current model"),
             [
                 ("Threshold", best_model.get("threshold", "-")),
-                ("Contamination", format_number(best_model.get("contamination"))),
+                ("Evaluation", "Previously inspected benchmark"),
                 ("Precision", format_number(best_metrics.get("precision"))),
                 ("Recall", format_number(best_metrics.get("recall"))),
             ],
@@ -165,5 +164,5 @@ if label_dist.get("pie_chart"):
     with table_col:
         if metrics:
             df = pd.DataFrame(metrics)
-            display_cols = [col for col in ["model", "roc_auc", "f1", "recall", "precision", "perf_score"] if col in df]
+            display_cols = [col for col in ["model", "roc_auc", "f1", "recall", "precision", "false_positive_rate"] if col in df]
             st.dataframe(df[display_cols], use_container_width=True, hide_index=True)

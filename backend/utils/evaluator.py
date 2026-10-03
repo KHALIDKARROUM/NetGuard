@@ -14,7 +14,7 @@ from sklearn.metrics import (
     roc_curve,
 )
 
-from config import PCA_N_COMPONENTS, VIZ_MAX_POINTS
+from backend.config import PCA_N_COMPONENTS, VIZ_MAX_POINTS
 
 logger = logging.getLogger(__name__)
 

@@ -78,6 +78,7 @@ from netguard_workflow import (
     WorkflowConfig, RawTrafficFeatures, load_raw_data, split_development,
     fit_baselines, evaluate_benchmark, save_run, predict_raw,
     feature_catalog, feature_quality_report,
+    PredictionService,
 )
 
 expected_versions = {
@@ -203,6 +204,9 @@ development membership, validation comparison, category/slice metrics and hashes
 Reload the artifact and verify that scores and decisions match both before/after
 serialization and for individual versus batch inputs. The model needs the ten
 raw measured fields; it does not need the benchmark table for inference.
+Publish the same bundle to `models_saved/shared_pipeline.joblib` with a hash and
+runtime manifest. Both the notebook and API load this artifact through the same
+`PredictionService`; the API does not fit, normalize or select a threshold.
 """),
         code("current-save", """manifest = save_run(
     ROOT, OUTPUT, bundle, development, fit_idx, val_idx, predictions,
@@ -216,26 +220,49 @@ display(pd.DataFrame([
 """),
         markdown("current-predict-heading", """### 8. Raw input to a saved prediction
 
-This example loads only the newly saved artifact and raw measurements. It
-demonstrates inference independent of benchmark labels and historical models.
-The dashboard integration remains a separate next step.
+This example loads the same saved artifact as the backend. Compare its raw-input
+scores and decisions with real API request handling for a single connection and
+a batch. The HTTP adapter retains float64 scores without rounding. Artifact
+loading verifies feature schema/order, feature implementation and numerical
+package versions before serving.
 """),
-        code("current-predict", """import joblib
-saved_bundle = joblib.load(OUTPUT / "model.joblib")
+        code("current-predict", """from fastapi.testclient import TestClient
+from backend.main import create_app
+saved_service = PredictionService(ROOT / "models_saved/shared_pipeline.joblib")
 example_measurements = pd.DataFrame([{
     "sbytes": 258, "dbytes": 172, "spkts": 6, "dpkts": 4,
     "dur": 0.121478, "rate": 74.08749, "sload": 14158.94238,
     "dload": 8495.365234, "sttl": 252, "dttl": 254,
 }])
-display(predict_raw(saved_bundle, example_measurements))
+expected_example = saved_service.predict(example_measurements)
+display(expected_example)
+parity_examples = pd.concat([
+    example_measurements,
+    development.loc[:, saved_service.bundle["raw_inputs"]].iloc[:32],
+], ignore_index=True)
+expected_parity = saved_service.predict(parity_examples)
+api_app = create_app(artifact_path=ROOT / "models_saved/shared_pipeline.joblib", enable_logging=False)
+with TestClient(api_app) as client:
+    batch_response = client.post("/api/predict/batch", json={"connections": parity_examples.to_dict(orient="records")})
+    assert batch_response.status_code == 200, batch_response.text
+    batch_results = batch_response.json()["predictions"]
+    np.testing.assert_allclose([r["score"] for r in batch_results], expected_parity.attack_score, rtol=0, atol=1e-12)
+    np.testing.assert_array_equal([r["prediction"]["label"] for r in batch_results], expected_parity.predicted_label)
+    for i, raw_row in enumerate(parity_examples.to_dict(orient="records")):
+        response = client.post("/api/predict/single", json=raw_row)
+        assert response.status_code == 200, response.text
+        result = response.json()
+        assert abs(result["score"] - expected_parity.attack_score.iloc[i]) <= 1e-12
+        assert result["prediction"]["label"] == int(expected_parity.predicted_label.iloc[i])
+print("Notebook/API parity passed for", len(parity_examples), "raw connections, alone and in a batch.")
 print("Completed: raw CSVs -> validation-selected model -> saved predictions.")
 """),
         markdown("current-limitations", """### Interpretation and remaining work
 
-This workflow repairs reproducibility and establishes a supervised baseline
-with validation-only decisions. It does not certify the old ensemble, change
-the live API, establish calibrated probabilities, or replace independent final
-evaluation. Additional baselines, uncertainty estimates, unseen attack-family
+This workflow establishes a supervised baseline with validation-only decisions.
+The API now uses its saved pipeline and threshold. This does not establish
+calibrated probabilities or replace independent final evaluation. Additional
+baselines, uncertainty estimates, unseen attack-family
 tests, provenance-based splits, and validation of operational alert costs are
 the next scientific improvements. `attack_score` is a classifier output, not a
 guarantee of the probability of an attack in production traffic.

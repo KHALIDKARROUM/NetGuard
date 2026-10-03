@@ -1,0 +1,13 @@
+# Only the backend package and its trusted prediction artifact need this context.
+*
+!backend/
+!backend/**
+!netguard_workflow/
+!netguard_workflow/**
+!models_saved/
+!models_saved/shared_pipeline.joblib
+!models_saved/shared_pipeline.manifest.json
+**/__pycache__/
+backend/backend_venv/
+backend/logs/
+backend/.env

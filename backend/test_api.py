@@ -11,13 +11,13 @@ import argparse
 import sys
 from typing import Any
 
-import requests
+import httpx
 
 
 DEFAULT_HOST = "http://localhost:5000"
 
 
-def check(name: str, response: requests.Response, expected: int = 200) -> dict[str, Any]:
+def check(name: str, response: httpx.Response, expected: int = 200) -> dict[str, Any]:
     try:
         payload = response.json()
     except Exception:
@@ -38,10 +38,10 @@ def main() -> int:
     args = parser.parse_args()
     host = args.host.rstrip("/")
 
-    check("health", requests.get(f"{host}/health", timeout=10))
-    check("dataset", requests.get(f"{host}/api/dataset/info", timeout=20))
-    check("compare", requests.get(f"{host}/api/models/compare", timeout=30))
-    check("best model", requests.get(f"{host}/api/predict/best_model", timeout=30))
+    check("health", httpx.get(f"{host}/health", timeout=10))
+    check("dataset", httpx.get(f"{host}/api/dataset/info", timeout=20))
+    check("compare", httpx.get(f"{host}/api/models/compare", timeout=30))
+    check("best model", httpx.get(f"{host}/api/predict/best_model", timeout=30))
 
     sample = {
         "sbytes": 1500,
@@ -57,9 +57,12 @@ def main() -> int:
     }
     prediction = check(
         "single prediction",
-        requests.post(f"{host}/api/predict/single", json=sample, timeout=120),
+        httpx.post(f"{host}/api/predict/single", json=sample, timeout=120),
     )
     print("Prediction:", prediction.get("prediction"), "score=", prediction.get("score"))
+    batch = check("batch prediction", httpx.post(f"{host}/api/predict/batch", json={"connections": [sample, sample]}, timeout=120))
+    assert all(row["score"] == prediction["score"] and row["prediction"] == prediction["prediction"]
+               for row in batch["predictions"])
     return 0
 
 

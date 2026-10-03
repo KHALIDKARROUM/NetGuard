@@ -1,6 +1,6 @@
-"""Public utility exports for backend routes."""
+"""Current data/evaluation utilities; historical model loading is opt-in."""
 
-from utils.data_loader import (
+from backend.utils.data_loader import (
     DataLoader,
     get_dataset_overview,
     get_feature_distributions,
@@ -11,7 +11,7 @@ from utils.data_loader import (
     load_train_data,
     read_csv_chunks,
 )
-from utils.evaluator import (
+from backend.utils.evaluator import (
     compute_metrics,
     compute_perf_score,
     get_confusion_matrix_data,
@@ -19,31 +19,7 @@ from utils.evaluator import (
     get_score_distribution,
     get_score_distributions,
 )
-from utils.exceptions import APIError, DataLoadError, ModelError
-from utils.model_loader import (
-    available_model_files,
-    get_ae_raw_scores,
-    get_ae_scores,
-    get_ensemble2_scores,
-    get_ensemble3_scores,
-    get_if_raw_scores,
-    get_if_scores,
-    get_lof_raw_scores,
-    get_lof_scores,
-    load_autoencoder,
-    load_ensemble_config,
-    load_isolation_forest,
-    load_lof,
-    load_qt,
-    load_scaler,
-    load_selected_features,
-    normalize_scores,
-    normalize_with_reference,
-    percentile_rank,
-    score_threshold,
-    scores_to_preds,
-    transform_features,
-)
+from backend.utils.exceptions import APIError, DataLoadError, ModelError
 
 __all__ = [
     "APIError",
@@ -64,26 +40,4 @@ __all__ = [
     "get_score_distribution",
     "get_score_distributions",
     "get_confusion_matrix_data",
-    "available_model_files",
-    "load_qt",
-    "load_scaler",
-    "load_isolation_forest",
-    "load_lof",
-    "load_autoencoder",
-    "load_ensemble_config",
-    "load_selected_features",
-    "normalize_scores",
-    "normalize_with_reference",
-    "percentile_rank",
-    "score_threshold",
-    "scores_to_preds",
-    "transform_features",
-    "get_if_scores",
-    "get_lof_scores",
-    "get_ae_scores",
-    "get_if_raw_scores",
-    "get_lof_raw_scores",
-    "get_ae_raw_scores",
-    "get_ensemble2_scores",
-    "get_ensemble3_scores",
 ]

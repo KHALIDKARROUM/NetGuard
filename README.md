@@ -1,19 +1,20 @@
 # NetGuard Anomaly Detection
 
 Dark Streamlit + FastAPI application for exploring UNSW-NB15 network traffic,
-comparing anomaly-detection models, and scoring a single connection in real time.
+evaluating a supervised baseline, and scoring individual connections or batches.
 
 ## What Changed
 
 - Backend moved to a clean FastAPI API surface with cached loaders and stable routes.
 - Runtime merge conflicts were resolved across backend, frontend, Dockerfiles, requirements, and model reports.
-- The deployed model is now the saved ensemble: Isolation Forest + LOF + Autoencoder.
+- The notebook and backend now share the validation-selected histogram gradient boosting pipeline and saved threshold.
 - Streamlit was rebuilt as a dark operations dashboard with shared UI components.
-- Prediction now accepts raw network fields and reconstructs the 20-feature model vector server-side.
+- Prediction requires ten measured raw fields and uses the same 29 physical features, training-fitted preprocessing, float64 precision and feature order as training.
+- Single/batch predictions and dashboard metrics are verified against the notebook's saved predictions. Historical ensemble artifacts remain reference material.
 
 ## Stack
 
-- Backend: FastAPI, scikit-learn, PyTorch, pandas
+- Backend: FastAPI, scikit-learn, pandas (CPython 3.13.9, shared numerical lock)
 - Frontend: Streamlit, Plotly
 - Model artifacts: `models_saved/`
 - Data artifacts: `data/featured/`, `data/preprocessed/`, `data/reports/`
@@ -66,6 +67,8 @@ NetGuard/
 |   `-- visualizations/
 |
 |-- models_saved/                    # Trained model artifacts
+|   |-- shared_pipeline.joblib        # Current complete fitted prediction pipeline
+|   |-- shared_pipeline.manifest.json # Artifact hash, runtime, feature order, threshold
 |   |-- autoencoder.pt
 |   |-- best_model.pkl
 |   |-- ensemble_3models.pkl
@@ -95,23 +98,26 @@ NetGuard/
 - `GET /api/models/viz?type=pca|scores|confusion|roc`
 - `GET /api/predict/best_model`
 - `POST /api/predict/single`
+- `POST /api/predict/batch` (1–1,000 connections)
 
 Compatibility routes are also kept under `/api/metrics/*`.
 
 ## Run Locally
 
-Backend:
+Backend, from the repository root using CPython 3.13.9:
 
-```bash
-cd backend
-uvicorn main:app --host 0.0.0.0 --port 5000 --reload
+```powershell
+uv venv .venv-api --python 3.13.9
+uv pip sync backend/requirements.txt --python .venv-api/Scripts/python.exe --require-hashes
+.venv-api/Scripts/python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 5000
 ```
 
-Frontend:
+Frontend, in its separate environment with `frontend/requirements.txt` installed:
 
-```bash
+```powershell
 cd frontend
-BACKEND_URL=http://localhost:5000 streamlit run app.py
+$env:BACKEND_URL="http://localhost:5000"
+streamlit run app.py
 ```
 
 Docker Compose:
@@ -127,9 +133,17 @@ Then open:
 
 ## Model Notes
 
-The dashboard currently serves the historical ensemble. Its notebook results
-used test-informed development choices and should be treated as exploratory.
-Labels also informed feature selection and normal-only autoencoder training.
+The dashboard serves `models_saved/shared_pipeline.joblib`. It was retrained
+using float64 raw features, fit-only preprocessing, and grouped validation for
+model and threshold selection. The fixed threshold is **0.4641181101371265**;
+the API performs no reference-data lookup, calibration, fitting or threshold selection.
+Missing or incompatible artifacts make prediction and health return HTTP 503.
+
+The current benchmark F1 is 0.8690, with a **34.8% false-positive rate**. This is
+a reproducible baseline, not an operationally validated intrusion detector.
+The benchmark was previously inspected; scores are not calibrated production
+attack probabilities. Historical ensemble results used test-informed choices
+and remain explicitly historical.
 
 ## Reproducible Data Science Workflow
 
@@ -146,4 +160,5 @@ The documented runner executes only corrected sections in a fresh kernel.
 Follow [the environment setup and execution guide](notebooks/WORKFLOW.md).
 The [feature dictionary](notebooks/FEATURES.md) defines physical features and
 their zero-denominator policies before training-only scaling.
-The new artifacts are separate from the dashboard's historical models.
+The same fitted artifact is now used by the notebook and dashboard backend.
+See [the shared prediction contract and parity checks](backend/PREDICTION.md).

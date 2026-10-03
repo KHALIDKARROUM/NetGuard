@@ -58,7 +58,7 @@
     "executed_notebook": "00_netguard_complete.executed.ipynb"
   },
   "manifest": {
-    "created_utc": "2026-10-03T10:36:32.935364+00:00",
+    "created_utc": "2026-10-03T11:15:19.171268+00:00",
     "python": "3.13.9",
     "packages": {
       "numpy": "2.2.6",
@@ -122,6 +122,7 @@
     ],
     "feature_precision": "float64",
     "feature_schema_version": 2,
+    "artifact_schema_version": 1,
     "preprocessing_order": [
       "raw_features",
       "scaler",
@@ -224,12 +225,14 @@
       "UNSW_NB15_testing-set.csv": "734fe6642edf758f7c94d7d9149426b49d202fe8e7bf0bef47392489c3c0a559"
     },
     "source_sha256": {
-      "netguard_workflow/workflow.py": "bf6d62af3059220858b36a4ddff99bd8f42f16747f35c81567f04057c79c19a8",
-      "requirements-notebooks.txt": "a18cd262fc535d756705827aed52cdacda7ac9cd410efc282f56db2a17ccf0f3",
-      "netguard_workflow/features.py": "25476667f5dd2696a27c571adc2ae29d86a0ad94516fbd45efbe7224580ba505"
+      "netguard_workflow/workflow.py": "ed7a4f0c520e5e7d845ce10965d6e41ebb043c62ba9be04b707b2589273559de",
+      "requirements-notebooks.txt": "adcb7a97dd4e2a425eed335f63994f8500ce5f004530b3877880c5cf40b21ef2",
+      "netguard_workflow/features.py": "25476667f5dd2696a27c571adc2ae29d86a0ad94516fbd45efbe7224580ba505",
+      "netguard_workflow/inference.py": "af109d838d717c715f61d64e08401a4caa886ed5d1b4150680f5c2d01b00b548",
+      "requirements-model.in": "5148dc976d4bd1dcf91f3dfba9b02668d101a8e898270273dc92ee93dc97b408"
     },
     "output_sha256": {
-      "model.joblib": "8e0af2bd490f19c0aa8cdbce8879e439325498ef4fc4d65a1c3633f03dd40663",
+      "model.joblib": "135c88e1cc16063eba91df4947215201d24c04cc54ae0b865f1df676285013fc",
       "benchmark_predictions.csv": "cdcd5e66f25750ed2c979c6e9a7452cdba86a04af0f8af8efbc4ae30ac1fc09a",
       "validation_comparison.csv": "92fbfcd0187dd119e5051f42686178391e813ed891ad2e6d47992884689a7085",
       "benchmark_slices.csv": "fdf3a842432cc6fd163e9008ac51d1b945a9de0f2b549b465e5aaed6dc26129a",
@@ -237,7 +240,13 @@
       "development_split.csv": "72f343d0c6f5268f8729cd1506ac7b2db6230e9082a374ef8a4072e3992f797f",
       "metrics.json": "226eee718d681aa592acbbd6e2c417da69b36cc2149a6132e6a28341b77a1c71",
       "feature_catalog.json": "874167b6fc70ca998a48dd8922aa56a52a4a3e01bf79384c6abb3d167d96cfdb",
-      "feature_quality_report.json": "32b4d2b2dd4d23d42d103dc5b6bd7e4a767e6f0fd9f69e425c575288c17891f3"
+      "feature_quality_report.json": "32b4d2b2dd4d23d42d103dc5b6bd7e4a767e6f0fd9f69e425c575288c17891f3",
+      "model.manifest.json": "8f0fd730f181782e32cc8c95f7e7149fd42798aa058fa65e2b49959984019943"
+    },
+    "shared_prediction_artifact": {
+      "path": "models_saved/shared_pipeline.joblib",
+      "sha256": "135c88e1cc16063eba91df4947215201d24c04cc54ae0b865f1df676285013fc",
+      "same_bytes_as_notebook_artifact": true
     }
   },
   "metrics": {

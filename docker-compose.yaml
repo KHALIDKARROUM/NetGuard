@@ -2,14 +2,14 @@ services:
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     ports:
       - "5001:5000"
     volumes:
-      - ./data:/app/../data:ro
-      - ./models_saved:/app/../models_saved:ro
-      - ./backend/logs:/app/logs
+      - ./data:/app/data:ro
+      - ./models_saved:/app/models_saved:ro
+      - ./backend/logs:/app/backend/logs
     environment:
       API_HOST: "0.0.0.0"
       API_PORT: "5000"

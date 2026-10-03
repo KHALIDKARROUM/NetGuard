@@ -126,10 +126,10 @@ metrics = best_model.get("metrics", {})
 render_page_header(
     "Real-Time Prediction",
     "Connection scoring",
-    "Raw network fields are rebuilt into the 20-feature model vector and scored against the deployed ensemble.",
+    "Measured network fields are scored by the same saved model used in the project report.",
     [
         best_model.get("name", "Model unavailable"),
-        best_model.get("threshold", "threshold pending"),
+        f"Threshold {format_number(best_model.get('threshold'))}",
     ],
 )
 
@@ -144,7 +144,7 @@ render_metric_cards(
         {
             "label": "ROC-AUC",
             "value": format_number(metrics.get("roc_auc")),
-            "sub": "test-set separation",
+            "sub": "inspected benchmark",
             "tone": "accent",
         },
         {
@@ -212,7 +212,7 @@ with result_col:
             <div class="result {tone}">
                 <div class="result-kicker">Prediction</div>
                 <div class="result-title {title_class}">{pred.get("class_name", "-")}</div>
-                <div class="result-meta">Risk {pred.get("risk_level", "-")} | Score {format_number(result.get("score"), 6)} | Threshold {format_number(result.get("threshold"), 6)}</div>
+                <div class="result-meta">Score {format_number(result.get("score"), 6)} | Threshold {format_number(result.get("threshold"), 6)}</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -244,30 +244,17 @@ with result_col:
         gauge.update_layout(**gauge_layout, height=260, margin=dict(l=20, r=20, t=20, b=20))
         st.plotly_chart(gauge, use_container_width=True)
 
-        render_score_bars(
-            {
-                "IF": result.get("components", {}).get("if", 0.0),
-                "LOF": result.get("components", {}).get("lof", 0.0),
-                "AE": result.get("components", {}).get("ae", 0.0),
-                "Final": result.get("components", {}).get("final", 0.0),
-            },
-            {"IF": ACCENT, "LOF": VIOLET, "AE": WARNING, "Final": DANGER if is_anomaly else SUCCESS},
-        )
+        render_score_bars({"Model score": result.get("score", 0.0)},
+                          {"Model score": DANGER if is_anomaly else SUCCESS})
 
-        inferred = result.get("inferred_raw", {})
-        if inferred:
-            render_kv_panel(
-                "Inferred raw fields",
-                "Nearest-neighbor estimates",
-                [(key, format_number(value)) for key, value in inferred.items()],
-            )
+        render_callout("This score has not been calibrated as a production attack probability.", "info")
     else:
         render_kv_panel(
             "Deployment",
             best_model.get("name", "Model unavailable"),
             [
                 ("Threshold", best_model.get("threshold", "-")),
-                ("Contamination", format_number(best_model.get("contamination"))),
+                ("Evaluation", "Previously inspected benchmark"),
                 ("Components", len(best_model.get("components", []))),
                 ("Backend", os.getenv("BACKEND_URL", "http://localhost:5000")),
             ],

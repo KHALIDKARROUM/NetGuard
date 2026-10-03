@@ -4,13 +4,20 @@ from __future__ import annotations
 
 import logging
 import logging.handlers
+from pathlib import Path
+import sys
 from contextlib import asynccontextmanager
+
+# Keep both repository-root package startup and the existing backend/ command usable.
+if not __package__:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 
-from config import (
+from backend.config import (
     LOG_BACKUP_COUNT,
     LOG_DATE_FORMAT,
     LOG_FILE,
@@ -18,8 +25,9 @@ from config import (
     LOG_MAX_BYTES,
     settings,
 )
-from routes import comparison_router, dataset_router, metrics_router, prediction_router
-from utils.model_loader import available_model_files
+from backend.routes import comparison_router, dataset_router, metrics_router, prediction_router
+from backend.utils.prediction_pipeline import get_prediction_service
+from netguard_workflow import ArtifactError
 
 
 def setup_logging() -> None:
@@ -44,23 +52,31 @@ def setup_logging() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.cache = {}
+    if app.state.enable_logging:
+        setup_logging()
+    try:
+        get_prediction_service(app)
+    except ArtifactError as exc:
+        logging.getLogger(__name__).warning("Shared model unavailable: %s", exc)
     logging.getLogger(__name__).info("NetGuard API started")
     yield
     logging.getLogger(__name__).info("NetGuard API stopped")
 
 
-def create_app() -> FastAPI:
+def create_app(artifact_path=None, enable_logging=True) -> FastAPI:
     app = FastAPI(
         title="NetGuard Anomaly Detection API",
         description=(
             "FastAPI service for UNSW-NB15 dataset exploration, model comparison, "
-            "and single-connection anomaly inference."
+            "and raw single/batch inference through the shared notebook pipeline."
         ),
-        version="4.0.0",
+        version="5.0.0",
         docs_url="/docs",
         redoc_url="/redoc",
         lifespan=lifespan,
     )
+    app.state.prediction_artifact_path = Path(artifact_path or settings.prediction_artifact)
+    app.state.enable_logging = enable_logging
 
     app.add_middleware(
         CORSMiddleware,
@@ -74,32 +90,36 @@ def create_app() -> FastAPI:
     app.include_router(metrics_router)
     app.include_router(prediction_router)
 
+    @app.exception_handler(RequestValidationError)
+    async def validation_exception_handler(request: Request, exc: RequestValidationError):
+        # Invalid measurements may contain infinity/NaN. Return useful field errors
+        # without echoing values that cannot be serialized as standards-compliant JSON.
+        errors = [{key: error[key] for key in ("type", "loc", "msg")}
+                  for error in exc.errors()]
+        return JSONResponse(status_code=422, content={"detail": errors})
+
     @app.get("/health", tags=["Infra"])
     def health():
-        files = available_model_files()
+        try:
+            service = get_prediction_service(app)
+        except ArtifactError as exc:
+            return JSONResponse(status_code=503, content={
+                "status": "unavailable", "service": "netguard-backend", "version": "5.0.0",
+                "models_ready": False, "detail": str(exc),
+            })
         return {
             "status": "ok",
             "service": "netguard-backend",
-            "version": "4.0.0",
-            "models_ready": all(
-                files[key]
-                for key in (
-                    "quantile_transformer",
-                    "robust_scaler",
-                    "isolation_forest",
-                    "lof",
-                    "autoencoder",
-                    "ensemble_if_lof_ae",
-                )
-            ),
-            "files": files,
+            "version": "5.0.0", "models_ready": True,
+            "model": service.metadata["name"], "artifact_sha256": service.artifact_sha256,
+            "precision": "float64",
         }
 
     @app.get("/", tags=["Infra"])
     def index():
         return {
             "service": "NetGuard Anomaly Detection API",
-            "version": "4.0.0",
+            "version": "5.0.0",
             "docs": "/docs",
             "routes": {
                 "dataset": [
@@ -114,6 +134,7 @@ def create_app() -> FastAPI:
                 "prediction": [
                     "GET /api/predict/best_model",
                     "POST /api/predict/single",
+                    "POST /api/predict/batch",
                 ],
             },
         }
@@ -129,7 +150,6 @@ def create_app() -> FastAPI:
     return app
 
 
-setup_logging()
 app = create_app()
 
 

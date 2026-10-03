@@ -1,6 +1,7 @@
 """Central backend configuration for the NetGuard API."""
 
 from pathlib import Path
+import os
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -10,7 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = BASE_DIR.parent
 DATA_DIR = PROJECT_DIR / "data"
 MODELS_DIR = PROJECT_DIR / "models_saved"
-LOGS_DIR = BASE_DIR / "logs"
+LOGS_DIR = Path(os.environ.get("NETGUARD_LOG_DIR", BASE_DIR / "logs"))
 
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
 MODELS_DIR.mkdir(parents=True, exist_ok=True)
@@ -19,8 +20,11 @@ TRAIN_FEATURED_FILE = DATA_DIR / "featured" / "train_featured.csv"
 TEST_FEATURED_FILE = DATA_DIR / "featured" / "test_featured.csv"
 TEST_CLEAN_FILE = DATA_DIR / "preprocessed" / "test_clean.csv"
 RAW_TEST_FILE = DATA_DIR / "UNSW_NB15_testing-set.csv"
+RAW_TRAIN_FILE = DATA_DIR / "UNSW_NB15_training-set.csv"
 MODEL_COMPARISON_FILE = DATA_DIR / "reports" / "model_comparison.csv"
 
+# Historical experiment configuration below is used only by model_loader.py.
+# Current serving uses the complete artifact configured by prediction_artifact.
 QT_FILE = MODELS_DIR / "qt_improvements.pkl"
 QT_IF_FILE = MODELS_DIR / "qt_if.pkl"
 SCALER_FILE = MODELS_DIR / "scaler.pkl"
@@ -103,6 +107,7 @@ class Settings(BaseSettings):
     api_port: int = Field(default=5000, ge=1024, le=65535)
     api_debug: bool = Field(default=False)
     log_level: str = Field(default="INFO")
+    prediction_artifact: Path = Field(default=MODELS_DIR / "shared_pipeline.joblib")
 
     @field_validator("log_level")
     @classmethod

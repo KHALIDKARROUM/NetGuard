@@ -27,7 +27,6 @@ from config import (  # noqa: E402
     render_kv_panel,
     render_metric_cards,
     render_page_header,
-    render_ranking,
 )
 
 
@@ -55,7 +54,7 @@ model_names = df_metrics["model"].tolist()
 render_page_header(
     "Model Performance",
     "Evaluation board",
-    "The deployed ensemble is ranked against the available anomaly detectors on the same featured test set.",
+    "The deployed model scores raw benchmark measurements using its saved preprocessing and fixed threshold.",
     [
         compare.get("source", "-"),
         f"{len(df_metrics)} models",
@@ -66,7 +65,7 @@ render_page_header(
 render_metric_cards(
     [
         {
-            "label": "Best F1",
+            "label": "Model F1",
             "value": format_number(best.get("f1")),
             "sub": best.get("model", ""),
             "tone": "success",
@@ -83,9 +82,9 @@ render_metric_cards(
             "sub": "attack coverage",
         },
         {
-            "label": "Composite",
-            "value": format_number(best.get("perf_score")),
-            "sub": "selection score",
+            "label": "False alarms",
+            "value": format_number(best.get("false_positive_rate")),
+            "sub": "share of normal benchmark traffic",
             "tone": "accent",
         },
     ]
@@ -96,13 +95,13 @@ with left:
     st.markdown(
         """
         <div class="panel">
-            <div class="panel-title">Ranking</div>
-            <div class="panel-heading">Composite performance</div>
+            <div class="panel-title">Selection</div>
+            <div class="panel-heading">Chosen using validation data</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
-    render_ranking(df_metrics.to_dict(orient="records"))
+    render_callout("This benchmark was previously inspected. Independent final testing is still needed.", "info")
 
 with right:
     render_kv_panel(

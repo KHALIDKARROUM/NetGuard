@@ -20,6 +20,7 @@ data/preprocessed/
 models_saved/*.pkl
 models_saved/*.pt
 models_saved/*.joblib
+!models_saved/shared_pipeline.joblib
 
 # Logs
 backend/logs/
@@ -33,8 +34,10 @@ backend/logs/
 
 # Reproducible notebook runtime and generated outputs
 .venv-workflow/
+.venv-api/
 .uv-cache/
 artifacts/notebook_workflow/
+artifacts/prediction_verification/
 
 # OS
 .DS_Store

@@ -10,18 +10,18 @@ from typing import Generator
 import numpy as np
 import pandas as pd
 
-from config import (
+from backend.config import (
     CHUNK_SIZE,
-    FEATURE_NAMES,
     MODEL_COMPARISON_FILE,
     RAW_TEST_FILE,
+    RAW_TRAIN_FILE,
     TARGET_COLUMN,
     TEST_CLEAN_FILE,
     TEST_FEATURED_FILE,
-    TRAIN_FEATURED_FILE,
     VIZ_MAX_POINTS,
 )
-from utils.exceptions import DataLoadError
+from backend.utils.exceptions import DataLoadError
+from netguard_workflow.features import FEATURE_NAMES as SHARED_FEATURE_NAMES, RawTrafficFeatures
 
 logger = logging.getLogger(__name__)
 
@@ -54,21 +54,18 @@ def read_csv_chunks(
 
 @lru_cache(maxsize=1)
 def load_test_frame() -> pd.DataFrame:
-    logger.info("Loading featured test data from %s", TEST_FEATURED_FILE)
-    df = _read_csv(TEST_FEATURED_FILE, "notebooks 01-03")
-    missing = [col for col in [*FEATURE_NAMES, TARGET_COLUMN] if col not in df.columns]
-    if missing:
-        raise DataLoadError(
-            "Featured test data has missing columns.",
-            details=", ".join(missing),
-        )
+    raw = load_raw_test_data()
+    df = RawTrafficFeatures().transform(raw)
+    df[TARGET_COLUMN] = raw[TARGET_COLUMN].to_numpy()
     return df
 
 
 @lru_cache(maxsize=1)
 def load_train_frame() -> pd.DataFrame:
-    logger.info("Loading featured train data from %s", TRAIN_FEATURED_FILE)
-    return _read_csv(TRAIN_FEATURED_FILE, "notebooks 01-03")
+    raw = _read_raw_frame(RAW_TRAIN_FILE)
+    df = RawTrafficFeatures().transform(raw)
+    df[TARGET_COLUMN] = raw[TARGET_COLUMN].to_numpy()
+    return df
 
 
 @lru_cache(maxsize=1)
@@ -80,14 +77,27 @@ def load_test_clean_data() -> pd.DataFrame:
 @lru_cache(maxsize=1)
 def load_raw_test_data() -> pd.DataFrame:
     logger.info("Loading raw test data from %s", RAW_TEST_FILE)
-    return _read_csv(RAW_TEST_FILE, "the raw data download")
+    return _read_raw_frame(RAW_TEST_FILE)
+
+
+def _read_raw_frame(path):
+    if not path.is_file():
+        raise _missing_file(path, "the original UNSW-NB15 data download")
+    try:
+        df = pd.read_csv(path, encoding="utf-8-sig")
+        if TARGET_COLUMN not in df or not df[TARGET_COLUMN].isin([0, 1]).all():
+            raise ValueError("Raw benchmark labels must be 0 or 1.")
+        RawTrafficFeatures().transform(df)
+        return df
+    except (ValueError, TypeError) as exc:
+        raise DataLoadError("Raw dataset does not match the shared input contract.", details=str(exc)) from exc
 
 
 def load_test_data() -> tuple[pd.DataFrame, np.ndarray, pd.DataFrame]:
     """Return X_test as a DataFrame, y_test, and the full featured frame."""
 
     df = load_test_frame()
-    X = df[FEATURE_NAMES].astype(np.float32)
+    X = df[list(SHARED_FEATURE_NAMES)].astype(np.float64)
     y = df[TARGET_COLUMN].astype(np.int8).to_numpy()
     return X, y, df
 
@@ -95,7 +105,7 @@ def load_test_data() -> tuple[pd.DataFrame, np.ndarray, pd.DataFrame]:
 def load_train_data() -> tuple[pd.DataFrame, np.ndarray]:
     df = load_train_frame()
     feature_cols = [col for col in df.columns if col != TARGET_COLUMN]
-    X = df[feature_cols].astype(np.float32)
+    X = df[feature_cols].astype(np.float64)
     y = df[TARGET_COLUMN].astype(np.int8).to_numpy()
     return X, y
 
@@ -126,8 +136,6 @@ def get_dataset_overview(df_test: pd.DataFrame) -> dict:
     stats = numeric.describe(percentiles=[0.25, 0.5, 0.75, 0.95]).T
 
     try:
-        train_rows = int(sum(1 for _ in read_csv_chunks(TRAIN_FEATURED_FILE)))
-        # Chunk count is not row count; fall back to the known full load below.
         train_rows = int(len(load_train_frame()))
     except Exception:
         train_rows = 175_341
@@ -171,7 +179,7 @@ def _series_stats(series: pd.Series) -> dict:
 def get_feature_distributions(df_test: pd.DataFrame, top_n: int = 10) -> dict:
     """Return sampled normal/anomaly distributions for selected features."""
 
-    feature_cols = [col for col in FEATURE_NAMES if col in df_test.columns][:top_n]
+    feature_cols = [col for col in SHARED_FEATURE_NAMES if col in df_test.columns][:top_n]
     sample_size = max(100, VIZ_MAX_POINTS // 2)
     result: dict[str, dict] = {}
 

@@ -31,6 +31,10 @@ from .features import (
     FEATURE_SCHEMA_VERSION, RAW_INPUTS, FEATURE_NAMES, RawTrafficFeatures,
     feature_catalog, feature_quality_report,
 )
+from .inference import (
+    ARTIFACT_SCHEMA_VERSION, predict_raw, runtime_versions,
+    save_prediction_artifact, load_prediction_artifact, PredictionService, feature_implementation_hash,
+)
 
 
 @dataclass(frozen=True)
@@ -145,22 +149,13 @@ def fit_baselines(train, fit_idx, val_idx, config):
               "raw_inputs": list(RAW_INPUTS), "features": list(FEATURE_NAMES),
               "feature_schema_version": FEATURE_SCHEMA_VERSION,
               "feature_definitions": feature_catalog(),
+              "artifact_schema_version": ARTIFACT_SCHEMA_VERSION,
+              "precision": "float64", "runtime": runtime_versions(),
+              "feature_implementation_sha256": feature_implementation_hash(),
               "threshold_policy": "maximum validation F1; equal F1 chooses higher threshold",
               "selection_policy": "validation F1, then average precision, then name",
               "evaluation_status": "previously inspected benchmark; not an untouched holdout"}
     return bundle, comparison
-
-
-def predict_raw(bundle, frame):
-    if bundle.get("feature_schema_version") != FEATURE_SCHEMA_VERSION:
-        raise ValueError("This model uses an earlier feature schema; rerun the corrected notebook to retrain.")
-    config = bundle["config"]
-    with threadpool_limits(limits=config["threads"]):
-        scores = bundle["pipeline"].predict_proba(frame)[:, 1]
-    return pd.DataFrame({
-        "attack_score": scores,
-        "predicted_label": (scores >= bundle["threshold"]).astype(np.int8),
-    }, index=frame.index)
 
 
 def evaluate_benchmark(bundle, benchmark, development):
@@ -199,10 +194,11 @@ def save_run(root, output_dir, bundle, train, fit_idx, val_idx, predictions,
              validation, benchmark_metrics, slices, categories):
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    joblib.dump(bundle, output_dir / "model.joblib")
+    bundle["benchmark_metrics"] = benchmark_metrics
+    save_prediction_artifact(bundle, output_dir / "model.joblib")
     # Verify persistence using the same raw measurements, including single-row inference.
     sample = train.loc[:, list(RAW_INPUTS)].iloc[:32]
-    restored = joblib.load(output_dir / "model.joblib")
+    restored = load_prediction_artifact(output_dir / "model.joblib")
     expected = predict_raw(bundle, sample)
     actual = predict_raw(restored, sample)
     np.testing.assert_allclose(expected.attack_score, actual.attack_score, rtol=0, atol=1e-12)
@@ -237,6 +233,7 @@ def save_run(root, output_dir, bundle, train, fit_idx, val_idx, predictions,
         "configuration": bundle["config"], "raw_inputs": bundle["raw_inputs"],
         "feature_names": bundle["features"], "feature_precision": "float64",
         "feature_schema_version": FEATURE_SCHEMA_VERSION,
+        "artifact_schema_version": ARTIFACT_SCHEMA_VERSION,
         "preprocessing_order": list(bundle["pipeline"].named_steps),
         "physical_feature_checks": quality,
         "threshold": bundle["threshold"], "threshold_policy": bundle["threshold_policy"],
@@ -251,12 +248,24 @@ def save_run(root, output_dir, bundle, train, fit_idx, val_idx, predictions,
         "source_sha256": {p.relative_to(root).as_posix(): file_sha256(p) for p in (
             Path(root)/"netguard_workflow/workflow.py", Path(root)/"requirements-notebooks.txt",
             Path(root)/"netguard_workflow/features.py",
+            Path(root)/"netguard_workflow/inference.py", Path(root)/"requirements-model.in",
         )},
         "output_sha256": {name: file_sha256(output_dir/name) for name in (
             "model.joblib", "benchmark_predictions.csv", "validation_comparison.csv",
             "benchmark_slices.csv", "attack_category_metrics.csv", "development_split.csv", "metrics.json",
             "feature_catalog.json", "feature_quality_report.json",
+            "model.manifest.json",
         )},
+    }
+    # Serve exactly the same selected fitted pipeline; do not train in the API.
+    deployment_path = Path(root)/"models_saved/shared_pipeline.joblib"
+    deployed_manifest = save_prediction_artifact(bundle, deployment_path)
+    deployed = PredictionService(deployment_path)
+    np.testing.assert_allclose(deployed.predict(sample).attack_score, expected.attack_score, rtol=0, atol=1e-12)
+    manifest["shared_prediction_artifact"] = {
+        "path": deployment_path.relative_to(root).as_posix(),
+        "sha256": deployed_manifest["artifact_sha256"],
+        "same_bytes_as_notebook_artifact": deployed_manifest["artifact_sha256"] == manifest["output_sha256"]["model.joblib"],
     }
     (output_dir / "manifest.json").write_text(json.dumps(manifest, indent=2, allow_nan=False), encoding="utf-8")
     return manifest

@@ -1,4 +1,8 @@
-"""Model loading and inference utilities for the deployed anomaly detectors."""
+"""Historical anomaly-detector helpers, retained for reference only.
+
+Current API routes use netguard_workflow.PredictionService. These older helpers
+are not an alternative serving path and require their original environments.
+"""
 
 from __future__ import annotations
 
@@ -10,7 +14,7 @@ import joblib
 import numpy as np
 import pandas as pd
 
-from config import (
+from backend.config import (
     AE_FILE,
     AE_INPUT_DIM,
     CONTAMINATION,
@@ -23,7 +27,7 @@ from config import (
     SCALER_FILE,
     SELECTED_FEATURES_FILE,
 )
-from utils.exceptions import ModelError
+from backend.utils.exceptions import ModelError
 
 logger = logging.getLogger(__name__)
 

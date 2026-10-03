@@ -6,12 +6,12 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Query
 
-from utils.data_loader import (
+from backend.utils.data_loader import (
     get_dataset_overview,
     get_feature_distributions,
     load_test_data,
 )
-from utils.exceptions import DataLoadError
+from backend.utils.exceptions import DataLoadError
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/dataset", tags=["Dataset"])
@@ -35,7 +35,9 @@ def get_dataset_info():
                     "values": [n_normal, n_anomaly],
                 },
             },
-            "source_file": "data/featured/test_featured.csv",
+            "source_file": "data/UNSW_NB15_testing-set.csv",
+            "feature_representation": "shared raw physical features before scaling",
+            "evaluation_status": "previously inspected benchmark; not an untouched holdout",
         }
     except DataLoadError as exc:
         raise HTTPException(status_code=404, detail=exc.message)

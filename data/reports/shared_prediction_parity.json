@@ -1,0 +1,60 @@
+{
+  "status": "passed",
+  "verified_utc": "2026-10-03T11:20:14.340904+00:00",
+  "transport": "live Uvicorn loopback HTTP server in a separate process",
+  "runtime": {
+    "python": "3.13.9",
+    "packages": {
+      "numpy": "2.2.6",
+      "pandas": "2.2.3",
+      "scipy": "1.15.3",
+      "scikit-learn": "1.6.1",
+      "joblib": "1.4.2",
+      "threadpoolctl": "3.6.0"
+    }
+  },
+  "artifact_sha256": "135c88e1cc16063eba91df4947215201d24c04cc54ae0b865f1df676285013fc",
+  "model": "hist_gradient_boosting",
+  "threshold": 0.4641181101371265,
+  "raw_connections": 518,
+  "benchmark_connections": 512,
+  "boundary_connections": 6,
+  "prediction_comparisons": 3108,
+  "batch_sizes": [
+    1,
+    7,
+    64,
+    1000
+  ],
+  "maximum_score_difference": 0.0,
+  "decision_mismatches": 0,
+  "score_tolerance": 1e-12,
+  "notebook_saved_predictions_match": true,
+  "dashboard_metrics_match_notebook": true,
+  "endpoint_checks": [
+    "/",
+    "/api/predict/info",
+    "/api/predict/best_model",
+    "/api/dataset/info",
+    "/api/dataset/sample?n=3",
+    "/api/dataset/distributions?top_n=20",
+    "/api/metrics/evaluate",
+    "/api/models/viz?type=pca",
+    "/api/models/viz?type=roc",
+    "/api/models/viz?type=confusion",
+    "/api/models/viz?type=scores",
+    "/api/metrics/viz?type=pca",
+    "/api/metrics/viz?type=roc",
+    "/api/metrics/viz?type=confusion",
+    "/api/metrics/viz?type=scores"
+  ],
+  "checks": {
+    "individual_and_batch_match": true,
+    "reordered_input_fields_match": true,
+    "reordered_batch_rows_match": true,
+    "full_precision_scores": true,
+    "fixed_saved_threshold": true,
+    "artifact_identity_matches": true
+  },
+  "evaluation_status": "previously inspected benchmark; not an untouched holdout"
+}
