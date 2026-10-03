@@ -1,0 +1,207 @@
+{
+  "status": "passed",
+  "execution": {
+    "status": "passed",
+    "current_cells_executed": 8,
+    "historical_cells_executed": 0,
+    "notebook_checks": [
+      {
+        "notebook": "00_netguard_complete.ipynb",
+        "cells": 303,
+        "preserved_origins_checked": 269,
+        "current_code_cells": 8
+      },
+      {
+        "notebook": "01_eda.ipynb",
+        "cells": 59,
+        "preserved_origins_checked": 57,
+        "current_code_cells": 0
+      },
+      {
+        "notebook": "02_preprocessing.ipynb",
+        "cells": 28,
+        "preserved_origins_checked": 26,
+        "current_code_cells": 0
+      },
+      {
+        "notebook": "03_feature_engineering.ipynb",
+        "cells": 45,
+        "preserved_origins_checked": 43,
+        "current_code_cells": 0
+      },
+      {
+        "notebook": "04_isolation_forest.ipynb",
+        "cells": 36,
+        "preserved_origins_checked": 34,
+        "current_code_cells": 0
+      },
+      {
+        "notebook": "05_dbscan.ipynb",
+        "cells": 33,
+        "preserved_origins_checked": 31,
+        "current_code_cells": 0
+      },
+      {
+        "notebook": "06_model_improvements.ipynb",
+        "cells": 33,
+        "preserved_origins_checked": 31,
+        "current_code_cells": 0
+      },
+      {
+        "notebook": "07_evaluation.ipynb",
+        "cells": 49,
+        "preserved_origins_checked": 47,
+        "current_code_cells": 0
+      }
+    ],
+    "python": "3.13.9",
+    "executed_notebook": "00_netguard_complete.executed.ipynb"
+  },
+  "manifest": {
+    "created_utc": "2026-10-03T10:06:40.528510+00:00",
+    "python": "3.13.9",
+    "packages": {
+      "numpy": "2.2.6",
+      "pandas": "2.2.3",
+      "scipy": "1.15.3",
+      "scikit-learn": "1.6.1",
+      "joblib": "1.4.2",
+      "threadpoolctl": "3.6.0",
+      "nbformat": "5.10.4",
+      "nbclient": "0.10.2",
+      "ipykernel": "6.29.5"
+    },
+    "configuration": {
+      "seed": 42,
+      "validation_folds": 5,
+      "max_iter": 150,
+      "threads": 2
+    },
+    "raw_inputs": [
+      "sbytes",
+      "dbytes",
+      "spkts",
+      "dpkts",
+      "dur",
+      "rate",
+      "sload",
+      "dload",
+      "sttl",
+      "dttl"
+    ],
+    "feature_names": [
+      "sbytes",
+      "dbytes",
+      "spkts",
+      "dpkts",
+      "dur",
+      "rate",
+      "sload",
+      "dload",
+      "sttl",
+      "dttl",
+      "bytes_total",
+      "pkts_total",
+      "bytes_per_pkt_src",
+      "bytes_per_pkt_dst",
+      "bytes_ratio_smoothed",
+      "bytes_diff_normalized",
+      "src_zero_pkts",
+      "dst_zero_pkts",
+      "src_low_ttl",
+      "dst_low_ttl",
+      "log1p_sbytes",
+      "log1p_dbytes",
+      "log1p_dur",
+      "log1p_rate",
+      "log1p_sload",
+      "log1p_dload"
+    ],
+    "feature_precision": "float64",
+    "threshold": 0.47587219640263856,
+    "threshold_policy": "maximum validation F1; equal F1 chooses higher threshold",
+    "model_selection": "validation F1, then average precision, then name",
+    "selected_model": "hist_gradient_boosting",
+    "fit_rows": 144587,
+    "validation_rows": 30754,
+    "benchmark_rows": 82332,
+    "evaluation_status": "previously inspected benchmark; not an untouched holdout",
+    "checks": {
+      "artifact_reload_matches": true,
+      "single_and_batch_match": true
+    },
+    "input_sha256": {
+      "UNSW_NB15_training-set.csv": "bec7dd5ec88dc2a0ccc7a07879d338395ed7421750f675fd0339e07dfe0648fa",
+      "UNSW_NB15_testing-set.csv": "734fe6642edf758f7c94d7d9149426b49d202fe8e7bf0bef47392489c3c0a559"
+    },
+    "source_sha256": {
+      "netguard_workflow/workflow.py": "5c7a9a189ccf7e118e6d33aaa65d354a6f40da3c38aeec0e13f45cca7ca404bc",
+      "requirements-notebooks.txt": "a18cd262fc535d756705827aed52cdacda7ac9cd410efc282f56db2a17ccf0f3"
+    },
+    "output_sha256": {
+      "model.joblib": "7a9cb44a8dfa4fc3f1c0756ddefaccac7b02371380f6c3d4574cc1bfc46d4445",
+      "benchmark_predictions.csv": "8be03ac43cfae8a0722d1b71bb0af2a58f19aa29c156d45a0fdf268b104efee2",
+      "validation_comparison.csv": "93e9cf40aef0c2621e1691e7fda24452122c7274df3d996df24238bd2d3bea0d",
+      "benchmark_slices.csv": "19c4b9d9f21c0188bc355741fcf8436b566547311d7f8fa3fd3ceade03cd6af0",
+      "attack_category_metrics.csv": "47da1af87b8fd3ed8d1570612872b4273c4afa01ba096508f5bc00ed2cb0f1c8",
+      "development_split.csv": "72f343d0c6f5268f8729cd1506ac7b2db6230e9082a374ef8a4072e3992f797f",
+      "metrics.json": "596e065b6260c1c7503e76d4478f03da0806afe0a93982ee48e27d78313ca5de"
+    }
+  },
+  "metrics": {
+    "selected_model": "hist_gradient_boosting",
+    "benchmark": {
+      "rows": 82332,
+      "threshold": 0.47587219640263856,
+      "precision": 0.7998063509709347,
+      "recall": 0.9839848230830318,
+      "f1": 0.8823872684292257,
+      "roc_auc": 0.97979444685575,
+      "average_precision": 0.985120515888499,
+      "false_positive_rate": 0.3017567567567568,
+      "tn": 25835,
+      "fp": 11165,
+      "fn": 726,
+      "tp": 44606
+    },
+    "validation": [
+      {
+        "model": "hist_gradient_boosting",
+        "rows": 30754,
+        "threshold": 0.47587219640263856,
+        "precision": 0.9167871485943775,
+        "recall": 0.9780075402719067,
+        "f1": 0.9464083358668914,
+        "roc_auc": 0.9879245486261163,
+        "average_precision": 0.9901749224896073,
+        "false_positive_rate": 0.11730072463768115,
+        "tn": 11694,
+        "fp": 1554,
+        "fn": 385,
+        "tp": 17121
+      },
+      {
+        "model": "dummy_prior",
+        "rows": 30754,
+        "threshold": 0.7043164323210247,
+        "precision": 0.5692267672497886,
+        "recall": 1.0,
+        "f1": 0.7254869457107336,
+        "roc_auc": 0.5,
+        "average_precision": 0.5692267672497886,
+        "false_positive_rate": 1.0,
+        "tn": 0,
+        "fp": 13248,
+        "fn": 0,
+        "tp": 17506
+      }
+    ],
+    "evaluation_status": "previously inspected benchmark; not an untouched holdout"
+  },
+  "additional_verification": {
+    "behaviour_tests_passed": 5,
+    "repeat_fresh_kernel_run_matches_first_prediction_csv": true,
+    "first_and_repeat_prediction_csv_sha256": "8be03ac43cfae8a0722d1b71bb0af2a58f19aa29c156d45a0fdf268b104efee2",
+    "scope": "Reproducibility and pipeline behaviour; not a new untouched final evaluation."
+  }
+}

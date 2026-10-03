@@ -1,0 +1,128 @@
+# Reproduce the NetGuard notebook report
+
+`00_netguard_complete.ipynb` is the main report. Its first eight code cells are
+the current workflow. The seven original stages and alternate merge content
+follow as a historical archive, with every original cell payload preserved.
+The seven standalone notebooks are also valid historical archives.
+
+## Fresh environment
+
+Use **CPython 3.13.9**. The workflow has its own fully pinned dependency lock;
+it does not load models created with the backend's older scikit-learn version.
+The `.in` file lists direct dependencies; the `.txt` lock pins transitive
+dependencies with package hashes and operating-system markers.
+
+From the repository root on Windows PowerShell, using uv:
+
+```powershell
+uv venv .venv-workflow --python 3.13.9
+uv pip sync requirements-notebooks.txt --python .venv-workflow/Scripts/python.exe --require-hashes
+.venv-workflow/Scripts/python.exe scripts/run_notebook.py
+```
+
+With an installed Python 3.13.9 and pip instead:
+
+```powershell
+py -3.13 -m venv .venv-workflow
+.venv-workflow/Scripts/python.exe -m pip install --require-hashes -r requirements-notebooks.txt
+.venv-workflow/Scripts/python.exe scripts/run_notebook.py
+```
+
+On Linux/macOS with Python 3.13.9:
+
+```bash
+python3.13 -m venv .venv-workflow
+.venv-workflow/bin/python -m pip install --require-hashes -r requirements-notebooks.txt
+.venv-workflow/bin/python scripts/run_notebook.py
+```
+
+The notebook checks the Python and core package versions before training.
+Both original CSVs must exist under `data/` with their committed filenames.
+No preprocessed CSV, historical model or saved visualization is required.
+
+The runner starts a fresh kernel with the same interpreter that invokes it;
+no globally registered Jupyter kernel is needed. It validates all eight
+notebooks, runs only the explicitly identified current code cells, and retains
+every historical cell unchanged. It saves an executed report and updates only
+the current outputs in the main notebook.
+
+For interactive work, select the matching environment, run the current code
+cells in order, and stop at **Historical reference**. Do not use an editor's
+unfiltered Run All: archived code retains its original behaviour and may write
+legacy artifacts. Skipping history is enforced by the documented runner,
+not by standard Jupyter itself.
+
+## Workflow and outputs
+
+1. Validate raw measurements, row IDs and binary labels.
+2. Split the development CSV into fit and validation partitions. Exact
+   signatures across the ten measured inputs remain in a single partition,
+   including signatures associated with conflicting labels.
+3. Calculate physical features from raw values and fit RobustScaler only on
+   fit rows. Every transformation uses float64 and fixed feature order.
+4. Fit a dummy prior and histogram gradient boosting baseline. Choose model
+   and a fixed decision threshold using validation F1 only; tie policies are
+   documented in the notebook and manifest. Do not refit after selection.
+5. Evaluate the previously inspected benchmark, including category and
+   seen/unseen input-signature slices.
+6. Save the fitted pipeline and threshold, verify artifact reload and
+   individual/batch parity, and demonstrate raw-input inference.
+
+Generated outputs under `artifacts/notebook_workflow/` are ignored by Git:
+
+| Output | Purpose |
+| --- | --- |
+| `model.joblib` | Complete fitted pipeline, threshold and input contract |
+| `benchmark_predictions.csv` | Score, decision, true label, category and overlap flag for every benchmark row |
+| `development_split.csv` | Row IDs and exact fit/validation membership |
+| `validation_comparison.csv` | Validation metrics and threshold for each candidate |
+| `metrics.json` | Selected model and aggregate metrics |
+| `benchmark_slices.csv` | Seen/unseen development-input signature metrics |
+| `attack_category_metrics.csv` | Per-category recall and sample counts |
+| `manifest.json` | Input/output/source hashes, versions, configuration and parity checks |
+| `execution_check.json` | Notebook validation and execution completion evidence |
+| `00_netguard_complete.executed.ipynb` | Executed current report plus unchanged historical cells |
+
+To use the artifact in a separate Python process, run from the repository root
+in this environment:
+
+```python
+import joblib
+import pandas as pd
+from netguard_workflow import predict_raw
+
+bundle = joblib.load("artifacts/notebook_workflow/model.joblib")
+measurements = pd.read_csv("your_raw_connections.csv")
+predict_raw(bundle, measurements).to_csv("predictions.csv", index=False)
+```
+
+Required measured columns are `sbytes`, `dbytes`, `spkts`, `dpkts`, `dur`, `rate`,
+`sload`, `dload`, `sttl`, `dttl`. Labels and attack categories are not required.
+Load only trusted model artifacts. Keep the package available so custom fitted
+transformers can be deserialized.
+
+## Verification and interpretation
+
+```powershell
+.venv-workflow/Scripts/python.exe scripts/notebook_integrity.py
+.venv-workflow/Scripts/python.exe -m unittest discover -s tests -v
+```
+
+Integrity checks validate notebook schemas, unique IDs, absence of conflict
+markers and the original fingerprints of every preserved historical cell.
+Original HEAD/incoming index mappings remain in notebook metadata.
+`data/reports/notebook_repair_evidence.json` documents the conflict recovery.
+`data/reports/notebook_workflow_verification.json` records the latest successful
+run, configuration, dataset/artifact hashes and benchmark metrics.
+The dated project audit remains a record of the state before this repair.
+
+The existing test set was previously used for development and must not be
+presented as an untouched final holdout. This workflow does not demonstrate
+future traffic or unseen attack-family performance, calibrated probabilities,
+or live dashboard accuracy. It establishes a reproducible binary-classification
+baseline. Grouping by input signature reduces one leakage route but is not
+capture-time or host isolation. Those require additional provenance.
+
+The backend still serves its historical ensemble. Connecting this new pipeline
+to the API, expanding baseline comparisons, setting an operational false-alarm
+budget, uncertainty estimates and independent final testing are subsequent work.

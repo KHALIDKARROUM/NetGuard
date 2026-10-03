@@ -21,7 +21,7 @@ comparing anomaly-detection models, and scoring a single connection in real time
 ## Project Layout
 
 ```text
-anomaly-detection2/
+NetGuard/
 |-- docker-compose.yaml              # Docker Compose orchestration
 |-- README.md                        # Project documentation
 |
@@ -73,7 +73,9 @@ anomaly-detection2/
 |   |-- isolation_forest.pkl
 |   `-- lof.pkl
 |
-`-- notebooks/                       # Exploration and model development
+`-- notebooks/                       # Main report and preserved historical stages
+    |-- 00_netguard_complete.ipynb
+    |-- WORKFLOW.md
     |-- 01_eda.ipynb
     |-- 02_preprocessing.ipynb
     |-- 03_feature_engineering.ipynb
@@ -125,6 +127,21 @@ Then open:
 
 ## Model Notes
 
-The application uses labels only for evaluation. The anomaly models are trained
-without target labels, then predictions are compared with UNSW-NB15 labels to
-report F1, recall, precision, ROC-AUC, and confusion matrices.
+The dashboard currently serves the historical ensemble. Its notebook results
+used test-informed development choices and should be treated as exploratory.
+Labels also informed feature selection and normal-only autoencoder training.
+
+## Reproducible Data Science Workflow
+
+Use [the combined notebook](notebooks/00_netguard_complete.ipynb) as the main
+project report. Its current sections run from the original raw CSVs to a saved
+supervised baseline and row-level predictions. Preprocessing is fitted on
+training rows, and model/threshold selection uses grouped validation data.
+The existing test file is labelled as a previously inspected benchmark.
+
+All original notebook cells and alternate merge content remain available as
+historical reference. The seven source notebooks are repaired JSON notebooks.
+The documented runner executes only corrected sections in a fresh kernel.
+
+Follow [the environment setup and execution guide](notebooks/WORKFLOW.md).
+The new artifacts are separate from the dashboard's historical models.

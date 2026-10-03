@@ -31,6 +31,11 @@ backend/logs/
 # Jupyter
 .ipynb_checkpoints/
 
+# Reproducible notebook runtime and generated outputs
+.venv-workflow/
+.uv-cache/
+artifacts/notebook_workflow/
+
 # OS
 .DS_Store
 Thumbs.db

@@ -1,0 +1,121 @@
+{
+  "status": "passed",
+  "conflicts_resolved": 1268,
+  "current_code_cells": 8,
+  "combined_original_payloads_preserved": 269,
+  "repaired_notebooks": [
+    {
+      "file": "01_eda.ipynb",
+      "conflicts_resolved": 29,
+      "main_preserved_cells": 37,
+      "alternate_preserved_cells": 20,
+      "head_cells_covered": 36,
+      "incoming_cells_covered": 37,
+      "all_cell_payloads_preserved": true
+    },
+    {
+      "file": "02_preprocessing.ipynb",
+      "conflicts_resolved": 3,
+      "main_preserved_cells": 24,
+      "alternate_preserved_cells": 2,
+      "head_cells_covered": 24,
+      "incoming_cells_covered": 24,
+      "all_cell_payloads_preserved": true
+    },
+    {
+      "file": "03_feature_engineering.ipynb",
+      "conflicts_resolved": 41,
+      "main_preserved_cells": 29,
+      "alternate_preserved_cells": 14,
+      "head_cells_covered": 29,
+      "incoming_cells_covered": 29,
+      "all_cell_payloads_preserved": true
+    },
+    {
+      "file": "04_isolation_forest.ipynb",
+      "conflicts_resolved": 47,
+      "main_preserved_cells": 31,
+      "alternate_preserved_cells": 3,
+      "head_cells_covered": 31,
+      "incoming_cells_covered": 31,
+      "all_cell_payloads_preserved": true
+    },
+    {
+      "file": "05_dbscan.ipynb",
+      "conflicts_resolved": 9,
+      "main_preserved_cells": 27,
+      "alternate_preserved_cells": 4,
+      "head_cells_covered": 27,
+      "incoming_cells_covered": 27,
+      "all_cell_payloads_preserved": true
+    },
+    {
+      "file": "06_model_improvements.ipynb",
+      "conflicts_resolved": 16,
+      "main_preserved_cells": 24,
+      "alternate_preserved_cells": 7,
+      "head_cells_covered": 24,
+      "incoming_cells_covered": 24,
+      "all_cell_payloads_preserved": true
+    },
+    {
+      "file": "07_evaluation.ipynb",
+      "conflicts_resolved": 1123,
+      "main_preserved_cells": 36,
+      "alternate_preserved_cells": 11,
+      "head_cells_covered": 36,
+      "incoming_cells_covered": 36,
+      "all_cell_payloads_preserved": true
+    }
+  ],
+  "schema_and_preservation_checks": [
+    {
+      "notebook": "00_netguard_complete.ipynb",
+      "cells": 303,
+      "preserved_origins_checked": 269,
+      "current_code_cells": 8
+    },
+    {
+      "notebook": "01_eda.ipynb",
+      "cells": 59,
+      "preserved_origins_checked": 57,
+      "current_code_cells": 0
+    },
+    {
+      "notebook": "02_preprocessing.ipynb",
+      "cells": 28,
+      "preserved_origins_checked": 26,
+      "current_code_cells": 0
+    },
+    {
+      "notebook": "03_feature_engineering.ipynb",
+      "cells": 45,
+      "preserved_origins_checked": 43,
+      "current_code_cells": 0
+    },
+    {
+      "notebook": "04_isolation_forest.ipynb",
+      "cells": 36,
+      "preserved_origins_checked": 34,
+      "current_code_cells": 0
+    },
+    {
+      "notebook": "05_dbscan.ipynb",
+      "cells": 33,
+      "preserved_origins_checked": 31,
+      "current_code_cells": 0
+    },
+    {
+      "notebook": "06_model_improvements.ipynb",
+      "cells": 33,
+      "preserved_origins_checked": 31,
+      "current_code_cells": 0
+    },
+    {
+      "notebook": "07_evaluation.ipynb",
+      "cells": 49,
+      "preserved_origins_checked": 47,
+      "current_code_cells": 0
+    }
+  ]
+}
