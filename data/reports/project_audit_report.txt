@@ -1,0 +1,394 @@
+NetGuard data science audit and improvement plan
+Completed 3 October 2026
+
+NetGuard has a useful application foundation and a substantial initial modelling
+workflow. It is currently an exploratory network intrusion detection project.
+Its reported results do not yet provide reliable evidence that the deployed
+prediction process will generalize to new traffic. The first investment should
+be a reproducible evaluation and prediction pipeline, followed by strong
+supervised baselines and controlled evaluation of unfamiliar attacks.
+
+This review covered all seven notebook stages, their available source extracts,
+both raw datasets, both processed datasets, selected features, saved models,
+backend and frontend code, reports, visualization files, Docker configuration,
+dependency declarations and repository contents. The API was exercised locally.
+No application code, training data or model was changed or retrained. The report
+and accompanying evidence are audit outputs.
+
+The data foundation is usable: the raw training set contains 175,341 rows, the
+test set contains 82,332 rows, raw and processed labels align, and the supplied
+raw and selected-feature tables have no missing or nonfinite values. The feature
+order in the saved transformer matches the selected feature list. FastAPI and
+Streamlit provide a clear place to present improved models and diagnostics.
+Several initial algorithms, ROC and precision-recall artifacts, confusion
+matrices and exploratory visualizations already exist.
+
+The audit evidence file records measurements, environments and artifact hashes.
+The initial API checks used the computer's current packages, including
+scikit-learn 1.9.0. A separate environment used Python 3.12.10, numpy 1.26.4,
+pandas 2.2.2, scikit-learn 1.5.1, joblib 1.4.2 and scipy 1.14.1 to investigate
+reproducibility. The original PyTorch version is not recorded. Saved autoencoder
+weights were evaluated using an equivalent NumPy forward pass and checked with
+PyTorch 2.13.0; ensemble F1 agreed and ROC-AUC differences were negligible.
+These reproductions retain the project's test-prevalence threshold and are
+diagnostics, not new independent generalization benchmarks.
+
+1. Critical: the notebooks cannot be opened or executed as committed.
+
+   All seven notebooks contain unresolved Git conflict markers and fail JSON
+   parsing. There are 1,268 conflict blocks in total; notebook 07 contains 1,123.
+   Thus, the README's notebook-based reproduction instructions are blocked.
+   Readable extracts exist for stages 03 through 07. For review only, the HEAD
+   side of conflicts in notebooks 01 and 02 was parsed in memory; the committed
+   files themselves remain invalid.
+
+   Resolve the notebooks deliberately, remove large stored outputs, and validate
+   their structure. Move reusable preparation, training and evaluation logic into
+   an importable package with a single documented execution command. Keep
+   notebooks for exploration and explanation. Add an automated check for invalid
+   notebooks and conflict markers. Completion means a clean checkout can generate
+   the documented artifacts without relying on a hidden notebook session.
+
+2. Critical: the test set is used for model development.
+
+   Stages 04, 06 and 07 use the actual test attack fraction as contamination.
+   Stage 06 selects ensemble weights by maximizing F1 on y_test. Stage 07 selects
+   the final model using test metrics. This consumes information from the data
+   later presented as an evaluation set. A percentile threshold also makes
+   decisions depend on the composition of the evaluation batch. Ties can cause
+   additional deviations from the requested alert fraction.
+
+   Split raw development data before fitting any preprocessing or feature
+   selection. Tune model settings, feature choices, score orientation, ensemble
+   weights and decision thresholds on validation data or within cross-validation.
+   Freeze those choices before final evaluation. The existing test set has
+   already been examined repeatedly, so an additional untouched holdout or a
+   prospective traffic sample is needed for a convincing final claim.
+   Completion means changing test labels cannot change the fitted artifact,
+   normalization, threshold or model selection.
+
+3. Critical: evaluation and backend preprocessing produce different results.
+
+   The notebook reads featured CSV values as float64, whereas the backend's
+   data loader converts values to float32 before QuantileTransformer. Single
+   prediction also constructs a float32 feature row. Repeated quantile values
+   make small rounding differences produce large changes in transformed values.
+
+   With scikit-learn 1.5.1, the largest transformed-feature difference was 0.2172
+   on a nominal 0-to-1 scale. Some feature differed by more than 0.0001 for 99.3%
+   of test rows. Isolation Forest ROC-AUC changed from 0.8075 to 0.6171. Reproduced
+   ensemble F1 changed from 0.8565 to 0.8396 with the same test-prevalence policy.
+   The computer's newer packages produced further differences, including an
+   Isolation Forest ROC-AUC of 0.4646 on the backend path.
+
+   Create one fitted preparation and scoring pipeline used by training,
+   evaluation and the API. Define feature order, units and numeric precision at
+   each step, and avoid CSV round trips as part of the fitted transformation.
+   Retrain against that consistent pipeline. Add golden examples that require
+   offline and API transformations, scores and decisions to agree. Check that
+   scoring one row alone or in any batch produces the same result. Fixing only
+   one cast is insufficient because the current raw reconstruction and reference
+   calibration paths also need to reproduce the training recipe.
+
+4. Critical: live prediction depends on test data and estimated measurements.
+
+   The single-connection route takes medians from the clean test table, retrieves
+   missing fields from nearest neighbors in raw test data, and recalculates score
+   normalization and the decision threshold from 5,000 test examples. It estimates
+   ct_state_ttl, smean, dmean and dinpkt instead of requiring those measurements.
+   The dashboard evaluates actual featured rows rather than this full raw-input
+   process, so its metrics do not validate the user-facing prediction endpoint.
+
+   In a random sample of 500 real test rows, the reconstruction changed smean for
+   13.8%, dmean for 9.0% and dinpkt for 39.6% of examples. This diagnostic used the
+   current local environment and test neighbors; it is not independent evidence
+   that the estimator works on unseen traffic.
+
+   Collect the required measurements using their documented definitions, or
+   train and evaluate a model that only needs the fields available at inference.
+   Fit any necessary imputer on development training data and freeze it. Save
+   normalization and threshold parameters with the model. Evaluate the complete
+   raw-input route on held-out examples. Completion means prediction works with
+   no test files installed and returns which measurements were inferred.
+
+5. High: engineered features lose their physical meaning.
+
+   Notebook 02 applies RobustScaler before notebook 03 constructs byte totals,
+   packet totals, ratios, log features and TTL flags. Adding separately centered
+   byte fields is not total bytes; dividing scaled fields is not a physical byte
+   ratio. The selected test table contains 37,340 negative bytes_per_pkt_src
+   values and 34,572 negative pkts_total values. These are transformed quantities,
+   but their names and explanations describe physical network measurements.
+   Clipping negative scaled values before log1p also removes distinctions below
+   the training median. Raw TTL rules are applied to scaled TTL values.
+
+   Construct domain features from raw, valid measurements first, then fit scaling
+   on development training data. Document units, division-by-zero behavior and
+   availability at decision time. Test totals, ratios and flags on hand-checked
+   raw examples. Benchmark the current 20 selected features against a wider raw
+   feature set. Several selected pairs have absolute correlations above 0.95;
+   use ablation evidence to decide whether redundant features help.
+
+6. High: feature overlap and ambiguity weaken generalization evidence.
+
+   Excluding ID and target columns, 8,541 test rows (10.4%) have the same complete
+   raw predictor values as a training row. After feature selection, 33,440 test
+   rows (40.6%) have the same selected-feature values as a training row. Equality
+   joins confirmed these counts. This establishes feature equivalence, not that
+   the records are the same physical connection.
+
+   The notebook-style ensemble reproduction had F1 0.9795 on feature vectors seen
+   in training and 0.6851 on other vectors. These slices differ in attack
+   prevalence and attack-family composition, so the gap alone does not prove
+   memorization. There are also 414 complete raw feature vectors with conflicting
+   binary labels across the combined tables, and 538 after feature selection.
+   These may reflect missing context rather than annotation mistakes.
+
+   Report the original benchmark and additional evaluations that group repeated
+   signatures. Where available, separate capture periods, hosts and sessions.
+   Preserve the original files and document exclusions or deduplication policies.
+   Review ambiguous signatures and assess whether additional context can resolve
+   them. Retain row identities and attack categories as evaluation metadata,
+   while excluding targets and unsuitable identifiers from model predictors.
+
+7. High: strong predictive baselines are missing.
+
+   There is no supervised logistic regression, random forest or gradient-boosted
+   tree benchmark, despite the available attack labels. The saved autoencoder F1
+   is 0.6615. Simply predicting attack for every supplied test row gives F1 0.7102.
+   This does not make the trivial rule useful, but it demonstrates why baselines
+   are necessary. The saved LOF ROC-AUC is 0.409; its reported F1 was not reproduced
+   in the inspected environment, another reason to review numerical stability
+   and artifact provenance before keeping it in an ensemble.
+
+   Start with DummyClassifier, regularized logistic regression, random forest
+   and HistGradientBoostingClassifier. Evaluate them with the same splits and
+   available input fields. Consider a further boosted-tree implementation only
+   when those comparisons justify it. Use one-hot or supported native categorical
+   handling for proto, service and state. Current LabelEncoder codes impose an
+   arbitrary ordering, and unseen states are mapped to the first existing code.
+   There are five test rows with states unseen in training; reserve a distinct
+   unknown category for deployment.
+
+8. High: anomaly detection assumptions and project claims need clarification.
+
+   Training traffic is 68.1% attacks, and test traffic is 55.1% attacks. Isolation
+   Forest and LOF learn this mixed distribution. The project treats high Isolation
+   Forest normality scores as attacks because attacks can form dense repeated
+   regions. DBSCAN similarly maps clusters to attacks and noise to normal.
+   These are dataset-specific assumptions. Do not blindly flip Isolation Forest
+   scores: the current positive direction reproduces its reported notebook AUC.
+   Choose and freeze orientation using development validation instead.
+
+   The README says labels are used only for evaluation, but mutual-information
+   feature selection uses training labels, autoencoder training selects normal
+   rows by label, and sampling is stratified by label. Describe this accurately
+   as a workflow that uses labels during development.
+
+   For a strong project, evaluate two explicit paths: supervised prediction of
+   known attacks, and detection of unusual traffic using normal-reference models.
+   Compare normal-only Isolation Forest and LOF with the normal-only autoencoder.
+   Use attacks excluded from training to test unfamiliar-attack behavior. Keep
+   their scores separate until validation demonstrates a benefit from combining
+   them. A larger ensemble is not automatically a better predictor.
+
+9. High: aggregate F1 hides operationally important failures.
+
+   The notebook-style reproduction closely matched ensemble F1 0.8565 and
+   ROC-AUC 0.8844. Nevertheless, it classified 6,507 of 37,000 normal test rows as
+   attacks: a 17.6% false positive rate. Its recall was 98.8% for Generic attacks,
+   but only 47.7% for Fuzzers, 51.3% for Shellcode and about 68.1% for Reconnaissance.
+   An overall score can therefore look strong while common attack families and
+   normal traffic perform poorly. These figures still reflect a reused test set.
+
+   Add false positive rate, false alarms per 1,000 normal connections, recall at a
+   chosen false positive limit, precision-recall curves and average precision,
+   MCC, balanced accuracy and a breakdown of errors by attack family, protocol
+   and service. For a binary detector, these are family-specific detection rates;
+   they are not evidence that the model predicts attack type.
+   Set an alert budget or error cost before selecting a threshold. For example,
+   recall at 1% false positive rate is a proposed comparison point, not an already
+   achieved result or a requirement supplied by the user. Show sensitivity to
+   attack prevalence because benchmark precision will not transfer automatically
+   to an operational network with fewer attacks.
+
+10. High: statistical and external validation are missing.
+
+    Add group-aware cross-validation on development data, repeated seeds and
+    confidence intervals for differences between models. Fit preprocessing and
+    feature selection within each fold. Bootstrap at a defensible independent
+    grouping level rather than treating repeated rows as unrelated observations.
+    The test set contains only 44 Worms examples; report uncertainty and counts
+    beside rare-family recall instead of treating that percentage as stable.
+
+    Add a held-out attack-family experiment and, when available, a prospective
+    sample from a different capture period or network. A second public dataset
+    can test transfer only after documenting schema and collection differences;
+    do not concatenate incompatible intrusion datasets without justification.
+    UNSW-NB15 includes traffic generated in a cyber range and does not establish
+    effectiveness on contemporary production traffic by itself.
+
+11. Medium: autoencoder development lacks validation controls and ablation.
+
+    The source trains for 30 epochs and plots training loss. It does not establish
+    a validation reconstruction-loss checkpoint, early stopping, or reproducible
+    PyTorch seeds. Add held-out normal validation data, best-checkpoint selection,
+    reproducible seeds and a modest validation-based search over architecture,
+    regularization and learning rate. Compare raw reconstruction errors, robust
+    score transformations and the selected operating point. Ablate each ensemble
+    member and engineered-feature group before adding more neural complexity.
+
+12. Medium: artifact identity and result provenance are inconsistent.
+
+    best_model.pkl contains a LOF estimator, although the application advertises
+    the three-model ensemble. Stage 07 matches file names by substring; an ensemble
+    name containing LOF can select lof.pkl before the ensemble branch. The current
+    API ignores best_model.pkl and loads the explicit ensemble configuration, so
+    this is a misleading export rather than proof that the API currently serves
+    LOF alone. Documentation also contains different ensemble weights, while
+    if_config.json records a contamination value different from the backend.
+
+    Create a versioned model manifest identifying every estimator, transformer,
+    feature definition, score orientation, normalization and threshold, together
+    with data hashes, dependency versions, code revision, validation policy and
+    matching metrics. Load a single declared artifact from that manifest. Reject
+    incompatible or incomplete bundles. Pin the complete training and serving
+    environments; the original SciPy and PyTorch versions are not fully recorded.
+    Start with transparent experiment records; a larger tracking platform is an
+    optional convenience after the basic workflow works.
+
+13. Medium: explanations and risk labels need stronger evidence.
+
+    The existing feature-importance visualization is absolute correlation with
+    Isolation Forest scores. It is neither a causal explanation nor an explanation
+    of the deployed ensemble. Add held-out permutation importance, individual
+    autoencoder reconstruction contributions, and suitable supervised-model
+    explanations. Distinguish anomaly scores and reference percentiles from
+    attack probabilities. If probability estimates are presented, calibrate them
+    on independent development data and show reliability curves and Brier score.
+
+    With the current threshold near the 45th reference percentile, the Watch
+    branch requiring the 75th percentile is effectively unreachable: that score
+    already qualifies as High. Define severity with an explicit, validated policy
+    and display uncertainty, missing measurements and unsupported input cases.
+
+14. Medium: application reliability can mask modelling problems.
+
+    The input schema accepts infinite duration values, supplies defaults for an
+    empty request and ignores unexpected fields. Production inference needs
+    finite values, an explicit measurement contract and deliberate handling of
+    incomplete inputs. Missing autoencoder support can silently produce zero
+    component scores while retaining its configured weight. Fail clearly or
+    serve a separately validated fallback artifact.
+
+    The health route checks file existence and can return success without
+    verifying loadability, required data, feature compatibility or a prediction.
+    Ensemble runtime timing measures weighted-score combination rather than the
+    complete component inference cost. The comparison route also switches from
+    a saved six-model report to a computed five-model cache after visualizations
+    initialize it. Report metrics from one identified artifact and evaluation
+    run, compute comparison reports offline, and measure end-to-end median and
+    tail latency, throughput and memory with realistic inputs.
+
+    Add tests for preprocessing parity, fixed thresholds, batch-independent
+    scores, invalid inputs, missing artifacts and representative raw-input
+    predictions. Existing test_api.py primarily checks successful HTTP responses.
+    Add an automated clean-run check. Clean up committed logs and bytecode, and
+    document data provenance, permitted use, artifact acquisition and reproduction.
+    The supplied data and model files are already Git-tracked despite ignore rules.
+    Review exposure controls if the service is deployed beyond the current demo.
+
+15. Medium: a live data and monitoring workflow is absent.
+
+    Add a batch scoring interface and a documented integration with a flow
+    collector compatible with the model's feature definitions. Record an event
+    identity, observation time, model version, input quality, prediction and score.
+    Monitor missing values, new categories, feature and score distributions,
+    saturation, alert rate and latency. Join delayed confirmed outcomes to measure
+    precision and recall over time. Drift signals should prompt investigation;
+    they do not alone prove performance deterioration or justify automatic
+    retraining. Evaluate a candidate on fixed acceptance criteria before promotion.
+
+    The supplied partition files do not contain actual capture timestamps or host
+    identifiers needed to justify temporal or host-based validation. The current
+    score timeline uses row order, not measured event time. The existing project
+    classifies connection summaries; forecasting future incidents or detecting an
+    attack early requires new time-indexed observations and features restricted
+    to information available at the decision time.
+
+The recommended implementation order is:
+
+A. Repair the scientific foundation.
+   Resolve notebooks, establish the data contract, validate labels and repeated
+   signatures, split development data, and build one fitted raw-input pipeline.
+   Deliver a clean reproduction command and offline/API parity examples.
+   This is the highest priority because every later experiment depends on it.
+
+B. Establish competitive baselines.
+   Compare the trivial rule, logistic regression, random forest, gradient boosting
+   and normal-reference anomaly models on the same development splits. Correct
+   raw feature engineering and categorical handling. Choose complexity using
+   validation results, ablation, input availability and inference cost.
+
+C. Make the predictive claim defensible.
+   Freeze thresholds and optional calibration, compare models at the same alert
+   budget, report family and protocol slices with uncertainty, and test attacks
+   excluded from training. Evaluate once on a new untouched holdout or prospective
+   sample. Publish a model card describing the task, data, known limits and use.
+
+D. Make the application match that evidence.
+   Serve the complete versioned artifact, add batch scoring and explanations,
+   replace ambiguous risk labels, fix readiness and input checks, and measure
+   complete prediction latency. Show the validation/test split and model version
+   alongside metrics in the dashboard.
+
+E. Add realistic operation and feedback.
+   Integrate measured flow data, monitor distributions and alert quality, record
+   reviewed outcomes and define a controlled retraining and promotion process.
+   Add forecasting only if the actual objective calls for it and suitable
+   timestamped data is collected.
+
+A strong finished project should reproduce from a clean checkout, never use test
+labels to choose a model or threshold, score independently of a batch's contents,
+and return the same result through evaluation and the API. It should beat simple
+baselines at a declared false-alarm budget, quantify weaknesses across attack
+families and unfamiliar traffic, and trace every displayed metric to the exact
+served artifact. Numerical targets must be agreed for the intended network and
+demonstrated on held-out data; this audit does not promise a particular score.
+
+Supporting source locations within the project:
+  notebooks/01_eda.ipynb through notebooks/07_evaluation.ipynb
+  data/reports/03_feature_engineering_source.txt
+  data/reports/04_isolation_forest_source.txt
+  data/reports/05_dbscan_source.txt
+  data/reports/06_model_improvements_source.txt
+  data/reports/07_evaluation_source.txt
+  backend/utils/data_loader.py
+  backend/utils/model_loader.py
+  backend/utils/evaluator.py
+  backend/routes/prediction.py
+  backend/routes/comparison.py
+  backend/config.py and backend/main.py
+  frontend/app.py, frontend/config.py and frontend/pages/
+  models_saved/ and data/visualizations/
+  README.md, requirements files, Dockerfiles and docker-compose.yaml
+
+Primary references for the recommendations:
+  UNSW dataset description and attribution requirements
+  https://research.unsw.edu.au/projects/unsw-nb15-dataset
+  Scikit-learn guidance on leakage and consistent preprocessing
+  https://scikit-learn.org/stable/common_pitfalls.html
+  Isolation Forest score convention
+  https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.IsolationForest.html
+  Threshold tuning on separate development data
+  https://scikit-learn.org/stable/modules/classification_threshold.html
+  Probability calibration
+  https://scikit-learn.org/stable/modules/calibration.html
+  Model persistence and environment compatibility
+  https://scikit-learn.org/stable/model_persistence.html
+
+Validation limits: damaged notebooks were inspected but not executed; no models
+were retrained; the original full training environment is not recoverable from
+the recorded metadata; Docker and the browser interface were not launched; no
+prospective or independently sourced traffic was available. Successful local API
+responses establish basic route behavior, not production readiness or accuracy.

@@ -1,0 +1,2172 @@
+{
+  "audit_date": "2026-10-02",
+  "scope": "Read-only project audit; generated evidence only; no retraining",
+  "datasets": {
+    "train": {
+      "raw_shape": [
+        175341,
+        45
+      ],
+      "clean_shape": [
+        175341,
+        43
+      ],
+      "featured_shape": [
+        175341,
+        21
+      ],
+      "attack_fraction": 0.6806223302022916,
+      "label_counts": {
+        "1": 119341,
+        "0": 56000
+      },
+      "attack_category_counts": {
+        "Normal": 56000,
+        "Generic": 40000,
+        "Exploits": 33393,
+        "Fuzzers": 18184,
+        "DoS": 12264,
+        "Reconnaissance": 10491,
+        "Analysis": 2000,
+        "Backdoor": 1746,
+        "Shellcode": 1133,
+        "Worms": 130
+      },
+      "missing_cells": 0,
+      "numeric_inf_cells": 0,
+      "labels_align_raw_clean_featured": true,
+      "featured_nonfinite": 0,
+      "featured_constants": [],
+      "negative_feature_counts": {
+        "bytes_total": 85346,
+        "bytes_per_pkt_src": 87669,
+        "bytes_ratio": 87669,
+        "sbytes": 87669,
+        "sttl": 60585,
+        "bytes_per_pkt_dst": 87551,
+        "dbytes": 87551,
+        "ct_state_ttl": 40791,
+        "dttl": 84372,
+        "rate": 87664,
+        "sload": 87670,
+        "dur": 87670,
+        "smean": 85277,
+        "dmean": 85889,
+        "pkts_total": 80379,
+        "dinpkt": 87354,
+        "dload": 87670,
+        "dpkts": 84290
+      },
+      "feature_ranges": {
+        "bytes_total": {
+          "min": -0.45710254,
+          "max": 13353.196
+        },
+        "bytes_per_pkt_src": {
+          "min": -0.3425358,
+          "max": 10.407578
+        },
+        "bytes_ratio": {
+          "min": -0.3621823,
+          "max": 172.8856
+        },
+        "bytes_diff_norm": {
+          "min": 3.7136397e-05,
+          "max": 0.991849
+        },
+        "sbytes": {
+          "min": -0.308282208588957,
+          "max": 9942.333588957055
+        },
+        "sttl": {
+          "min": -1.3229166666666667,
+          "max": 0.0052083333333333
+        },
+        "bytes_per_pkt_dst": {
+          "min": -0.18602541,
+          "max": 13.090932
+        },
+        "dbytes": {
+          "min": -0.1488203266787658,
+          "max": 13298.89836660617
+        },
+        "ct_state_ttl": {
+          "min": -1.0,
+          "max": 5.0
+        },
+        "dttl": {
+          "min": -0.115079365079365,
+          "max": 0.8928571428571429
+        },
+        "rate": {
+          "min": -0.0258132236528075,
+          "max": 7.976285639844541
+        },
+        "sload": {
+          "min": -0.0098977945282206,
+          "max": 67.36499976712217
+        },
+        "dur": {
+          "min": -0.0023680472943046,
+          "max": 89.80977202033715
+        },
+        "smean": {
+          "min": -1.0465116279069768,
+          "max": 33.27906976744186
+        },
+        "log1p_dbytes": {
+          "min": 0.0,
+          "max": 9.495512
+        },
+        "dmean": {
+          "min": -0.4943820224719101,
+          "max": 15.887640449438202
+        },
+        "pkts_total": {
+          "min": -0.3,
+          "max": 1262.3999
+        },
+        "dinpkt": {
+          "min": -0.0001175249228678,
+          "max": 1110.9399380879263
+        },
+        "dload": {
+          "min": -0.05196729768316,
+          "max": 805.2212883947434
+        },
+        "dpkts": {
+          "min": -0.2,
+          "max": 1097.2
+        }
+      }
+    },
+    "test": {
+      "raw_shape": [
+        82332,
+        45
+      ],
+      "clean_shape": [
+        82332,
+        43
+      ],
+      "featured_shape": [
+        82332,
+        21
+      ],
+      "attack_fraction": 0.5506000097167566,
+      "label_counts": {
+        "1": 45332,
+        "0": 37000
+      },
+      "attack_category_counts": {
+        "Normal": 37000,
+        "Generic": 18871,
+        "Exploits": 11132,
+        "Fuzzers": 6062,
+        "DoS": 4089,
+        "Reconnaissance": 3496,
+        "Analysis": 677,
+        "Backdoor": 583,
+        "Shellcode": 378,
+        "Worms": 44
+      },
+      "missing_cells": 0,
+      "numeric_inf_cells": 0,
+      "labels_align_raw_clean_featured": true,
+      "featured_nonfinite": 0,
+      "featured_constants": [],
+      "negative_feature_counts": {
+        "bytes_total": 36434,
+        "bytes_per_pkt_src": 37340,
+        "bytes_ratio": 37340,
+        "sbytes": 37340,
+        "sttl": 28258,
+        "bytes_per_pkt_dst": 38844,
+        "dbytes": 38844,
+        "ct_state_ttl": 17045,
+        "dttl": 36067,
+        "rate": 44381,
+        "sload": 44239,
+        "dur": 37790,
+        "smean": 42895,
+        "dmean": 38200,
+        "pkts_total": 34572,
+        "dinpkt": 37734,
+        "dload": 38896,
+        "dpkts": 36013
+      },
+      "feature_ranges": {
+        "bytes_total": {
+          "min": -0.46017003,
+          "max": 13354.584
+        },
+        "bytes_per_pkt_src": {
+          "min": -0.3459441,
+          "max": 10.477308
+        },
+        "bytes_ratio": {
+          "min": -0.3657861,
+          "max": 175.91188
+        },
+        "bytes_diff_norm": {
+          "min": 8.396754e-06,
+          "max": 0.991905
+        },
+        "sbytes": {
+          "min": -0.3113496932515337,
+          "max": 11008.699386503067
+        },
+        "sttl": {
+          "min": -1.3229166666666667,
+          "max": 0.0052083333333333
+        },
+        "bytes_per_pkt_dst": {
+          "min": -0.18602541,
+          "max": 13.19525
+        },
+        "dbytes": {
+          "min": -0.1488203266787658,
+          "max": 13300.696007259528
+        },
+        "ct_state_ttl": {
+          "min": -1.0,
+          "max": 5.0
+        },
+        "dttl": {
+          "min": -0.115079365079365,
+          "max": 0.8888888888888888
+        },
+        "rate": {
+          "min": -0.0258132236528075,
+          "max": 7.976285639844541
+        },
+        "sload": {
+          "min": -0.0098977945282206,
+          "max": 59.263810025892425
+        },
+        "dur": {
+          "min": -0.0023680472943046,
+          "max": 89.80977202033715
+        },
+        "smean": {
+          "min": -1.1395348837209305,
+          "max": 33.27906976744186
+        },
+        "log1p_dbytes": {
+          "min": 0.0,
+          "max": 9.495646
+        },
+        "dmean": {
+          "min": -0.4943820224719101,
+          "max": 16.359550561797754
+        },
+        "pkts_total": {
+          "min": -0.3,
+          "max": 1265.6
+        },
+        "dinpkt": {
+          "min": -0.0001175249228678,
+          "max": 1130.9664602195662
+        },
+        "dload": {
+          "min": -0.05196729768316,
+          "max": 747.7018265661161
+        },
+        "dpkts": {
+          "min": -0.2,
+          "max": 1101.6
+        }
+      }
+    }
+  },
+  "notebooks": [
+    {
+      "file": "notebooks\\01_eda.ipynb",
+      "size_bytes": 18771725,
+      "conflict_blocks": 29,
+      "json_valid": false,
+      "error": "Expecting property name enclosed in double quotes: line 135 column 1 (char 7667)"
+    },
+    {
+      "file": "notebooks\\02_preprocessing.ipynb",
+      "size_bytes": 35779704,
+      "conflict_blocks": 3,
+      "json_valid": false,
+      "error": "Expecting value: line 246 column 1 (char 6741)"
+    },
+    {
+      "file": "notebooks\\03_feature_engineering.ipynb",
+      "size_bytes": 146242,
+      "conflict_blocks": 41,
+      "json_valid": false,
+      "error": "Expecting property name enclosed in double quotes: line 30 column 1 (char 773)"
+    },
+    {
+      "file": "notebooks\\04_isolation_forest.ipynb",
+      "size_bytes": 3862881,
+      "conflict_blocks": 47,
+      "json_valid": false,
+      "error": "Expecting value: line 200 column 1 (char 5925)"
+    },
+    {
+      "file": "notebooks\\05_dbscan.ipynb",
+      "size_bytes": 2835418,
+      "conflict_blocks": 9,
+      "json_valid": false,
+      "error": "Expecting value: line 20211 column 1 (char 590171)"
+    },
+    {
+      "file": "notebooks\\06_model_improvements.ipynb",
+      "size_bytes": 468151,
+      "conflict_blocks": 16,
+      "json_valid": false,
+      "error": "Expecting value: line 178 column 1 (char 5962)"
+    },
+    {
+      "file": "notebooks\\07_evaluation.ipynb",
+      "size_bytes": 9660103,
+      "conflict_blocks": 1123,
+      "json_valid": false,
+      "error": "Expecting value: line 261 column 1 (char 7466)"
+    }
+  ],
+  "raw_columns": [
+    "id",
+    "dur",
+    "proto",
+    "service",
+    "state",
+    "spkts",
+    "dpkts",
+    "sbytes",
+    "dbytes",
+    "rate",
+    "sttl",
+    "dttl",
+    "sload",
+    "dload",
+    "sloss",
+    "dloss",
+    "sinpkt",
+    "dinpkt",
+    "sjit",
+    "djit",
+    "swin",
+    "stcpb",
+    "dtcpb",
+    "dwin",
+    "tcprtt",
+    "synack",
+    "ackdat",
+    "smean",
+    "dmean",
+    "trans_depth",
+    "response_body_len",
+    "ct_srv_src",
+    "ct_state_ttl",
+    "ct_dst_ltm",
+    "ct_src_dport_ltm",
+    "ct_dst_sport_ltm",
+    "ct_dst_src_ltm",
+    "is_ftp_login",
+    "ct_ftp_cmd",
+    "ct_flw_http_mthd",
+    "ct_src_ltm",
+    "ct_srv_dst",
+    "is_sm_ips_ports",
+    "attack_cat",
+    "label"
+  ],
+  "overlap": {
+    "raw": {
+      "excluded_columns": [
+        "id",
+        "label",
+        "attack_cat"
+      ],
+      "train_duplicate_feature_rows": 74301,
+      "test_duplicate_feature_rows": 28386,
+      "test_rows_with_features_seen_in_train": 8541,
+      "unique_shared_feature_vectors": 1302,
+      "feature_vectors_with_conflicting_labels": 414,
+      "method": "Pandas feature equality join confirmed hash count; excludes targets and raw row ID; does not establish shared flow identity",
+      "exact_merge_verified_test_overlap": 8541
+    },
+    "featured": {
+      "excluded_columns": [
+        "label"
+      ],
+      "train_duplicate_feature_rows": 89399,
+      "test_duplicate_feature_rows": 37163,
+      "test_rows_with_features_seen_in_train": 33440,
+      "unique_shared_feature_vectors": 1663,
+      "feature_vectors_with_conflicting_labels": 538,
+      "method": "Pandas feature equality join confirmed hash count; excludes targets and raw row ID; does not establish shared flow identity",
+      "exact_merge_verified_test_overlap": 33440
+    }
+  },
+  "categories": {
+    "proto": {
+      "train_unique": 133,
+      "test_unique": 131,
+      "unseen_test_categories": [],
+      "unseen_test_rows": 0
+    },
+    "service": {
+      "train_unique": 13,
+      "test_unique": 13,
+      "unseen_test_categories": [],
+      "unseen_test_rows": 0
+    },
+    "state": {
+      "train_unique": 9,
+      "test_unique": 7,
+      "unseen_test_categories": [
+        "acc",
+        "clo"
+      ],
+      "unseen_test_rows": 5
+    }
+  },
+  "always_attack_baseline": {
+    "precision": 0.5506000097167566,
+    "recall": 1.0,
+    "f1": 0.710176713873919,
+    "accuracy": 0.5506000097167566,
+    "note": "Trivial baseline on supplied test labels; no trained model"
+  },
+  "correlated_feature_pairs": [
+    {
+      "a": "bytes_total",
+      "b": "pkts_total",
+      "absolute_correlation": 0.9822599181428076
+    },
+    {
+      "a": "bytes_per_pkt_dst",
+      "b": "log1p_dbytes",
+      "absolute_correlation": 0.9632438257712703
+    },
+    {
+      "a": "bytes_per_pkt_dst",
+      "b": "dmean",
+      "absolute_correlation": 0.9873962604544555
+    },
+    {
+      "a": "dbytes",
+      "b": "dpkts",
+      "absolute_correlation": 0.9719070079919394
+    }
+  ],
+  "saved_model_report": [
+    {
+      "model": "Ensemble IF(0.1)+LOF(0.2)+AE(0.7)",
+      "roc_auc": 0.8844,
+      "f1": 0.8565,
+      "recall": 0.8565,
+      "precision": 0.8565,
+      "avg_precision": 0.8756,
+      "inference_s": 9.9871,
+      "size_kb": 9475.6,
+      "perf_score": 0.9683
+    },
+    {
+      "model": "Ensemble IF(0.3)+LOF(0.7)",
+      "roc_auc": 0.8098,
+      "f1": 0.7404,
+      "recall": 0.7404,
+      "precision": 0.7404,
+      "avg_precision": 0.8817,
+      "inference_s": 9.9493,
+      "size_kb": 9467.1,
+      "perf_score": 0.6211
+    },
+    {
+      "model": "Isolation Forest",
+      "roc_auc": 0.8075,
+      "f1": 0.7353,
+      "recall": 0.7353,
+      "precision": 0.7352,
+      "avg_precision": 0.8806,
+      "inference_s": 1.4753,
+      "size_kb": 2903.8,
+      "perf_score": 0.6065
+    },
+    {
+      "model": "Autoencoder (PyTorch)",
+      "roc_auc": 0.7285,
+      "f1": 0.6615,
+      "recall": 0.663,
+      "precision": 0.66,
+      "avg_precision": 0.7441,
+      "inference_s": 0.0335,
+      "size_kb": 8.5,
+      "perf_score": 0.3628
+    },
+    {
+      "model": "LOF",
+      "roc_auc": 0.409,
+      "f1": 0.711,
+      "recall": 0.9015,
+      "precision": 0.5869,
+      "avg_precision": 0.5536,
+      "inference_s": 8.4731,
+      "size_kb": 6563.4,
+      "perf_score": 0.3172
+    },
+    {
+      "model": "IF par protocole",
+      "roc_auc": 0.6513,
+      "f1": 0.6177,
+      "recall": 0.6177,
+      "precision": 0.6177,
+      "avg_precision": 0.702,
+      "inference_s": 0.672,
+      "size_kb": 6010.8,
+      "perf_score": 0.1955
+    }
+  ],
+  "raw_data_sha256": {
+    "data\\UNSW_NB15_testing-set.csv": "734fe6642edf758f7c94d7d9149426b49d202fe8e7bf0bef47392489c3c0a559",
+    "data\\UNSW_NB15_training-set.csv": "bec7dd5ec88dc2a0ccc7a07879d338395ed7421750f675fd0339e07dfe0648fa"
+  },
+  "audit_completed_date": "2026-10-03",
+  "artifacts": {
+    "runtime_sklearn": "1.9.0",
+    "items": [
+      {
+        "file": "best_model.pkl",
+        "type": "LocalOutlierFactor",
+        "n_features": 20,
+        "warnings": [
+          "Trying to unpickle estimator LocalOutlierFactor from version 1.5.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations"
+        ],
+        "fit_rows": 20000,
+        "novelty": true,
+        "contamination": "auto"
+      },
+      {
+        "file": "dbscan.pkl",
+        "type": "dict",
+        "n_features": null,
+        "warnings": [
+          "Trying to unpickle estimator KNeighborsClassifier from version 1.5.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations"
+        ],
+        "keys": [
+          "knn",
+          "eps",
+          "min_samples",
+          "contamination"
+        ]
+      },
+      {
+        "file": "dbscan_pca.pkl",
+        "type": "PCA",
+        "n_features": 20,
+        "warnings": [
+          "Trying to unpickle estimator PCA from version 1.5.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations"
+        ]
+      },
+      {
+        "file": "dbscan_qt.pkl",
+        "type": "QuantileTransformer",
+        "n_features": 20,
+        "warnings": [
+          "Trying to unpickle estimator QuantileTransformer from version 1.5.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations"
+        ],
+        "features": [
+          "bytes_total",
+          "bytes_per_pkt_src",
+          "bytes_ratio",
+          "bytes_diff_norm",
+          "sbytes",
+          "sttl",
+          "bytes_per_pkt_dst",
+          "dbytes",
+          "ct_state_ttl",
+          "dttl",
+          "rate",
+          "sload",
+          "dur",
+          "smean",
+          "log1p_dbytes",
+          "dmean",
+          "pkts_total",
+          "dinpkt",
+          "dload",
+          "dpkts"
+        ]
+      },
+      {
+        "file": "encoders.pkl",
+        "type": "dict",
+        "n_features": null,
+        "warnings": [
+          "Trying to unpickle estimator LabelEncoder from version 1.5.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations"
+        ],
+        "keys": [
+          "proto",
+          "service",
+          "state"
+        ]
+      },
+      {
+        "file": "ensemble_3models.pkl",
+        "type": "dict",
+        "n_features": null,
+        "warnings": [],
+        "keys": [
+          "w_if",
+          "w_lof",
+          "w_ae",
+          "contamination"
+        ],
+        "value": {
+          "w_if": 0.1,
+          "w_lof": 0.2,
+          "w_ae": 0.7,
+          "contamination": 0.5506000097167566
+        }
+      },
+      {
+        "file": "ensemble_if_lof.pkl",
+        "type": "dict",
+        "n_features": null,
+        "warnings": [],
+        "keys": [
+          "w_if",
+          "w_lof",
+          "contamination"
+        ],
+        "value": {
+          "w_if": 0.3,
+          "w_lof": 0.7,
+          "contamination": 0.5506000097167566
+        }
+      },
+      {
+        "file": "feature_cols.pkl",
+        "type": "list",
+        "n_features": null,
+        "warnings": [],
+        "value": [
+          "dur",
+          "proto",
+          "service",
+          "state",
+          "spkts",
+          "dpkts",
+          "sbytes",
+          "dbytes",
+          "rate",
+          "sttl",
+          "dttl",
+          "sload",
+          "dload",
+          "sloss",
+          "dloss",
+          "sinpkt",
+          "dinpkt",
+          "sjit",
+          "djit",
+          "swin",
+          "stcpb",
+          "dtcpb",
+          "dwin",
+          "tcprtt",
+          "synack",
+          "ackdat",
+          "smean",
+          "dmean",
+          "trans_depth",
+          "response_body_len",
+          "ct_srv_src",
+          "ct_state_ttl",
+          "ct_dst_ltm",
+          "ct_src_dport_ltm",
+          "ct_dst_sport_ltm",
+          "ct_dst_src_ltm",
+          "is_ftp_login",
+          "ct_ftp_cmd",
+          "ct_flw_http_mthd",
+          "ct_src_ltm",
+          "ct_srv_dst",
+          "is_sm_ips_ports"
+        ]
+      },
+      {
+        "file": "if_base.pkl",
+        "type": "IsolationForest",
+        "n_features": 20,
+        "warnings": [
+          "Trying to unpickle estimator ExtraTreeRegressor from version 1.5.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations",
+          "Trying to unpickle estimator IsolationForest from version 1.5.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations"
+        ],
+        "contamination": "auto"
+      },
+      {
+        "file": "if_by_proto.pkl",
+        "type": "dict",
+        "n_features": null,
+        "warnings": [
+          "Trying to unpickle estimator ExtraTreeRegressor from version 1.5.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations",
+          "Trying to unpickle estimator IsolationForest from version 1.5.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations",
+          "Trying to unpickle estimator QuantileTransformer from version 1.5.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations"
+        ],
+        "keys": [
+          "models",
+          "features",
+          "contamination"
+        ]
+      },
+      {
+        "file": "isolation_forest.pkl",
+        "type": "IsolationForest",
+        "n_features": 20,
+        "warnings": [
+          "Trying to unpickle estimator ExtraTreeRegressor from version 1.5.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations",
+          "Trying to unpickle estimator IsolationForest from version 1.5.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations"
+        ],
+        "contamination": "auto"
+      },
+      {
+        "file": "isolation_forest_optimized.pkl",
+        "type": "dict",
+        "n_features": null,
+        "warnings": [
+          "Trying to unpickle estimator ExtraTreeRegressor from version 1.5.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations",
+          "Trying to unpickle estimator IsolationForest from version 1.5.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations",
+          "Trying to unpickle estimator QuantileTransformer from version 1.5.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations"
+        ],
+        "keys": [
+          "model",
+          "qt",
+          "features"
+        ]
+      },
+      {
+        "file": "lof.pkl",
+        "type": "LocalOutlierFactor",
+        "n_features": 20,
+        "warnings": [
+          "Trying to unpickle estimator LocalOutlierFactor from version 1.5.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations"
+        ],
+        "fit_rows": 20000,
+        "novelty": true,
+        "contamination": "auto"
+      },
+      {
+        "file": "lof_pca.pkl",
+        "type": "LocalOutlierFactor",
+        "n_features": 10,
+        "warnings": [
+          "Trying to unpickle estimator LocalOutlierFactor from version 1.5.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations"
+        ],
+        "fit_rows": 20000,
+        "novelty": true,
+        "contamination": "auto"
+      },
+      {
+        "file": "lof_pca_transformer.pkl",
+        "type": "PCA",
+        "n_features": 20,
+        "warnings": [
+          "Trying to unpickle estimator PCA from version 1.5.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations"
+        ]
+      },
+      {
+        "file": "new_features.pkl",
+        "type": "list",
+        "n_features": null,
+        "warnings": [],
+        "value": [
+          "bytes_ratio",
+          "bytes_total",
+          "bytes_diff_norm",
+          "pkts_ratio",
+          "pkts_total",
+          "bytes_per_pkt_src",
+          "bytes_per_pkt_dst",
+          "log1p_sbytes",
+          "log1p_dbytes",
+          "log1p_dur",
+          "log1p_rate",
+          "log1p_sload",
+          "log1p_dload",
+          "is_empty_conn",
+          "is_high_rate",
+          "is_long_dur",
+          "is_ttl_suspect",
+          "bytes_ratio",
+          "bytes_total",
+          "bytes_diff_norm",
+          "pkts_ratio",
+          "pkts_total",
+          "bytes_per_pkt_src",
+          "bytes_per_pkt_dst",
+          "log1p_sbytes",
+          "log1p_dbytes",
+          "log1p_dur",
+          "log1p_rate",
+          "log1p_sload",
+          "log1p_dload",
+          "is_empty_conn",
+          "is_high_rate",
+          "is_long_dur",
+          "is_ttl_suspect"
+        ]
+      },
+      {
+        "file": "qt_if.pkl",
+        "type": "QuantileTransformer",
+        "n_features": 20,
+        "warnings": [
+          "Trying to unpickle estimator QuantileTransformer from version 1.5.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations"
+        ],
+        "features": [
+          "bytes_total",
+          "bytes_per_pkt_src",
+          "bytes_ratio",
+          "bytes_diff_norm",
+          "sbytes",
+          "sttl",
+          "bytes_per_pkt_dst",
+          "dbytes",
+          "ct_state_ttl",
+          "dttl",
+          "rate",
+          "sload",
+          "dur",
+          "smean",
+          "log1p_dbytes",
+          "dmean",
+          "pkts_total",
+          "dinpkt",
+          "dload",
+          "dpkts"
+        ]
+      },
+      {
+        "file": "qt_improvements.pkl",
+        "type": "QuantileTransformer",
+        "n_features": 20,
+        "warnings": [
+          "Trying to unpickle estimator QuantileTransformer from version 1.5.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations"
+        ],
+        "features": [
+          "bytes_total",
+          "bytes_per_pkt_src",
+          "bytes_ratio",
+          "bytes_diff_norm",
+          "sbytes",
+          "sttl",
+          "bytes_per_pkt_dst",
+          "dbytes",
+          "ct_state_ttl",
+          "dttl",
+          "rate",
+          "sload",
+          "dur",
+          "smean",
+          "log1p_dbytes",
+          "dmean",
+          "pkts_total",
+          "dinpkt",
+          "dload",
+          "dpkts"
+        ]
+      },
+      {
+        "file": "scaler.pkl",
+        "type": "RobustScaler",
+        "n_features": 42,
+        "warnings": [
+          "Trying to unpickle estimator RobustScaler from version 1.5.1 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:\nhttps://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations"
+        ],
+        "features": [
+          "dur",
+          "proto",
+          "service",
+          "state",
+          "spkts",
+          "dpkts",
+          "sbytes",
+          "dbytes",
+          "rate",
+          "sttl",
+          "dttl",
+          "sload",
+          "dload",
+          "sloss",
+          "dloss",
+          "sinpkt",
+          "dinpkt",
+          "sjit",
+          "djit",
+          "swin",
+          "stcpb",
+          "dtcpb",
+          "dwin",
+          "tcprtt",
+          "synack",
+          "ackdat",
+          "smean",
+          "dmean",
+          "trans_depth",
+          "response_body_len",
+          "ct_srv_src",
+          "ct_state_ttl",
+          "ct_dst_ltm",
+          "ct_src_dport_ltm",
+          "ct_dst_sport_ltm",
+          "ct_dst_src_ltm",
+          "is_ftp_login",
+          "ct_ftp_cmd",
+          "ct_flw_http_mthd",
+          "ct_src_ltm",
+          "ct_srv_dst",
+          "is_sm_ips_ports"
+        ]
+      },
+      {
+        "file": "selected_features.pkl",
+        "type": "list",
+        "n_features": null,
+        "warnings": [],
+        "value": [
+          "bytes_total",
+          "bytes_per_pkt_src",
+          "bytes_ratio",
+          "bytes_diff_norm",
+          "sbytes",
+          "sttl",
+          "bytes_per_pkt_dst",
+          "dbytes",
+          "ct_state_ttl",
+          "dttl",
+          "rate",
+          "sload",
+          "dur",
+          "smean",
+          "log1p_dbytes",
+          "dmean",
+          "pkts_total",
+          "dinpkt",
+          "dload",
+          "dpkts"
+        ]
+      }
+    ]
+  },
+  "local_api_checks": {
+    "environment_note": "Local versions differ from declared requirements; not pinned-environment verification",
+    "checks": [
+      {
+        "url": "/health",
+        "status": 200,
+        "elapsed_s": 0.016693700003088452,
+        "keys": [
+          "status",
+          "service",
+          "version",
+          "models_ready",
+          "files"
+        ],
+        "payload": {
+          "status": "ok",
+          "service": "netguard-backend",
+          "version": "4.0.0",
+          "models_ready": true,
+          "files": {
+            "quantile_transformer": true,
+            "robust_scaler": true,
+            "isolation_forest": true,
+            "lof": true,
+            "autoencoder": true,
+            "ensemble_if_lof": true,
+            "ensemble_if_lof_ae": true
+          }
+        }
+      },
+      {
+        "url": "/api/dataset/info",
+        "status": 200,
+        "elapsed_s": 2.7751300999952946,
+        "keys": [
+          "status",
+          "overview",
+          "label_distribution",
+          "source_file"
+        ],
+        "payload": null
+      },
+      {
+        "url": "/api/dataset/sample?n=3",
+        "status": 200,
+        "elapsed_s": 0.031902799993986264,
+        "keys": [
+          "status",
+          "n",
+          "sample"
+        ],
+        "payload": null
+      },
+      {
+        "url": "/api/models/compare",
+        "status": 200,
+        "elapsed_s": 0.017374400005792268,
+        "keys": [
+          "status",
+          "source",
+          "n_models",
+          "metrics",
+          "best_model"
+        ],
+        "payload": null
+      },
+      {
+        "url": "/api/predict/best_model",
+        "status": 200,
+        "elapsed_s": 0.012342700007138774,
+        "keys": [
+          "status",
+          "best_model",
+          "editable_inputs",
+          "defaults"
+        ],
+        "payload": {
+          "status": 200,
+          "best_model": {
+            "name": "Ensemble IF(0.1)+LOF(0.2)+AE(0.7)",
+            "threshold": "calibrated at inference",
+            "threshold_value": null,
+            "contamination": 0.5506,
+            "components": [
+              {
+                "name": "Isolation Forest",
+                "weight": 0.1
+              },
+              {
+                "name": "LOF",
+                "weight": 0.2
+              },
+              {
+                "name": "Autoencoder",
+                "weight": 0.7
+              }
+            ],
+            "metrics": {
+              "f1": 0.8565,
+              "roc_auc": 0.8844,
+              "precision": 0.8565,
+              "recall": 0.8565,
+              "perf_score": 0.9683
+            },
+            "files": {
+              "quantile_transformer": true,
+              "robust_scaler": true,
+              "isolation_forest": true,
+              "lof": true,
+              "autoencoder": true,
+              "ensemble_if_lof": true,
+              "ensemble_if_lof_ae": true
+            }
+          },
+          "editable_inputs": [
+            {
+              "name": "sbytes",
+              "label": "Bytes sent",
+              "type": "int"
+            },
+            {
+              "name": "dbytes",
+              "label": "Bytes received",
+              "type": "int"
+            },
+            {
+              "name": "spkts",
+              "label": "Packets sent",
+              "type": "int"
+            },
+            {
+              "name": "dpkts",
+              "label": "Packets received",
+              "type": "int"
+            },
+            {
+              "name": "dur",
+              "label": "Duration",
+              "type": "float"
+            },
+            {
+              "name": "rate",
+              "label": "Rate",
+              "type": "float"
+            },
+            {
+              "name": "sload",
+              "label": "Source load",
+              "type": "float"
+            },
+            {
+              "name": "dload",
+              "label": "Destination load",
+              "type": "float"
+            },
+            {
+              "name": "sttl",
+              "label": "Source TTL",
+              "type": "int"
+            },
+            {
+              "name": "dttl",
+              "label": "Destination TTL",
+              "type": "int"
+            }
+          ],
+          "defaults": {
+            "sbytes": 1500,
+            "dbytes": 5000,
+            "spkts": 10,
+            "dpkts": 15,
+            "dur": 0.5,
+            "rate": 20.0,
+            "sload": 0.0,
+            "dload": 0.0,
+            "sttl": 64,
+            "dttl": 64
+          }
+        }
+      },
+      {
+        "case": "default",
+        "status": 200,
+        "elapsed_s": 6.8527565999975195,
+        "payload": {
+          "status": 200,
+          "model": "Ensemble IF(0.1)+LOF(0.2)+AE(0.7)",
+          "prediction": {
+            "label": 1,
+            "class_name": "Anomaly",
+            "risk_level": "High"
+          },
+          "score": 0.117626,
+          "threshold": 0.112295,
+          "percentile": 0.4734,
+          "components": {
+            "if": 0.644112,
+            "lof": 0.0,
+            "ae": 0.076021,
+            "final": 0.117626
+          },
+          "weights": {
+            "if": 0.1,
+            "lof": 0.2,
+            "ae": 0.7
+          },
+          "input": {
+            "sbytes": 1500,
+            "dbytes": 5000,
+            "spkts": 10,
+            "dpkts": 15,
+            "dur": 0.5,
+            "rate": 20.0,
+            "sload": 0.0,
+            "dload": 0.0,
+            "sttl": 64,
+            "dttl": 64
+          },
+          "inferred_raw": {
+            "ct_state_ttl": 0.0,
+            "smean": 113.0,
+            "dmean": 339.0,
+            "dinpkt": 91.8369
+          },
+          "feature_vector": {
+            "bytes_total": 5.208937,
+            "bytes_per_pkt_src": 0.455862,
+            "bytes_ratio": 0.152282,
+            "bytes_diff_norm": 0.574629,
+            "sbytes": 0.820552,
+            "sttl": -0.989583,
+            "bytes_per_pkt_dst": 1.907993,
+            "dbytes": 4.388385,
+            "ct_state_ttl": -1.0,
+            "dttl": 0.138889,
+            "rate": -0.025653,
+            "sload": -0.009898,
+            "dur": 0.746067,
+            "smean": 0.930233,
+            "log1p_dbytes": 1.684246,
+            "dmean": 3.314607,
+            "pkts_total": 2.1,
+            "dinpkt": 1.798737,
+            "dload": -0.051967,
+            "dpkts": 1.3
+          }
+        }
+      },
+      {
+        "case": "normal_web",
+        "status": 200,
+        "elapsed_s": 0.07908429999952205,
+        "payload": {
+          "status": 200,
+          "model": "Ensemble IF(0.1)+LOF(0.2)+AE(0.7)",
+          "prediction": {
+            "label": 1,
+            "class_name": "Anomaly",
+            "risk_level": "High"
+          },
+          "score": 0.16403,
+          "threshold": 0.112295,
+          "percentile": 0.553,
+          "components": {
+            "if": 0.682755,
+            "lof": 0.0,
+            "ae": 0.136792,
+            "final": 0.16403
+          },
+          "weights": {
+            "if": 0.1,
+            "lof": 0.2,
+            "ae": 0.7
+          },
+          "input": {
+            "sbytes": 1800,
+            "dbytes": 6200,
+            "spkts": 12,
+            "dpkts": 18,
+            "dur": 0.5,
+            "rate": 24.0,
+            "sload": 0.0,
+            "dload": 0.0,
+            "sttl": 64,
+            "dttl": 64
+          },
+          "inferred_raw": {
+            "ct_state_ttl": 1.0,
+            "smean": 108.0,
+            "dmean": 404.0,
+            "dinpkt": 80.1601
+          },
+          "feature_vector": {
+            "bytes_total": 6.527927,
+            "bytes_per_pkt_src": 0.525307,
+            "bytes_ratio": 0.162199,
+            "bytes_diff_norm": 0.588037,
+            "sbytes": 1.050614,
+            "sttl": -0.989583,
+            "bytes_per_pkt_dst": 2.106659,
+            "dbytes": 5.477314,
+            "ct_state_ttl": 0.0,
+            "dttl": 0.138889,
+            "rate": -0.025621,
+            "sload": -0.009898,
+            "dur": 0.746067,
+            "smean": 0.813953,
+            "log1p_dbytes": 1.868306,
+            "dmean": 4.044944,
+            "pkts_total": 2.6,
+            "dinpkt": 1.570017,
+            "dload": -0.051967,
+            "dpkts": 1.6
+          }
+        }
+      },
+      {
+        "case": "port_scan",
+        "status": 200,
+        "elapsed_s": 0.07833699999901,
+        "payload": {
+          "status": 200,
+          "model": "Ensemble IF(0.1)+LOF(0.2)+AE(0.7)",
+          "prediction": {
+            "label": 1,
+            "class_name": "Anomaly",
+            "risk_level": "High"
+          },
+          "score": 0.309082,
+          "threshold": 0.112295,
+          "percentile": 0.6432,
+          "components": {
+            "if": 0.223448,
+            "lof": 0.0,
+            "ae": 0.409624,
+            "final": 0.309082
+          },
+          "weights": {
+            "if": 0.1,
+            "lof": 0.2,
+            "ae": 0.7
+          },
+          "input": {
+            "sbytes": 60,
+            "dbytes": 0,
+            "spkts": 1,
+            "dpkts": 0,
+            "dur": 0.001,
+            "rate": 1200.0,
+            "sload": 14000.0,
+            "dload": 0.0,
+            "sttl": 255,
+            "dttl": 0
+          },
+          "inferred_raw": {
+            "ct_state_ttl": 2.0,
+            "smean": 24.0,
+            "dmean": 0.0,
+            "dinpkt": 0.0
+          },
+          "feature_vector": {
+            "bytes_total": -0.432563,
+            "bytes_per_pkt_src": -0.315269,
+            "bytes_ratio": -0.333352,
+            "bytes_diff_norm": 0.237774,
+            "sbytes": -0.283742,
+            "sttl": 0.005208,
+            "bytes_per_pkt_dst": -0.186025,
+            "dbytes": -0.14882,
+            "ct_state_ttl": 1.0,
+            "dttl": -0.115079,
+            "rate": -0.016211,
+            "sload": -0.00974,
+            "dur": -0.000871,
+            "smean": -1.139535,
+            "log1p_dbytes": 0.0,
+            "dmean": -0.494382,
+            "pkts_total": -0.3,
+            "dinpkt": -0.000118,
+            "dload": -0.051967,
+            "dpkts": -0.2
+          }
+        }
+      },
+      {
+        "case": "burst",
+        "status": 200,
+        "elapsed_s": 0.07923489999666344,
+        "payload": {
+          "status": 200,
+          "model": "Ensemble IF(0.1)+LOF(0.2)+AE(0.7)",
+          "prediction": {
+            "label": 1,
+            "class_name": "Anomaly",
+            "risk_level": "High"
+          },
+          "score": 0.714139,
+          "threshold": 0.112295,
+          "percentile": 1.0,
+          "components": {
+            "if": 0.141394,
+            "lof": 0.0,
+            "ae": 1.0,
+            "final": 0.714139
+          },
+          "weights": {
+            "if": 0.1,
+            "lof": 0.2,
+            "ae": 0.7
+          },
+          "input": {
+            "sbytes": 500000,
+            "dbytes": 0,
+            "spkts": 6000,
+            "dpkts": 0,
+            "dur": 4.2,
+            "rate": 10000.0,
+            "sload": 4000000.0,
+            "dload": 0.0,
+            "sttl": 255,
+            "dttl": 0
+          },
+          "inferred_raw": {
+            "ct_state_ttl": 0.0,
+            "smean": 480.0,
+            "dmean": 43.0,
+            "dinpkt": 139.3185
+          },
+          "feature_vector": {
+            "bytes_total": 382.957001,
+            "bytes_per_pkt_src": 0.637659,
+            "bytes_ratio": 450.088074,
+            "bytes_diff_norm": 0.998171,
+            "sbytes": 383.105835,
+            "sttl": 0.005208,
+            "bytes_per_pkt_dst": -0.186025,
+            "dbytes": -0.14882,
+            "ct_state_ttl": -1.0,
+            "dttl": -0.115079,
+            "rate": 0.054208,
+            "sload": 0.035109,
+            "dur": 6.284483,
+            "smean": 9.465117,
+            "log1p_dbytes": 0.0,
+            "dmean": -0.011236,
+            "pkts_total": 599.599976,
+            "dinpkt": 2.728782,
+            "dload": -0.051967,
+            "dpkts": -0.2
+          }
+        }
+      }
+    ]
+  },
+  "local_unpinned_prediction_diagnostics": {
+    "environment_note": "Diagnostic re-evaluation using local sklearn 1.9.0, artifacts trained in 1.5.1; rerun in pinned environment before treating as reproducible benchmark",
+    "computed_model_metrics": [
+      {
+        "model": "Ensemble IF(0.1)+LOF(0.2)+AE(0.7)",
+        "precision": 0.7922,
+        "recall": 0.7922,
+        "f1": 0.7922,
+        "roc_auc": 0.8696,
+        "avg_precision": 0.896,
+        "inference_s": 0.0002,
+        "confusion_matrix": {
+          "tn": 27581,
+          "fp": 9419,
+          "fn": 9419,
+          "tp": 35913
+        },
+        "n_anomalies_detected": 45332,
+        "n_true_anomalies": 45332,
+        "perf_score": 0.9748
+      },
+      {
+        "model": "Autoencoder (PyTorch)",
+        "precision": 0.8035,
+        "recall": 0.8035,
+        "f1": 0.8035,
+        "roc_auc": 0.8261,
+        "avg_precision": 0.8506,
+        "inference_s": 0.0182,
+        "confusion_matrix": {
+          "tn": 28090,
+          "fp": 8910,
+          "fn": 8910,
+          "tp": 36422
+        },
+        "n_anomalies_detected": 45332,
+        "n_true_anomalies": 45332,
+        "perf_score": 0.9624
+      },
+      {
+        "model": "LOF",
+        "precision": 0.67,
+        "recall": 0.67,
+        "f1": 0.67,
+        "roc_auc": 0.705,
+        "avg_precision": 0.8182,
+        "inference_s": 20.9772,
+        "confusion_matrix": {
+          "tn": 22039,
+          "fp": 14961,
+          "fn": 14961,
+          "tp": 30371
+        },
+        "n_anomalies_detected": 45332,
+        "n_true_anomalies": 45332,
+        "perf_score": 0.5599
+      },
+      {
+        "model": "Ensemble IF(0.3)+LOF(0.7)",
+        "precision": 0.6531,
+        "recall": 0.6533,
+        "f1": 0.6532,
+        "roc_auc": 0.7181,
+        "avg_precision": 0.815,
+        "inference_s": 0.0002,
+        "confusion_matrix": {
+          "tn": 21267,
+          "fp": 15733,
+          "fn": 15717,
+          "tp": 29615
+        },
+        "n_anomalies_detected": 45348,
+        "n_true_anomalies": 45332,
+        "perf_score": 0.5337
+      },
+      {
+        "model": "Isolation Forest",
+        "precision": 0.5122,
+        "recall": 0.5122,
+        "f1": 0.5122,
+        "roc_auc": 0.4646,
+        "avg_precision": 0.5192,
+        "inference_s": 0.9347,
+        "confusion_matrix": {
+          "tn": 14886,
+          "fp": 22114,
+          "fn": 22113,
+          "tp": 23219
+        },
+        "n_anomalies_detected": 45333,
+        "n_true_anomalies": 45332,
+        "perf_score": 0.0
+      }
+    ],
+    "offline_ensemble": {
+      "n": 82332,
+      "f1": 0.7922218300538251,
+      "precision": 0.7922218300538251,
+      "recall": 0.7922218300538251,
+      "roc_auc": 0.8695512715795298,
+      "average_precision": 0.8960482392707054,
+      "tn": 27581,
+      "fp": 9419,
+      "fn": 9419,
+      "tp": 35913,
+      "false_positive_rate": 0.25456756756756754,
+      "alert_fraction": 0.5506000097167566
+    },
+    "live_reference_on_exact_featured_rows": {
+      "n": 82332,
+      "f1": 0.7899651104834691,
+      "precision": 0.793295219451427,
+      "recall": 0.7866628430247948,
+      "roc_auc": 0.8705057965735081,
+      "average_precision": 0.8954814622933913,
+      "tn": 27708,
+      "fp": 9292,
+      "fn": 9671,
+      "tp": 35661,
+      "false_positive_rate": 0.25113513513513513,
+      "alert_fraction": 0.5459966963027741
+    },
+    "reference_threshold": 0.11229526996612549,
+    "offline_threshold": 0.10712156444787979,
+    "offline_vs_live_exact_label_disagreement_count": 515,
+    "if_auc_positive_direction": 0.46457961174136286,
+    "if_auc_negative_direction": 0.5354203882586372,
+    "attack_category_recall": {
+      "Analysis": {
+        "count": 677,
+        "fraction_predicted_attack_offline": 0.9955686853766618,
+        "fraction_predicted_attack_live_exact": 0.9955686853766618
+      },
+      "Backdoor": {
+        "count": 583,
+        "fraction_predicted_attack_offline": 0.9399656946826758,
+        "fraction_predicted_attack_live_exact": 0.9382504288164666
+      },
+      "DoS": {
+        "count": 4089,
+        "fraction_predicted_attack_offline": 0.8879921741257031,
+        "fraction_predicted_attack_live_exact": 0.8835901198337002
+      },
+      "Exploits": {
+        "count": 11132,
+        "fraction_predicted_attack_offline": 0.6430111390585699,
+        "fraction_predicted_attack_live_exact": 0.629895795903701
+      },
+      "Fuzzers": {
+        "count": 6062,
+        "fraction_predicted_attack_offline": 0.5161662817551963,
+        "fraction_predicted_attack_live_exact": 0.5069284064665127
+      },
+      "Generic": {
+        "count": 18871,
+        "fraction_predicted_attack_offline": 0.989083779343967,
+        "fraction_predicted_attack_live_exact": 0.989083779343967
+      },
+      "Normal": {
+        "count": 37000,
+        "fraction_predicted_attack_offline": 0.25456756756756754,
+        "fraction_predicted_attack_live_exact": 0.25113513513513513
+      },
+      "Reconnaissance": {
+        "count": 3496,
+        "fraction_predicted_attack_offline": 0.540045766590389,
+        "fraction_predicted_attack_live_exact": 0.5320366132723112
+      },
+      "Shellcode": {
+        "count": 378,
+        "fraction_predicted_attack_offline": 0.5555555555555556,
+        "fraction_predicted_attack_live_exact": 0.5423280423280423
+      },
+      "Worms": {
+        "count": 44,
+        "fraction_predicted_attack_offline": 0.22727272727272727,
+        "fraction_predicted_attack_live_exact": 0.2727272727272727
+      }
+    },
+    "offline_metrics_by_feature_overlap": {
+      "seen_in_training": {
+        "n": 33440,
+        "f1": 0.9157241757488519,
+        "precision": 0.8446558973224164,
+        "recall": 0.9998503162070127,
+        "roc_auc": 0.8859909195509167,
+        "average_precision": 0.9688211135632223,
+        "tn": 1803,
+        "fp": 4914,
+        "fn": 4,
+        "tp": 26719,
+        "false_positive_rate": 0.7315765966949531,
+        "alert_fraction": 0.945962918660287
+      },
+      "not_seen_in_training": {
+        "n": 48892,
+        "f1": 0.569146960505138,
+        "precision": 0.6711438791152639,
+        "recall": 0.49406201300446023,
+        "roc_auc": 0.796995659447677,
+        "average_precision": 0.6867108091884057,
+        "tn": 25778,
+        "fp": 4505,
+        "fn": 9415,
+        "tp": 9194,
+        "false_positive_rate": 0.14876333256282404,
+        "alert_fraction": 0.2801889879734926
+      }
+    },
+    "raw_input_reconstruction_sample": {
+      "sample_size": 500,
+      "seed": 42,
+      "elapsed_s": 3.583541400003014,
+      "metrics": {
+        "n": 500,
+        "f1": 0.7857142857142857,
+        "precision": 0.810077519379845,
+        "recall": 0.7627737226277372,
+        "roc_auc": 0.8865867837994962,
+        "average_precision": 0.9069779745583972,
+        "tn": 177,
+        "fp": 49,
+        "fn": 65,
+        "tp": 209,
+        "false_positive_rate": 0.2168141592920354,
+        "alert_fraction": 0.516
+      },
+      "offline_metrics_same_rows": {
+        "n": 500,
+        "f1": 0.7970204841713222,
+        "precision": 0.8136882129277566,
+        "recall": 0.781021897810219,
+        "roc_auc": 0.8821781538660294,
+        "average_precision": 0.900524646572392,
+        "tn": 177,
+        "fp": 49,
+        "fn": 60,
+        "tp": 214,
+        "false_positive_rate": 0.2168141592920354,
+        "alert_fraction": 0.526
+      },
+      "live_exact_metrics_same_rows": {
+        "n": 500,
+        "f1": 0.7902621722846442,
+        "precision": 0.8115384615384615,
+        "recall": 0.7700729927007299,
+        "roc_auc": 0.8825172792455268,
+        "average_precision": 0.899658256634141,
+        "tn": 177,
+        "fp": 49,
+        "fn": 63,
+        "tp": 211,
+        "false_positive_rate": 0.2168141592920354,
+        "alert_fraction": 0.52
+      },
+      "disagreement_with_offline": 5,
+      "disagreement_with_live_exact": 2,
+      "per_feature_mismatch_fraction": {
+        "bytes_total": 0.0,
+        "bytes_per_pkt_src": 0.0,
+        "bytes_ratio": 0.0,
+        "bytes_diff_norm": 0.0,
+        "sbytes": 0.0,
+        "sttl": 0.0,
+        "bytes_per_pkt_dst": 0.0,
+        "dbytes": 0.0,
+        "ct_state_ttl": 0.002,
+        "dttl": 0.0,
+        "rate": 0.0,
+        "sload": 0.0,
+        "dur": 0.0,
+        "smean": 0.138,
+        "log1p_dbytes": 0.0,
+        "dmean": 0.09,
+        "pkts_total": 0.0,
+        "dinpkt": 0.396,
+        "dload": 0.0,
+        "dpkts": 0.0
+      }
+    }
+  },
+  "pinned_scoring_verification": {
+    "environment": {
+      "python": "3.12.10",
+      "sklearn": "1.5.1",
+      "numpy": "1.26.4",
+      "pandas": "2.2.2"
+    },
+    "note": "No retraining. Autoencoder uses its saved weights with an equivalent NumPy forward pass. Thresholds retain original test-prevalence leakage for reproduction diagnostics.",
+    "paths": {
+      "notebook_float64": {
+        "elapsed_s": 2.704457200001343,
+        "metrics": {
+          "Isolation Forest": {
+            "n": 82332,
+            "f1": 0.7352759518242379,
+            "precision": 0.7352435150873478,
+            "recall": 0.7353083914232772,
+            "roc_auc": 0.8074865204699979,
+            "average_precision": 0.880634596568554,
+            "tn": 24997,
+            "fp": 12003,
+            "fn": 11999,
+            "tp": 33333,
+            "false_positive_rate": 0.3244054054054054,
+            "threshold": 0.6075875419629535,
+            "alert_fraction": 0.5506485934994899,
+            "stored_f1": 0.7353,
+            "stored_roc_auc": 0.8075
+          },
+          "LOF": {
+            "n": 82332,
+            "f1": 0.4113736342487955,
+            "precision": 0.4112058894840089,
+            "recall": 0.41154151592693905,
+            "roc_auc": 0.4110506285757212,
+            "average_precision": 0.5575211745063091,
+            "tn": 10287,
+            "fp": 26713,
+            "fn": 26676,
+            "tp": 18656,
+            "false_positive_rate": 0.721972972972973,
+            "threshold": 1.1189390373885804e-11,
+            "alert_fraction": 0.5510494097070398,
+            "stored_f1": 0.711,
+            "stored_roc_auc": 0.409
+          },
+          "Autoencoder (PyTorch)": {
+            "n": 82332,
+            "f1": 0.662323489533384,
+            "precision": 0.6619367632477691,
+            "recall": 0.6627106679608223,
+            "roc_auc": 0.7284782693330408,
+            "average_precision": 0.7423866919910906,
+            "tn": 21657,
+            "fp": 15343,
+            "fn": 15290,
+            "tp": 30042,
+            "false_positive_rate": 0.4146756756756757,
+            "threshold": 0.013304921798408031,
+            "alert_fraction": 0.5512437448379731,
+            "stored_f1": 0.6615,
+            "stored_roc_auc": 0.7285
+          },
+          "Ensemble IF(0.1)+LOF(0.2)+AE(0.7)": {
+            "n": 82332,
+            "f1": 0.8564590135003971,
+            "precision": 0.8564590135003971,
+            "recall": 0.8564590135003971,
+            "roc_auc": 0.8844068583495699,
+            "average_precision": 0.8739782479587666,
+            "tn": 30493,
+            "fp": 6507,
+            "fn": 6507,
+            "tp": 38825,
+            "false_positive_rate": 0.17586486486486486,
+            "threshold": 0.07609155018467038,
+            "alert_fraction": 0.5506000097167566,
+            "stored_f1": 0.8565,
+            "stored_roc_auc": 0.8844
+          }
+        },
+        "attack_recall_or_normal_fpr": {
+          "Analysis": {
+            "n": 677,
+            "predicted_attack_fraction": 0.9985228951255539
+          },
+          "Backdoor": {
+            "n": 583,
+            "predicted_attack_fraction": 0.9485420240137221
+          },
+          "DoS": {
+            "n": 4089,
+            "predicted_attack_fraction": 0.9021765712888237
+          },
+          "Exploits": {
+            "n": 11132,
+            "predicted_attack_fraction": 0.8763923823212361
+          },
+          "Fuzzers": {
+            "n": 6062,
+            "predicted_attack_fraction": 0.4774001979544705
+          },
+          "Generic": {
+            "n": 18871,
+            "predicted_attack_fraction": 0.9884478829950718
+          },
+          "Normal": {
+            "n": 37000,
+            "predicted_attack_fraction": 0.17586486486486486
+          },
+          "Reconnaissance": {
+            "n": 3496,
+            "predicted_attack_fraction": 0.681350114416476
+          },
+          "Shellcode": {
+            "n": 378,
+            "predicted_attack_fraction": 0.5132275132275133
+          },
+          "Worms": {
+            "n": 44,
+            "predicted_attack_fraction": 0.6363636363636364
+          }
+        },
+        "overlap_metrics": {
+          "seen_feature_vector": {
+            "n": 33440,
+            "f1": 0.9794626956159297,
+            "precision": 0.991941363828236,
+            "recall": 0.9672940912322718,
+            "roc_auc": 0.9671169197277094,
+            "average_precision": 0.9855980954968995,
+            "tn": 6507,
+            "fp": 210,
+            "fn": 874,
+            "tp": 25849,
+            "false_positive_rate": 0.03126395712371594,
+            "threshold": 0.07609155018467038,
+            "alert_fraction": 0.7792763157894737
+          },
+          "unseen_feature_vector": {
+            "n": 48892,
+            "f1": 0.6850747056649596,
+            "precision": 0.6732734914128574,
+            "recall": 0.6972970068246548,
+            "roc_auc": 0.8030807851334566,
+            "average_precision": 0.6877811936060086,
+            "tn": 23986,
+            "fp": 6297,
+            "fn": 5633,
+            "tp": 12976,
+            "false_positive_rate": 0.20793844731367433,
+            "threshold": 0.07609155018467038,
+            "alert_fraction": 0.3941953693855845
+          }
+        }
+      },
+      "backend_float32": {
+        "elapsed_s": 70.54202580000856,
+        "metrics": {
+          "Isolation Forest": {
+            "n": 82332,
+            "f1": 0.6324160370595048,
+            "precision": 0.632409061831337,
+            "recall": 0.6324230124415424,
+            "roc_auc": 0.6171355775169858,
+            "average_precision": 0.6224778998795761,
+            "tn": 20336,
+            "fp": 16664,
+            "fn": 16663,
+            "tp": 28669,
+            "false_positive_rate": 0.45037837837837835,
+            "threshold": 0.7522575259208679,
+            "alert_fraction": 0.5506121556624399,
+            "stored_f1": 0.7353,
+            "stored_roc_auc": 0.8075
+          },
+          "LOF": {
+            "n": 82332,
+            "f1": 0.6468278478778787,
+            "precision": 0.6468278478778787,
+            "recall": 0.6468278478778787,
+            "roc_auc": 0.6961258820807925,
+            "average_precision": 0.8158857601359061,
+            "tn": 20990,
+            "fp": 16010,
+            "fn": 16010,
+            "tp": 29322,
+            "false_positive_rate": 0.4327027027027027,
+            "threshold": 4.081781504129778e-10,
+            "alert_fraction": 0.5506000097167566,
+            "stored_f1": 0.711,
+            "stored_roc_auc": 0.409
+          },
+          "Autoencoder (PyTorch)": {
+            "n": 82332,
+            "f1": 0.8249139680578841,
+            "precision": 0.8249139680578841,
+            "recall": 0.8249139680578841,
+            "roc_auc": 0.8714381476243738,
+            "average_precision": 0.8754514730013336,
+            "tn": 29063,
+            "fp": 7937,
+            "fn": 7937,
+            "tp": 37395,
+            "false_positive_rate": 0.21451351351351353,
+            "threshold": 0.036276921674609906,
+            "alert_fraction": 0.5506000097167566,
+            "stored_f1": 0.6615,
+            "stored_roc_auc": 0.7285
+          },
+          "Ensemble IF(0.1)+LOF(0.2)+AE(0.7)": {
+            "n": 82332,
+            "f1": 0.8396055766346069,
+            "precision": 0.8396055766346069,
+            "recall": 0.8396055766346069,
+            "roc_auc": 0.8987768714183169,
+            "average_precision": 0.9193326398262651,
+            "tn": 29729,
+            "fp": 7271,
+            "fn": 7271,
+            "tp": 38061,
+            "false_positive_rate": 0.1965135135135135,
+            "threshold": 0.09864952976256645,
+            "alert_fraction": 0.5506000097167566,
+            "stored_f1": 0.8565,
+            "stored_roc_auc": 0.8844
+          }
+        },
+        "attack_recall_or_normal_fpr": {
+          "Analysis": {
+            "n": 677,
+            "predicted_attack_fraction": 0.9985228951255539
+          },
+          "Backdoor": {
+            "n": 583,
+            "predicted_attack_fraction": 0.9451114922813036
+          },
+          "DoS": {
+            "n": 4089,
+            "predicted_attack_fraction": 0.8811445341159208
+          },
+          "Exploits": {
+            "n": 11132,
+            "predicted_attack_fraction": 0.7920409629895796
+          },
+          "Fuzzers": {
+            "n": 6062,
+            "predicted_attack_fraction": 0.5122071923457605
+          },
+          "Generic": {
+            "n": 18871,
+            "predicted_attack_fraction": 0.9872290816596895
+          },
+          "Normal": {
+            "n": 37000,
+            "predicted_attack_fraction": 0.1965135135135135
+          },
+          "Reconnaissance": {
+            "n": 3496,
+            "predicted_attack_fraction": 0.6979405034324943
+          },
+          "Shellcode": {
+            "n": 378,
+            "predicted_attack_fraction": 0.5608465608465608
+          },
+          "Worms": {
+            "n": 44,
+            "predicted_attack_fraction": 0.6136363636363636
+          }
+        },
+        "overlap_metrics": {
+          "seen_feature_vector": {
+            "n": 33440,
+            "f1": 0.9643731000222436,
+            "precision": 0.9554820936639118,
+            "recall": 0.9734311267447517,
+            "roc_auc": 0.9754098213615743,
+            "average_precision": 0.9935672700045326,
+            "tn": 5505,
+            "fp": 1212,
+            "fn": 710,
+            "tp": 26013,
+            "false_positive_rate": 0.18043769539973203,
+            "threshold": 0.09864952976256645,
+            "alert_fraction": 0.8141447368421053
+          },
+          "unseen_feature_vector": {
+            "n": 48892,
+            "f1": 0.6562806405926571,
+            "precision": 0.6653780305959022,
+            "recall": 0.6474286635498953,
+            "roc_auc": 0.7828990256772205,
+            "average_precision": 0.6735027353669414,
+            "tn": 24224,
+            "fp": 6059,
+            "fn": 6561,
+            "tp": 12048,
+            "false_positive_rate": 0.20007925238582702,
+            "threshold": 0.09864952976256645,
+            "alert_fraction": 0.37034688701628077
+          }
+        }
+      }
+    },
+    "transformation_parity": {
+      "max_absolute_difference": 0.21721721737756505,
+      "fraction_rows_with_any_difference_above_1e_minus_4": 0.9930889569061847,
+      "per_feature_max_absolute_difference": {
+        "bytes_total": 0.10960961112359144,
+        "bytes_per_pkt_src": 0.10960960799494426,
+        "bytes_ratio": 0.10960961112359144,
+        "bytes_diff_norm": 0.10960962172146432,
+        "sbytes": 0.10960960349401791,
+        "sttl": 0.11011010960109896,
+        "bytes_per_pkt_dst": 0.03303303804483493,
+        "dbytes": 0.032532537544334494,
+        "ct_state_ttl": 2.935484011423739e-08,
+        "dttl": 0.002001999197779547,
+        "rate": 0.06556556771348065,
+        "sload": 0.03303306125425132,
+        "dur": 0.06556561341634148,
+        "smean": 0.11311312600060386,
+        "log1p_dbytes": 0.03253254834357444,
+        "dmean": 0.03253252024168485,
+        "pkts_total": 0.21721721737756505,
+        "dinpkt": 0.008007997566753966,
+        "dload": 1.9855328914353265e-07,
+        "dpkts": 0.05055053939332477
+      }
+    },
+    "artifact_sha256": {
+      "qt_improvements.pkl": "97743dfd96856809d51590ce197a1f0d5d95b7f1206487c8f589dfd3d4633ee1",
+      "if_base.pkl": "9b46cb203bfb2630a4de7d574e7ce610f9e500838423eddf2de6703d03b4c1a0",
+      "lof.pkl": "7d5ba78e7c63228430c126262273ac718478725358082a82b58f7c8119d93f8f",
+      "autoencoder.pt": "4bf2db0ac468a2d86927e87b1196027a70de30b5d94416d9f5ea57788211d5c8",
+      "ensemble_3models.pkl": "adbea7afac24fe59f30762ca8da421c7c0d440c5c0d9dec70446d933c8fae263"
+    },
+    "torch_forward_verification": {
+      "torch_version": "2.13.0+cpu",
+      "note": "Original PyTorch version not recorded; verification uses saved weights and pinned sklearn transformations. Metrics still use the original leaked test prevalence threshold.",
+      "notebook_float64": {
+        "max_normalized_ae_difference_vs_numpy": 6.109476089477539e-07,
+        "ensemble_f1": 0.8564590135003971,
+        "ensemble_roc_auc": 0.884406831222381,
+        "tn": 30493,
+        "fp": 6507,
+        "fn": 6507,
+        "tp": 38825,
+        "false_positive_rate": 0.17586486486486486,
+        "attack_recall_or_normal_fpr": {
+          "Analysis": {
+            "n": 677,
+            "predicted_attack_fraction": 0.9985228951255539
+          },
+          "Backdoor": {
+            "n": 583,
+            "predicted_attack_fraction": 0.9485420240137221
+          },
+          "DoS": {
+            "n": 4089,
+            "predicted_attack_fraction": 0.9021765712888237
+          },
+          "Exploits": {
+            "n": 11132,
+            "predicted_attack_fraction": 0.8763923823212361
+          },
+          "Fuzzers": {
+            "n": 6062,
+            "predicted_attack_fraction": 0.4774001979544705
+          },
+          "Generic": {
+            "n": 18871,
+            "predicted_attack_fraction": 0.9884478829950718
+          },
+          "Normal": {
+            "n": 37000,
+            "predicted_attack_fraction": 0.17586486486486486
+          },
+          "Reconnaissance": {
+            "n": 3496,
+            "predicted_attack_fraction": 0.681350114416476
+          },
+          "Shellcode": {
+            "n": 378,
+            "predicted_attack_fraction": 0.5132275132275133
+          },
+          "Worms": {
+            "n": 44,
+            "predicted_attack_fraction": 0.6363636363636364
+          }
+        },
+        "overlap_slice_f1": {
+          "seen_feature_vector": 0.9794626956159297,
+          "unseen_feature_vector": 0.6850747056649596
+        }
+      },
+      "backend_float32": {
+        "max_normalized_ae_difference_vs_numpy": 6.556510925292969e-07,
+        "ensemble_f1": 0.8396055766346069,
+        "ensemble_roc_auc": 0.898776842204421,
+        "tn": 29729,
+        "fp": 7271,
+        "fn": 7271,
+        "tp": 38061,
+        "false_positive_rate": 0.1965135135135135,
+        "attack_recall_or_normal_fpr": {
+          "Analysis": {
+            "n": 677,
+            "predicted_attack_fraction": 0.9985228951255539
+          },
+          "Backdoor": {
+            "n": 583,
+            "predicted_attack_fraction": 0.9451114922813036
+          },
+          "DoS": {
+            "n": 4089,
+            "predicted_attack_fraction": 0.8811445341159208
+          },
+          "Exploits": {
+            "n": 11132,
+            "predicted_attack_fraction": 0.7920409629895796
+          },
+          "Fuzzers": {
+            "n": 6062,
+            "predicted_attack_fraction": 0.5122071923457605
+          },
+          "Generic": {
+            "n": 18871,
+            "predicted_attack_fraction": 0.9872290816596895
+          },
+          "Normal": {
+            "n": 37000,
+            "predicted_attack_fraction": 0.1965135135135135
+          },
+          "Reconnaissance": {
+            "n": 3496,
+            "predicted_attack_fraction": 0.6979405034324943
+          },
+          "Shellcode": {
+            "n": 378,
+            "predicted_attack_fraction": 0.5608465608465608
+          },
+          "Worms": {
+            "n": 44,
+            "predicted_attack_fraction": 0.6136363636363636
+          }
+        },
+        "overlap_slice_f1": {
+          "seen_feature_vector": 0.9643731000222436,
+          "unseen_feature_vector": 0.6562806405926571
+        }
+      }
+    }
+  },
+  "python_source_validation": {
+    "backend": {
+      "checked_files": 13,
+      "parse_errors": []
+    },
+    "frontend": {
+      "checked_files": 5,
+      "parse_errors": []
+    }
+  },
+  "visualization_json_validation": {
+    "checked_files": 16,
+    "all_valid": true
+  },
+  "notebook_conflict_block_total": 1268,
+  "validation_limits": [
+    "No model retraining",
+    "Invalid notebooks not executed",
+    "Original full training environment not documented",
+    "Docker and browser UI not launched",
+    "No prospective or untouched external traffic available",
+    "Reproduced scores retain test-prevalence leakage and cannot serve as unbiased final evaluation"
+  ]
+}
