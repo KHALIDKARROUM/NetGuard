@@ -340,6 +340,11 @@ They are preserved for review and are not additional current workflow steps.
         "executable_cell_ids": [c["id"] for c in added if c["cell_type"] == "code"],
         "historical_execution_policy": "preserve unchanged; skipped by supported runner",
     }
+    combined["metadata"]["language_info"]["version"] = "3.13.9"
+    combined["metadata"]["kernelspec"] = {
+        "display_name": "NetGuard workflow (Python 3.13.9)",
+        "language": "python", "name": "python3",
+    }
     combined["nbformat_minor"] = 5
     nbformat.validate(nbformat.from_dict(deepcopy(combined)))
     path.write_text(json.dumps(combined, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n")

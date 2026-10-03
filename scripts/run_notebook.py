@@ -71,6 +71,11 @@ def main():
     for i, cell in enumerate(executed["cells"]):
         if cell["id"] in current_ids:
             result["cells"][i] = cell
+    result["metadata"]["language_info"] = executed["metadata"]["language_info"]
+    result["metadata"]["kernelspec"] = {
+        "display_name": "NetGuard workflow (Python 3.13.9)",
+        "language": "python", "name": "python3",
+    }
     result["metadata"]["netguard_workflow"]["last_execution"] = {
         "utc": datetime.now(timezone.utc).isoformat(),
         "python": sys.version.split()[0], "executed_current_cells": client.code_cells_executed,
