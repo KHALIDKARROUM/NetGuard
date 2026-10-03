@@ -60,6 +60,9 @@ not by standard Jupyter itself.
    including signatures associated with conflicting labels.
 3. Calculate physical features from raw values and fit RobustScaler only on
    fit rows. Every transformation uses float64 and fixed feature order.
+   [The feature dictionary](FEATURES.md) documents all formulas, units and
+   zero-denominator policies. Schema 2 includes exact and explicitly smoothed
+   ratios; older workflow artifacts must be retrained.
 4. Fit a dummy prior and histogram gradient boosting baseline. Choose model
    and a fixed decision threshold using validation F1 only; tie policies are
    documented in the notebook and manifest. Do not refit after selection.
@@ -80,6 +83,8 @@ Generated outputs under `artifacts/notebook_workflow/` are ignored by Git:
 | `benchmark_slices.csv` | Seen/unseen development-input signature metrics |
 | `attack_category_metrics.csv` | Per-category recall and sample counts |
 | `manifest.json` | Input/output/source hashes, versions, configuration and parity checks |
+| `feature_catalog.json` | Every unscaled feature's meaning, unit, formula and zero policy |
+| `feature_quality_report.json` | Physical invariant checks across both complete raw CSVs |
 | `execution_check.json` | Notebook validation and execution completion evidence |
 | `00_netguard_complete.executed.ipynb` | Executed current report plus unchanged historical cells |
 

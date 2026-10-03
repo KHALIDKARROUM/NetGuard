@@ -77,6 +77,7 @@ sys.path.insert(0, str(ROOT))
 from netguard_workflow import (
     WorkflowConfig, RawTrafficFeatures, load_raw_data, split_development,
     fit_baselines, evaluate_benchmark, save_run, predict_raw,
+    feature_catalog, feature_quality_report,
 )
 
 expected_versions = {
@@ -126,17 +127,41 @@ display(pd.DataFrame([
 """),
         markdown("current-features-heading", """### 4. Features from physical measurements
 
-Calculate byte/packet totals, bytes per packet, log1p features and TTL indicators
-from raw values. Zero packet denominators return zero, with explicit zero-packet
-indicators. The byte ratio is `(sbytes + 1)/(dbytes + 1)` and normalized byte
-difference is `(sbytes - dbytes)/(sbytes + dbytes + 1)`. Low TTL means a measured
-value between 1 and 9; it is a candidate feature, not a proven attack rule.
-Float64 is used consistently. RobustScaler is fitted inside each model pipeline
-on the fit partition only. Neither labels nor attack categories enter features.
+Calculate all domain features from original measurements before fitting any
+scaler. `bytes_total = sbytes + dbytes` is bytes and `pkts_total = spkts + dpkts`
+is a nonnegative integer packet count. Bytes per packet use the actual packet
+count, without adding a packet to the denominator.
+
+The exact byte ratio is `sbytes / dbytes`; zero denominators use a zero sentinel
+and an explicit flag. Keep the separately named one-byte-smoothed ratio
+`(sbytes + 1)/(dbytes + 1)`. Signed byte balance is
+`(sbytes - dbytes)/(sbytes + dbytes)`, with a zero-total flag when undefined.
+An undefined-ratio sentinel must not be interpreted as an observed zero ratio.
+
+Log features use `ln(1 + raw value / one reference unit)`, so raw zero maps to
+zero. Negative/nonfinite measurements are rejected instead of clipped. Byte
+and packet counts are integral; TTL values are integers from 0 through 255.
+Low TTL means a recorded value from 1 through 9; it does not prove an attack.
+
+The dictionary below defines every unscaled feature, formula, unit and zero
+policy. Full-dataset checks verify both raw CSVs. RobustScaler is fitted on fit
+rows only, **after** domain features exist. Scaled values are dimensionless
+model inputs and must not be described as physical byte or packet counts.
+See `notebooks/FEATURES.md`. Feature schema 2 requires retraining older models.
 """),
         code("current-features", """feature_preview = RawTrafficFeatures().transform(development.iloc[:5])
-assert (feature_preview[["bytes_total", "pkts_total"]] >= 0).all().all()
+physical_checks = {
+    "development": feature_quality_report(development),
+    "previously inspected benchmark": feature_quality_report(benchmark),
+}
+display(pd.DataFrame(feature_catalog()))
 display(feature_preview)
+display(pd.DataFrame([
+    {"partition": name, "rows_checked": result["rows"], "all_checks_passed": all(result["checks"].values()),
+     "zero_destination_packet_rows": result["zero_denominator_rows"]["destination_packets"],
+     "zero_destination_byte_rows": result["zero_denominator_rows"]["destination_bytes"]}
+    for name, result in physical_checks.items()
+]))
 print("Engineered predictor count:", feature_preview.shape[1])
 """),
         markdown("current-training-heading", """### 5. Baseline training and validation-only decisions

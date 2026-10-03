@@ -58,7 +58,7 @@
     "executed_notebook": "00_netguard_complete.executed.ipynb"
   },
   "manifest": {
-    "created_utc": "2026-10-03T10:06:40.528510+00:00",
+    "created_utc": "2026-10-03T10:36:32.935364+00:00",
     "python": "3.13.9",
     "packages": {
       "numpy": "2.2.6",
@@ -104,10 +104,13 @@
       "pkts_total",
       "bytes_per_pkt_src",
       "bytes_per_pkt_dst",
+      "bytes_ratio",
       "bytes_ratio_smoothed",
       "bytes_diff_normalized",
       "src_zero_pkts",
       "dst_zero_pkts",
+      "dst_zero_bytes",
+      "zero_total_bytes",
       "src_low_ttl",
       "dst_low_ttl",
       "log1p_sbytes",
@@ -118,7 +121,93 @@
       "log1p_dload"
     ],
     "feature_precision": "float64",
-    "threshold": 0.47587219640263856,
+    "feature_schema_version": 2,
+    "preprocessing_order": [
+      "raw_features",
+      "scaler",
+      "model"
+    ],
+    "physical_feature_checks": {
+      "status": "passed",
+      "stage": "raw features before scaling",
+      "development": {
+        "rows": 175341,
+        "feature_count": 29,
+        "schema_version": 2,
+        "precision": "float64; byte/packet counts remain integer-valued",
+        "checks": {
+          "all_values_finite": true,
+          "raw_measurements_unchanged": true,
+          "byte_total_matches_raw": true,
+          "packet_total_matches_raw": true,
+          "nonnegative_integer_counts": true,
+          "nonnegative_features_except_signed_byte_balance": true,
+          "signed_byte_balance_in_bounds": true,
+          "indicators_binary": true,
+          "ttl_values_in_range": true,
+          "src_bytes_per_packet_defined_values": true,
+          "src_zero_packet_policy": true,
+          "dst_bytes_per_packet_defined_values": true,
+          "dst_zero_packet_policy": true,
+          "exact_byte_ratio_defined_values": true,
+          "zero_byte_ratio_policy": true,
+          "smoothed_byte_ratio_matches_raw": true,
+          "zero_total_byte_policy": true,
+          "signed_byte_balance_matches_raw": true,
+          "logarithms_recover_raw_measurements": true,
+          "ttl_rules_use_raw_measurements": true
+        },
+        "zero_denominator_rows": {
+          "source_packets": 0,
+          "destination_packets": 84282,
+          "destination_bytes": 84282,
+          "total_bytes": 0
+        },
+        "positive_bytes_with_zero_packets": {
+          "source": 0,
+          "destination": 0
+        }
+      },
+      "benchmark": {
+        "rows": 82332,
+        "feature_count": 29,
+        "schema_version": 2,
+        "precision": "float64; byte/packet counts remain integer-valued",
+        "checks": {
+          "all_values_finite": true,
+          "raw_measurements_unchanged": true,
+          "byte_total_matches_raw": true,
+          "packet_total_matches_raw": true,
+          "nonnegative_integer_counts": true,
+          "nonnegative_features_except_signed_byte_balance": true,
+          "signed_byte_balance_in_bounds": true,
+          "indicators_binary": true,
+          "ttl_values_in_range": true,
+          "src_bytes_per_packet_defined_values": true,
+          "src_zero_packet_policy": true,
+          "dst_bytes_per_packet_defined_values": true,
+          "dst_zero_packet_policy": true,
+          "exact_byte_ratio_defined_values": true,
+          "zero_byte_ratio_policy": true,
+          "smoothed_byte_ratio_matches_raw": true,
+          "zero_total_byte_policy": true,
+          "signed_byte_balance_matches_raw": true,
+          "logarithms_recover_raw_measurements": true,
+          "ttl_rules_use_raw_measurements": true
+        },
+        "zero_denominator_rows": {
+          "source_packets": 0,
+          "destination_packets": 36006,
+          "destination_bytes": 36006,
+          "total_bytes": 0
+        },
+        "positive_bytes_with_zero_packets": {
+          "source": 0,
+          "destination": 0
+        }
+      }
+    },
+    "threshold": 0.4641181101371265,
     "threshold_policy": "maximum validation F1; equal F1 chooses higher threshold",
     "model_selection": "validation F1, then average precision, then name",
     "selected_model": "hist_gradient_boosting",
@@ -135,50 +224,53 @@
       "UNSW_NB15_testing-set.csv": "734fe6642edf758f7c94d7d9149426b49d202fe8e7bf0bef47392489c3c0a559"
     },
     "source_sha256": {
-      "netguard_workflow/workflow.py": "5c7a9a189ccf7e118e6d33aaa65d354a6f40da3c38aeec0e13f45cca7ca404bc",
-      "requirements-notebooks.txt": "a18cd262fc535d756705827aed52cdacda7ac9cd410efc282f56db2a17ccf0f3"
+      "netguard_workflow/workflow.py": "bf6d62af3059220858b36a4ddff99bd8f42f16747f35c81567f04057c79c19a8",
+      "requirements-notebooks.txt": "a18cd262fc535d756705827aed52cdacda7ac9cd410efc282f56db2a17ccf0f3",
+      "netguard_workflow/features.py": "25476667f5dd2696a27c571adc2ae29d86a0ad94516fbd45efbe7224580ba505"
     },
     "output_sha256": {
-      "model.joblib": "7a9cb44a8dfa4fc3f1c0756ddefaccac7b02371380f6c3d4574cc1bfc46d4445",
-      "benchmark_predictions.csv": "8be03ac43cfae8a0722d1b71bb0af2a58f19aa29c156d45a0fdf268b104efee2",
-      "validation_comparison.csv": "93e9cf40aef0c2621e1691e7fda24452122c7274df3d996df24238bd2d3bea0d",
-      "benchmark_slices.csv": "19c4b9d9f21c0188bc355741fcf8436b566547311d7f8fa3fd3ceade03cd6af0",
-      "attack_category_metrics.csv": "47da1af87b8fd3ed8d1570612872b4273c4afa01ba096508f5bc00ed2cb0f1c8",
+      "model.joblib": "8e0af2bd490f19c0aa8cdbce8879e439325498ef4fc4d65a1c3633f03dd40663",
+      "benchmark_predictions.csv": "cdcd5e66f25750ed2c979c6e9a7452cdba86a04af0f8af8efbc4ae30ac1fc09a",
+      "validation_comparison.csv": "92fbfcd0187dd119e5051f42686178391e813ed891ad2e6d47992884689a7085",
+      "benchmark_slices.csv": "fdf3a842432cc6fd163e9008ac51d1b945a9de0f2b549b465e5aaed6dc26129a",
+      "attack_category_metrics.csv": "cc44aec464a74ad990fd24bd35e6e2c9c5c8cad78fea08a7e1954fcaf242b8d1",
       "development_split.csv": "72f343d0c6f5268f8729cd1506ac7b2db6230e9082a374ef8a4072e3992f797f",
-      "metrics.json": "596e065b6260c1c7503e76d4478f03da0806afe0a93982ee48e27d78313ca5de"
+      "metrics.json": "226eee718d681aa592acbbd6e2c417da69b36cc2149a6132e6a28341b77a1c71",
+      "feature_catalog.json": "874167b6fc70ca998a48dd8922aa56a52a4a3e01bf79384c6abb3d167d96cfdb",
+      "feature_quality_report.json": "32b4d2b2dd4d23d42d103dc5b6bd7e4a767e6f0fd9f69e425c575288c17891f3"
     }
   },
   "metrics": {
     "selected_model": "hist_gradient_boosting",
     "benchmark": {
       "rows": 82332,
-      "threshold": 0.47587219640263856,
-      "precision": 0.7998063509709347,
-      "recall": 0.9839848230830318,
-      "f1": 0.8823872684292257,
-      "roc_auc": 0.97979444685575,
-      "average_precision": 0.985120515888499,
-      "false_positive_rate": 0.3017567567567568,
-      "tn": 25835,
-      "fp": 11165,
-      "fn": 726,
-      "tp": 44606
+      "threshold": 0.4641181101371265,
+      "precision": 0.7766295569411397,
+      "recall": 0.9864113650401483,
+      "f1": 0.86903963696081,
+      "roc_auc": 0.9758296847761023,
+      "average_precision": 0.9821790744015734,
+      "false_positive_rate": 0.3475945945945946,
+      "tn": 24139,
+      "fp": 12861,
+      "fn": 616,
+      "tp": 44716
     },
     "validation": [
       {
         "model": "hist_gradient_boosting",
         "rows": 30754,
-        "threshold": 0.47587219640263856,
-        "precision": 0.9167871485943775,
-        "recall": 0.9780075402719067,
-        "f1": 0.9464083358668914,
-        "roc_auc": 0.9879245486261163,
-        "average_precision": 0.9901749224896073,
-        "false_positive_rate": 0.11730072463768115,
-        "tn": 11694,
-        "fp": 1554,
-        "fn": 385,
-        "tp": 17121
+        "threshold": 0.4641181101371265,
+        "precision": 0.8021090943026457,
+        "recall": 0.9819490460413572,
+        "f1": 0.8829647892749827,
+        "roc_auc": 0.9353997215619931,
+        "average_precision": 0.9530998700533726,
+        "false_positive_rate": 0.3201237922705314,
+        "tn": 9007,
+        "fp": 4241,
+        "fn": 316,
+        "tp": 17190
       },
       {
         "model": "dummy_prior",
@@ -197,11 +289,5 @@
       }
     ],
     "evaluation_status": "previously inspected benchmark; not an untouched holdout"
-  },
-  "additional_verification": {
-    "behaviour_tests_passed": 5,
-    "repeat_fresh_kernel_run_matches_first_prediction_csv": true,
-    "first_and_repeat_prediction_csv_sha256": "8be03ac43cfae8a0722d1b71bb0af2a58f19aa29c156d45a0fdf268b104efee2",
-    "scope": "Reproducibility and pipeline behaviour; not a new untouched final evaluation."
   }
 }

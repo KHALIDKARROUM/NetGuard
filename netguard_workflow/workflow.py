@@ -16,7 +16,6 @@ import platform
 import joblib
 import numpy as np
 import pandas as pd
-from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.metrics import (
@@ -28,18 +27,10 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import RobustScaler
 from threadpoolctl import threadpool_limits
 
-RAW_INPUTS = (
-    "sbytes", "dbytes", "spkts", "dpkts", "dur", "rate",
-    "sload", "dload", "sttl", "dttl",
+from .features import (
+    FEATURE_SCHEMA_VERSION, RAW_INPUTS, FEATURE_NAMES, RawTrafficFeatures,
+    feature_catalog, feature_quality_report,
 )
-DERIVED_INPUTS = (
-    "bytes_total", "pkts_total", "bytes_per_pkt_src", "bytes_per_pkt_dst",
-    "bytes_ratio_smoothed", "bytes_diff_normalized", "src_zero_pkts",
-    "dst_zero_pkts", "src_low_ttl", "dst_low_ttl",
-    "log1p_sbytes", "log1p_dbytes", "log1p_dur", "log1p_rate",
-    "log1p_sload", "log1p_dload",
-)
-FEATURE_NAMES = RAW_INPUTS + DERIVED_INPUTS
 
 
 @dataclass(frozen=True)
@@ -52,58 +43,6 @@ class WorkflowConfig:
     def __post_init__(self):
         if self.validation_folds < 2 or self.max_iter < 1 or self.threads < 1:
             raise ValueError("Require at least two folds and positive iterations/threads.")
-
-
-class RawTrafficFeatures(TransformerMixin, BaseEstimator):
-    """Deterministic float64 features built from ten measured input fields.
-
-    A zero packet denominator produces a zero byte-per-packet value and an
-    explicit zero-packet indicator. Ratios use documented additive smoothing.
-    Low TTL is a candidate indicator, not a rule that proves an attack.
-    """
-
-    def fit(self, X, y=None):
-        self.transform(X)
-        self.n_features_in_ = len(RAW_INPUTS)
-        self.feature_names_in_ = np.asarray(RAW_INPUTS, dtype=object)
-        return self
-
-    def transform(self, X):
-        if not isinstance(X, pd.DataFrame):
-            raise TypeError("Supply raw measurements as a pandas DataFrame.")
-        missing = sorted(set(RAW_INPUTS) - set(X.columns))
-        if missing:
-            raise ValueError(f"Missing required raw measurements: {missing}")
-        f = X.loc[:, list(RAW_INPUTS)].astype(np.float64).copy()
-        values = f.to_numpy()
-        if not np.isfinite(values).all() or (values < 0).any():
-            raise ValueError("Raw measurements must be finite and nonnegative.")
-        for col in ("spkts", "dpkts", "sttl", "dttl"):
-            if (f[col] != np.floor(f[col])).any():
-                raise ValueError(f"{col} must contain integer measurements.")
-        f["bytes_total"] = f.sbytes + f.dbytes
-        f["pkts_total"] = f.spkts + f.dpkts
-        for direction, byte_col, packet_col in (
-            ("src", "sbytes", "spkts"), ("dst", "dbytes", "dpkts")
-        ):
-            f[f"bytes_per_pkt_{direction}"] = np.divide(
-                f[byte_col], f[packet_col],
-                out=np.zeros(len(f), dtype=np.float64), where=f[packet_col] > 0,
-            )
-            f[f"{direction}_zero_pkts"] = (f[packet_col] == 0).astype(np.float64)
-        f["bytes_ratio_smoothed"] = (f.sbytes + 1.0) / (f.dbytes + 1.0)
-        f["bytes_diff_normalized"] = (f.sbytes - f.dbytes) / (f.bytes_total + 1.0)
-        f["src_low_ttl"] = ((f.sttl > 0) & (f.sttl < 10)).astype(np.float64)
-        f["dst_low_ttl"] = ((f.dttl > 0) & (f.dttl < 10)).astype(np.float64)
-        for col in ("sbytes", "dbytes", "dur", "rate", "sload", "dload"):
-            f[f"log1p_{col}"] = np.log1p(f[col])
-        result = f.loc[:, list(FEATURE_NAMES)]
-        if not np.isfinite(result.to_numpy()).all():
-            raise ValueError("Feature calculations overflowed; check raw measurements.")
-        return result
-
-    def get_feature_names_out(self, input_features=None):
-        return np.asarray(FEATURE_NAMES, dtype=object)
 
 
 def _read_raw(path):
@@ -204,6 +143,8 @@ def fit_baselines(train, fit_idx, val_idx, config):
     winner = comparison.iloc[0].model
     bundle = {**fitted[winner], "config": asdict(config),
               "raw_inputs": list(RAW_INPUTS), "features": list(FEATURE_NAMES),
+              "feature_schema_version": FEATURE_SCHEMA_VERSION,
+              "feature_definitions": feature_catalog(),
               "threshold_policy": "maximum validation F1; equal F1 chooses higher threshold",
               "selection_policy": "validation F1, then average precision, then name",
               "evaluation_status": "previously inspected benchmark; not an untouched holdout"}
@@ -211,6 +152,8 @@ def fit_baselines(train, fit_idx, val_idx, config):
 
 
 def predict_raw(bundle, frame):
+    if bundle.get("feature_schema_version") != FEATURE_SCHEMA_VERSION:
+        raise ValueError("This model uses an earlier feature schema; rerun the corrected notebook to retrain.")
     config = bundle["config"]
     with threadpool_limits(limits=config["threads"]):
         scores = bundle["pipeline"].predict_proba(frame)[:, 1]
@@ -277,6 +220,14 @@ def save_run(root, output_dir, bundle, train, fit_idx, val_idx, predictions,
                "validation": validation.to_dict(orient="records"),
                "evaluation_status": bundle["evaluation_status"]}
     (output_dir / "metrics.json").write_text(json.dumps(summary, indent=2, allow_nan=False), encoding="utf-8")
+    catalog = {"schema_version": FEATURE_SCHEMA_VERSION, "stage": "raw features before scaling",
+               "features": feature_catalog()}
+    (output_dir / "feature_catalog.json").write_text(json.dumps(catalog, indent=2), encoding="utf-8")
+    raw_benchmark = _read_raw(Path(root)/"data/UNSW_NB15_testing-set.csv")
+    quality = {"status": "passed", "stage": "raw features before scaling",
+               "development": feature_quality_report(train),
+               "benchmark": feature_quality_report(raw_benchmark)}
+    (output_dir / "feature_quality_report.json").write_text(json.dumps(quality, indent=2), encoding="utf-8")
     packages = {p: version(p) for p in (
         "numpy", "pandas", "scipy", "scikit-learn", "joblib", "threadpoolctl", "nbformat", "nbclient", "ipykernel"
     )}
@@ -285,6 +236,9 @@ def save_run(root, output_dir, bundle, train, fit_idx, val_idx, predictions,
         "python": platform.python_version(), "packages": packages,
         "configuration": bundle["config"], "raw_inputs": bundle["raw_inputs"],
         "feature_names": bundle["features"], "feature_precision": "float64",
+        "feature_schema_version": FEATURE_SCHEMA_VERSION,
+        "preprocessing_order": list(bundle["pipeline"].named_steps),
+        "physical_feature_checks": quality,
         "threshold": bundle["threshold"], "threshold_policy": bundle["threshold_policy"],
         "model_selection": bundle["selection_policy"], "selected_model": bundle["model_name"],
         "fit_rows": len(fit_idx), "validation_rows": len(val_idx),
@@ -295,11 +249,13 @@ def save_run(root, output_dir, bundle, train, fit_idx, val_idx, predictions,
             Path(root)/"data/UNSW_NB15_training-set.csv", Path(root)/"data/UNSW_NB15_testing-set.csv"
         )},
         "source_sha256": {p.relative_to(root).as_posix(): file_sha256(p) for p in (
-            Path(root)/"netguard_workflow/workflow.py", Path(root)/"requirements-notebooks.txt"
+            Path(root)/"netguard_workflow/workflow.py", Path(root)/"requirements-notebooks.txt",
+            Path(root)/"netguard_workflow/features.py",
         )},
         "output_sha256": {name: file_sha256(output_dir/name) for name in (
             "model.joblib", "benchmark_predictions.csv", "validation_comparison.csv",
             "benchmark_slices.csv", "attack_category_metrics.csv", "development_split.csv", "metrics.json",
+            "feature_catalog.json", "feature_quality_report.json",
         )},
     }
     (output_dir / "manifest.json").write_text(json.dumps(manifest, indent=2, allow_nan=False), encoding="utf-8")

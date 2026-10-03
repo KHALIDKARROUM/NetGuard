@@ -144,4 +144,6 @@ historical reference. The seven source notebooks are repaired JSON notebooks.
 The documented runner executes only corrected sections in a fresh kernel.
 
 Follow [the environment setup and execution guide](notebooks/WORKFLOW.md).
+The [feature dictionary](notebooks/FEATURES.md) defines physical features and
+their zero-denominator policies before training-only scaling.
 The new artifacts are separate from the dashboard's historical models.
