@@ -60,18 +60,23 @@ not by standard Jupyter itself.
 2. Split the development CSV into fit and validation partitions. Exact
    signatures across the ten measured inputs remain in a single partition,
    including signatures associated with conflicting labels.
-3. Calculate physical features from raw values and fit RobustScaler only on
+3. Calculate physical features from raw values and fit StandardScaler only on
    fit rows. Every transformation uses float64 and fixed feature order.
    [The feature dictionary](FEATURES.md) documents all formulas, units and
    zero-denominator policies. Schema 2 includes exact and explicitly smoothed
    ratios; older workflow artifacts must be retrained.
-4. Fit a dummy prior and histogram gradient boosting baseline. Choose model
+4. Fit a dummy prior, logistic regression, random forest and histogram gradient
+   boosting with identical preprocessing and split membership. Compare a fixed
+   equal-weight soft vote of the three supervised models. Choose model
    and a fixed decision threshold by maximizing validation attack recall under
    a 1% empirical false-positive budget. Equal recall prefers fewer false
    positives, then a higher threshold. Candidate selection uses constrained
    recall, lower false-positive rate, average precision, then name. All score
    ties move together; the target is not an interpolated ROC point. Do not
-   refit after selection.
+   refit after selection. Retain the soft vote only if it gains at least two
+   percentage points of validation recall with no more than twice the best
+   individual's median 256-row prediction latency. Record convergence and
+   exclude nonconverged candidates from selection.
 5. Evaluate the previously inspected benchmark, including category and
    seen/unseen input-signature slices.
 6. Save the fitted pipeline and threshold, verify artifact reload and
@@ -88,6 +93,8 @@ Generated outputs under `artifacts/notebook_workflow/` are ignored by Git:
 | `benchmark_predictions.csv` | Score, decision, true label, category and overlap flag for every benchmark row |
 | `development_split.csv` | Row IDs and exact fit/validation membership |
 | `validation_comparison.csv` | Validation metrics and threshold for each candidate |
+| `benchmark_comparison.csv` | All candidates evaluated after freezing selection and thresholds |
+| `candidates/*.joblib` | Regenerable complete fitted candidate pipelines and manifests |
 | `metrics.json` | Selected model and aggregate metrics |
 | `benchmark_slices.csv` | Seen/unseen development-input signature metrics |
 | `attack_category_metrics.csv` | Per-category recall and sample counts |
@@ -155,5 +162,12 @@ against a separate live API process in a fresh backend-only environment.
 prediction in an isolated copy with no data directory and dataset reads blocked.
 The 1% budget is an empirical validation constraint, not a promise about other
 traffic. Benchmark results are measured at the frozen threshold and may exceed
-the target. Expanding baseline comparisons, checking the budget against real
+the target. Broader model tuning, checking the budget against real
 alert costs, uncertainty estimates and independent final testing remain work.
+
+See [the supervised comparison guide](SUPERVISED_COMPARISON.md) for the full
+tables, timing protocol and declared ensemble complexity rules. Compact results
+are committed under `data/reports/supervised_*`. The separate anomaly experiment
+reads only development data, removes one whole attack family and its matching
+signatures from fitting/calibration, and fits Isolation Forest and novelty LOF
+on normal traffic. It does not alter the supervised winner or API artifact.

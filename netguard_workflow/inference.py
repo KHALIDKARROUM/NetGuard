@@ -16,7 +16,7 @@ from threadpoolctl import threadpool_limits
 
 from .features import FEATURE_SCHEMA_VERSION, RAW_INPUTS, FEATURE_NAMES
 
-ARTIFACT_SCHEMA_VERSION = 2
+ARTIFACT_SCHEMA_VERSION = 3
 RUNTIME_PACKAGES = ("numpy", "pandas", "scipy", "scikit-learn", "joblib", "threadpoolctl")
 SCORE_CALIBRATION = {
     "method": "identity", "parameters": {}, "fitted_on": None,
@@ -39,6 +39,12 @@ def feature_implementation_hash():
     return sha256(source.encode("utf-8")).hexdigest()
 
 
+@lru_cache(maxsize=1)
+def model_implementation_hash():
+    source = Path(__file__).with_name("models.py").read_text(encoding="utf-8")
+    return sha256(source.encode("utf-8")).hexdigest()
+
+
 def validate_bundle(bundle):
     if not isinstance(bundle, dict):
         raise ArtifactError("The prediction artifact must contain a complete pipeline bundle.")
@@ -52,6 +58,8 @@ def validate_bundle(bundle):
         raise ArtifactError("Prediction runtime differs from training. Install the shared locked environment.")
     if bundle.get("feature_implementation_sha256") != feature_implementation_hash():
         raise ArtifactError("Feature implementation differs from training; retrain the shared artifact.")
+    if bundle.get("model_implementation_sha256") != model_implementation_hash():
+        raise ArtifactError("Model implementation differs from training; retrain the shared artifact.")
     if bundle.get("raw_inputs") != list(RAW_INPUTS) or bundle.get("features") != list(FEATURE_NAMES):
         raise ArtifactError("The artifact feature order does not match the shared feature contract.")
     threshold = bundle.get("threshold")
@@ -125,6 +133,7 @@ def save_prediction_artifact(bundle, path):
         "model_selection": bundle["selection_policy"],
         "evaluation_status": bundle["evaluation_status"],
         "feature_implementation_sha256": bundle["feature_implementation_sha256"],
+        "model_implementation_sha256": bundle["model_implementation_sha256"],
     }
     artifact_manifest_path(path).write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n")
     return manifest
@@ -148,6 +157,7 @@ def load_prediction_artifact(path):
         if any(bundle.get(key) != manifest.get(key) for key in (
             "runtime", "threshold", "precision", "raw_inputs", "features", "feature_schema_version", "model_name",
             "threshold_policy", "score_calibration", "threshold_selection", "feature_implementation_sha256",
+            "model_implementation_sha256",
         )):
             raise ArtifactError("The prediction artifact and manifest are inconsistent.")
         return bundle
@@ -180,5 +190,8 @@ class PredictionService:
             "artifact_sha256": self.artifact_sha256,
             "metrics": self.bundle.get("benchmark_metrics", {}),
             "evaluation_status": self.bundle["evaluation_status"],
-            "components": [{"name": self.bundle["model_name"], "weight": 1.0}],
+            "validation_comparison": self.bundle.get("validation_comparison", []),
+            "ensemble_decision": self.bundle.get("ensemble_decision", {}),
+            "components": [{"name": name, "weight": 1/len(self.bundle.get("component_names", [self.bundle["model_name"]]))}
+                           for name in self.bundle.get("component_names", [self.bundle["model_name"]])],
         }

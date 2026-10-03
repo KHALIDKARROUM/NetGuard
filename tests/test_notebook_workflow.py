@@ -37,7 +37,7 @@ class WorkflowChecks(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.data = traffic()
-        cls.config = WorkflowConfig(max_iter=12)
+        cls.config = WorkflowConfig(max_iter=12, forest_trees=12, latency_repeats=3)
         cls.fit, cls.validation, cls.groups = split_development(cls.data, cls.config)
         cls.bundle, cls.comparison = fit_baselines(cls.data, cls.fit, cls.validation, cls.config)
 
@@ -70,8 +70,8 @@ class WorkflowChecks(unittest.TestCase):
 
     def test_preprocessing_fitted_on_fit_rows_and_targets_excluded(self):
         scaler = self.bundle["pipeline"].named_steps["scaler"]
-        expected = RawTrafficFeatures().transform(self.data.iloc[self.fit]).median().to_numpy()
-        np.testing.assert_allclose(scaler.center_, expected, rtol=0, atol=0)
+        expected = RawTrafficFeatures().transform(self.data.iloc[self.fit]).mean().to_numpy()
+        np.testing.assert_allclose(scaler.mean_, expected, rtol=0, atol=1e-12)
         altered = self.data.copy()
         altered["label"] = 1 - altered.label
         altered["attack_cat"] = "changed benchmark labels"

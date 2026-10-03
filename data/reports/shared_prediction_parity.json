@@ -1,6 +1,6 @@
 {
   "status": "passed",
-  "verified_utc": "2026-10-03T11:54:44.952977+00:00",
+  "verified_utc": "2026-10-03T12:25:19.135665+00:00",
   "transport": "live Uvicorn loopback HTTP server in a separate process",
   "runtime": {
     "python": "3.13.9",
@@ -13,9 +13,9 @@
       "threadpoolctl": "3.6.0"
     }
   },
-  "artifact_sha256": "71a01f7703879487f0f94f97271d4a0ce99998b298fa42fcb5a1b2d23b976454",
-  "model": "hist_gradient_boosting",
-  "threshold": 0.9458945040124691,
+  "artifact_sha256": "69e0ffe2f5ee3d7127e2d5509a9f8e6e25f13cb4b3f8bacf99c1d1b9dd6140bd",
+  "model": "supervised_soft_vote",
+  "threshold": 0.8631127466983196,
   "raw_connections": 518,
   "benchmark_connections": 512,
   "boundary_connections": 6,
@@ -26,7 +26,7 @@
     64,
     1000
   ],
-  "maximum_score_difference": 0.0,
+  "maximum_score_difference": 3.3306690738754696e-16,
   "decision_mismatches": 0,
   "score_tolerance": 1e-12,
   "notebook_saved_predictions_match": true,

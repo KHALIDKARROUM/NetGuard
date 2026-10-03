@@ -151,6 +151,9 @@ def main():
         print("Single/batch/field-order/row-order parity passed; checking dashboard endpoints", flush=True)
         comparison = response_json(client.get("/api/models/compare"))
         assert comparison["best_model"] == service.bundle["model_name"] and comparison["n_models"] == 1
+        assert comparison["validation_comparison"] == service.bundle["validation_comparison"]
+        assert comparison["ensemble_decision"] == service.bundle["ensemble_decision"]
+        assert comparison["benchmark_comparison"] == service.bundle["benchmark_comparison"]
         for name, value in service.bundle["benchmark_metrics"].items():
             assert comparison["metrics"][0][name] == value, name
         endpoints = ["/", "/api/predict/info", "/api/predict/best_model", "/api/dataset/info",

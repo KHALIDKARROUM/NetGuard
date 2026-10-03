@@ -146,7 +146,7 @@ and packet counts are integral; TTL values are integers from 0 through 255.
 Low TTL means a recorded value from 1 through 9; it does not prove an attack.
 
 The dictionary below defines every unscaled feature, formula, unit and zero
-policy. Full-dataset checks verify both raw CSVs. RobustScaler is fitted on fit
+policy. Full-dataset checks verify both raw CSVs. StandardScaler is fitted on fit
 rows only, **after** domain features exist. Scaled values are dimensionless
 model inputs and must not be described as physical byte or packet counts.
 See `notebooks/FEATURES.md`. Feature schema 2 requires retraining older models.
@@ -168,15 +168,35 @@ print("Engineered predictor count:", feature_preview.shape[1])
 """),
         markdown("current-training-heading", """### 5. Baseline training and validation-only decisions
 
-Compare a class-prior dummy with a supervised histogram gradient boosting
-baseline. Settings are declared in `WorkflowConfig`, not optimized against the
-benchmark. Early stopping is disabled to avoid an ungrouped internal split.
+Compare a class-prior dummy, logistic regression, random forest, histogram
+gradient boosting, and one fixed equal-weight soft vote of the three supervised
+models. Every candidate uses exactly the same grouped split, 29 physical
+features, and the **same fit-only StandardScaler**. Standardization replaces
+the earlier robust scaling because it lets logistic regression converge reliably.
+Settings are declared in `WorkflowConfig`, not optimized against the benchmark:
+logistic regression uses C=1 and up to 2,000 iterations; the forest uses 200
+trees, depth 20, and minimum leaf size 2; boosting uses 150 iterations and L2=1.
+Early stopping is disabled to avoid an ungrouped internal split. Forest trees
+are fitted with two workers and scored in a fixed single-worker order.
 For each candidate, maximize attack recall subject to a maximum **1% empirical
 validation false-positive rate**. All equal scores move together; do not
 interpolate an unattainable operating point. Equal recall prefers fewer false
-positives, then the higher threshold. Select the candidate by constrained recall,
+positives, then the higher threshold. Rank eligible individual models by recall,
 lower false-positive rate, average precision, then name. This budget is declared
 before benchmark evaluation and is not a guarantee on future traffic.
+
+The three-model soft vote is retained only if its validation recall exceeds the
+best individual by at least **2 percentage points**, and its complete median
+256-row prediction latency is no more than **2x** that individual's. These
+complexity rules are declared before evaluation. Nonconverged fits are ineligible.
+
+Report accuracy, balanced accuracy, precision, recall, F1, ROC-AUC, average
+precision, false-positive rate/counts, and complete prediction latency. Timing
+covers raw feature creation, fitted scaling, scoring, the fixed decision and
+result creation through `predict_raw`, including contract/thread checks. It uses
+loaded models, one single and batch warmup, and 11 repeated calls; report median
+and descriptive p95 for singles and 256-row batches. Artifact loading and
+HTTP/network transport are excluded. Timings depend on this machine.
 
 Save score calibration as **identity / no learned calibration**, with no fitted
 reference distribution or parameters. Scores are uncalibrated classifier outputs.
@@ -189,7 +209,12 @@ See [scikit-learn threshold guidance](https://scikit-learn.org/stable/modules/cl
 for why threshold selection uses separate validation data.
 """),
         code("current-training", """bundle, validation_comparison = fit_baselines(development, fit_idx, val_idx, config)
-display(validation_comparison)
+display(validation_comparison[["model", "selected", "accuracy", "balanced_accuracy", "precision", "recall",
+    "f1", "roc_auc", "average_precision", "false_positive_rate", "fp", "fn"]])
+display(validation_comparison[["model", "single_latency_median_ms", "single_latency_p95_ms",
+    "batch_latency_median_ms", "batch_latency_p95_ms", "batch_rows", "artifact_bytes",
+    "fit_seconds", "converged", "optimization_iterations"]])
+print("Ensemble decision:", bundle["ensemble_decision"])
 print("Frozen model:", bundle["model_name"], "| fixed threshold:", bundle["threshold"])
 print("Maximum validation false-positive rate:", config.max_false_positive_rate)
 print("Saved score calibration:", bundle["score_calibration"])
@@ -207,6 +232,7 @@ not time forecasts; a new untouched/prospective holdout is still required.
     bundle, benchmark, development
 )
 display(pd.DataFrame([benchmark_metrics]))
+display(pd.DataFrame(bundle["benchmark_comparison"]))
 validation_point = bundle["threshold_selection"]["validation_metrics"]
 display(pd.DataFrame([
     {"partition": name, "target_fpr": config.max_false_positive_rate,
@@ -285,10 +311,11 @@ print("Completed: raw CSVs -> validation-selected model -> saved predictions.")
 This workflow establishes a supervised baseline with validation-only decisions
 under a declared 1% empirical validation false-positive budget. The benchmark
 false-positive rate may differ; no benchmark-dependent retuning is performed.
-The API now uses its saved pipeline and threshold. This does not establish
-calibrated probabilities or replace independent final evaluation. Additional
-baselines, uncertainty estimates, unseen attack-family
-tests, provenance-based splits, and validation of operational alert costs are
+The API now uses its selected saved pipeline and threshold. This does not establish
+calibrated probabilities or replace independent final evaluation. Isolation
+Forest and novelty LOF remain separate unfamiliar-attack experiments; see
+`notebooks/SUPERVISED_COMPARISON.md` for the leave-one-family-out protocol.
+Uncertainty estimates, additional families, provenance-based splits, and validation of operational alert costs are
 the next scientific improvements. `attack_score` is a classifier output, not a
 guarantee of the probability of an attack in production traffic.
 

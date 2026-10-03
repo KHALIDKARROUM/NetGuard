@@ -22,7 +22,7 @@ class SharedPredictionChecks(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         data = traffic()
-        config = WorkflowConfig(max_iter=12)
+        config = WorkflowConfig(max_iter=12, forest_trees=12, latency_repeats=3)
         fit, validation, _ = split_development(data, config)
         cls.bundle, _ = fit_baselines(data, fit, validation, config)
         cls.rows = data.loc[:7, cls.bundle["raw_inputs"]].copy()

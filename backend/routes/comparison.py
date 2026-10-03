@@ -51,6 +51,10 @@ def compare_models(request: Request):
         return {"status": 200, "source": "shared pipeline on raw benchmark measurements",
                 "n_models": len(state["metrics_list"]), "metrics": state["metrics_list"],
                 "best_model": state["best_model_name"],
+                "validation_comparison": state["shared_prediction_service"].bundle.get("validation_comparison", []),
+                "ensemble_decision": state["shared_prediction_service"].bundle.get("ensemble_decision", {}),
+                "latency_protocol": state["shared_prediction_service"].bundle.get("latency_protocol", {}),
+                "benchmark_comparison": state["shared_prediction_service"].bundle.get("benchmark_comparison", []),
                 "selection": "frozen using validation; benchmark metrics do not select the deployed model",
                 "historical_metrics": historical.reset_index().to_dict(orient="records") if historical is not None else [],
                 "historical_status": "earlier test-informed experiments; not comparable independent evaluations"}

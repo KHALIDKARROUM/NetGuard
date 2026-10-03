@@ -1,0 +1,58 @@
+{
+  "status": "passed",
+  "created_utc": "2026-10-03T12:27:56.510241+00:00",
+  "family": "Backdoor",
+  "runtime": {
+    "python": "3.13.9",
+    "packages": {
+      "numpy": "2.2.6",
+      "pandas": "2.2.3",
+      "scipy": "1.15.3",
+      "scikit-learn": "1.6.1",
+      "joblib": "1.4.2",
+      "threadpoolctl": "3.6.0"
+    }
+  },
+  "input_sha256": "bec7dd5ec88dc2a0ccc7a07879d338395ed7421750f675fd0339e07dfe0648fa",
+  "max_validation_false_positive_rate": 0.01,
+  "results": [
+    {
+      "model": "isolation_forest_novelty",
+      "held_out_family": "Backdoor",
+      "normal_fit_rows": 5000,
+      "normal_validation_rows": 13181,
+      "known_attack_validation_rows": 11446,
+      "held_out_attack_rows": 1746,
+      "threshold": 0.674393866467341,
+      "false_positive_rate": 0.009938547909870268,
+      "false_positives": 131,
+      "known_attack_recall": 0.019657522278525248,
+      "held_out_attack_recall": 0.03436426116838488,
+      "held_out_complete_prediction_seconds": 0.030960200005210936,
+      "score_type": "negative native score_samples; higher means more anomalous"
+    },
+    {
+      "model": "local_outlier_factor_novelty",
+      "held_out_family": "Backdoor",
+      "normal_fit_rows": 5000,
+      "normal_validation_rows": 13181,
+      "known_attack_validation_rows": 11446,
+      "held_out_attack_rows": 1746,
+      "threshold": 6.172346326200021,
+      "false_positive_rate": 0.009938547909870268,
+      "false_positives": 131,
+      "known_attack_recall": 0.06735977634107986,
+      "held_out_attack_recall": 0.08075601374570447,
+      "held_out_complete_prediction_seconds": 0.05248559999745339,
+      "score_type": "negative native score_samples; higher means more anomalous"
+    }
+  ],
+  "partition_checks": {
+    "normal_fit_rows_available": 42128,
+    "normal_fit_cap": 5000,
+    "held_out_signatures_excluded_from_fit_and_validation": true
+  },
+  "data_used": "development CSV only; no benchmark CSV read",
+  "scope": "one prespecified withheld family, normal-only fitted models and normal-only validation threshold; no supervised selection or deployment changes",
+  "limitations": "familiar dataset, capped normal fit sample, no capture/host isolation, no uncertainty estimate; repeat across families before drawing a general conclusion"
+}

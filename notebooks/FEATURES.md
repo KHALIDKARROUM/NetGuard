@@ -2,7 +2,7 @@
 
 All features are calculated from the ten original measurements before scaling.
 The raw feature frame is used for interpretation and data-quality checks.
-RobustScaler then fits its medians and interquartile ranges on fit rows only;
+StandardScaler then fits its means and standard deviations on fit rows only;
 its output is dimensionless and must not be presented as a byte or packet count.
 Labels, attack categories and row IDs are never inputs to these features.
 

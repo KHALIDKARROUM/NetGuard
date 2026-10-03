@@ -7,7 +7,7 @@ evaluating a supervised baseline, and scoring individual connections or batches.
 
 - Backend moved to a clean FastAPI API surface with cached loaders and stable routes.
 - Runtime merge conflicts were resolved across backend, frontend, Dockerfiles, requirements, and model reports.
-- The notebook and backend now share the validation-selected histogram gradient boosting pipeline and saved threshold.
+- The notebook and backend share a validation-selected supervised pipeline and saved threshold; the current winner is a fixed soft vote of logistic regression, random forest and gradient boosting.
 - Streamlit was rebuilt as a dark operations dashboard with shared UI components.
 - Prediction requires ten measured raw fields and uses the same 29 physical features, training-fitted preprocessing, float64 precision and feature order as training.
 - Single/batch predictions and dashboard metrics are verified against the notebook's saved predictions. Historical ensemble artifacts remain reference material.
@@ -135,20 +135,30 @@ Then open:
 
 The dashboard serves `models_saved/shared_pipeline.joblib`. It was retrained
 using float64 raw features, fit-only preprocessing, and grouped validation for
-model and threshold selection. The fixed threshold is **0.9458945040124691**,
+model and threshold selection. All candidates use the same fit-only StandardScaler.
+The fixed threshold is **0.8631127466983196**,
 chosen for maximum validation attack recall with false-positive rate at most
 **1%**. The API performs no reference-data lookup, fitting or threshold selection.
 Score calibration is saved explicitly as identity (no learned calibration).
 Missing or incompatible artifacts make prediction and health return HTTP 503.
 
-Validation false-positive rate is **0.317%** (42/13,248 normal rows), with
-**73.38% attack recall**. At the same frozen threshold, the benchmark has
-**0.670% false-positive rate** (248/37,000), **83.41% recall**, and F1 **0.9068**.
+Validation false-positive rate is **0.996%** (132/13,248 normal rows), with
+**79.00% attack recall**. At the same frozen threshold, the benchmark has
+**2.959% false-positive rate** (1,095/37,000), **86.51% recall**, and F1 **0.9158**.
 These are measured operating points; the validation budget does not guarantee
 the same false-alarm rate on other traffic.
 The benchmark was previously inspected; scores are not calibrated production
 attack probabilities. Historical ensemble results used test-informed choices
 and remain explicitly historical.
+
+The current supervised ensemble gained **5.62 percentage points of validation
+recall** over the best individual (gradient boosting), with **1.53x** complete
+256-row prediction latency. It passed the declared 2-point gain / 2x latency
+rules. Its fitted artifact is about 64 MB, versus 0.6 MB for gradient boosting,
+so deployment memory and storage costs are higher.
+The [comparison guide and tables](notebooks/SUPERVISED_COMPARISON.md) cover
+accuracy, false alarms, complete single/batch prediction timing, and the separate
+unfamiliar-attack experiments.
 
 ## Reproducible Data Science Workflow
 

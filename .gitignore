@@ -38,6 +38,7 @@ backend/logs/
 .uv-cache/
 artifacts/notebook_workflow/
 artifacts/prediction_verification/
+artifacts/novelty_experiments/
 
 # OS
 .DS_Store

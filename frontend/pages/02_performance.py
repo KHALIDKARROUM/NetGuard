@@ -57,7 +57,7 @@ render_page_header(
     "The deployed model scores raw benchmark measurements using its saved preprocessing and fixed threshold.",
     [
         compare.get("source", "-"),
-        f"{len(df_metrics)} models",
+        f"{len(compare.get('validation_comparison', []))} validation candidates",
         best.get("model", "best model"),
     ],
 )
@@ -102,6 +102,11 @@ with left:
         unsafe_allow_html=True,
     )
     render_callout("This benchmark was previously inspected. Independent final testing is still needed.", "info")
+    decision = compare.get("ensemble_decision", {})
+    if decision:
+        retained = decision.get("retained", False)
+        render_callout(
+            f"The supervised ensemble was {'retained' if retained else 'rejected'} under the declared validation gain and prediction-time rules.", "info")
 
 with right:
     render_kv_panel(
@@ -116,9 +121,21 @@ with right:
         ],
     )
 
-tab_table, tab_roc, tab_confusion, tab_scores, tab_pca = st.tabs(
-    ["Table", "ROC", "Confusion", "Scores", "PCA"]
+tab_validation, tab_table, tab_roc, tab_confusion, tab_scores, tab_pca = st.tabs(
+    ["Validation comparison", "Deployed model", "ROC", "Confusion", "Scores", "PCA"]
 )
+
+with tab_validation:
+    validation = pd.DataFrame(compare.get("validation_comparison", []))
+    if not validation.empty:
+        st.caption("Same grouped split, physical features and training-fitted standardization. Each threshold uses the 1% validation false-alarm budget. Times include raw feature creation, scaling, scoring and the decision; network time is excluded.")
+        columns = [name for name in ["model", "selected", "accuracy", "balanced_accuracy", "precision", "recall", "f1",
+                   "roc_auc", "average_precision", "false_positive_rate", "fp", "fn", "threshold",
+                   "single_latency_median_ms", "single_latency_p95_ms", "batch_latency_median_ms",
+                   "batch_latency_p95_ms", "batch_rows", "artifact_bytes", "converged"] if name in validation]
+        st.dataframe(validation[columns], use_container_width=True, hide_index=True)
+    else:
+        render_callout("The saved model has no validation comparison table. Rerun the notebook workflow.", "warning")
 
 with tab_table:
     columns = [

@@ -1,7 +1,7 @@
 {
-  "artifact_schema_version": 2,
+  "artifact_schema_version": 3,
   "feature_schema_version": 2,
-  "artifact_sha256": "71a01f7703879487f0f94f97271d4a0ce99998b298fa42fcb5a1b2d23b976454",
+  "artifact_sha256": "69e0ffe2f5ee3d7127e2d5509a9f8e6e25f13cb4b3f8bacf99c1d1b9dd6140bd",
   "runtime": {
     "python": "3.13.9",
     "packages": {
@@ -57,9 +57,9 @@
     "log1p_sload",
     "log1p_dload"
   ],
-  "threshold": 0.9458945040124691,
+  "threshold": 0.8631127466983196,
   "threshold_policy": "maximum validation recall under the configured false-positive budget; ties prefer fewer false positives, then higher threshold",
-  "model_name": "hist_gradient_boosting",
+  "model_name": "supervised_soft_vote",
   "score_calibration": {
     "method": "identity",
     "parameters": {},
@@ -73,21 +73,24 @@
     "attack_rows": 17506,
     "validation_metrics": {
       "rows": 30754,
-      "threshold": 0.9458945040124691,
-      "precision": 0.9967411545623837,
-      "recall": 0.7338055523820405,
-      "f1": 0.8452984141606896,
-      "roc_auc": 0.9353997215619931,
-      "average_precision": 0.9530998700533726,
-      "false_positive_rate": 0.003170289855072464,
-      "tn": 13206,
-      "fp": 42,
-      "fn": 4660,
-      "tp": 12846
+      "threshold": 0.8631127466983196,
+      "accuracy": 0.8761461923652207,
+      "balanced_accuracy": 0.8899969803313812,
+      "precision": 0.9905450898932742,
+      "recall": 0.7899577287787044,
+      "f1": 0.8789525534687133,
+      "roc_auc": 0.971405800964859,
+      "average_precision": 0.9801573740869924,
+      "false_positive_rate": 0.009963768115942028,
+      "tn": 13116,
+      "fp": 132,
+      "fn": 3677,
+      "tp": 13829
     },
     "interpretation": "empirical validation constraint; not a guarantee on other traffic"
   },
-  "model_selection": "validation recall under budget, then lower false-positive rate, then average precision, then name",
+  "model_selection": "best eligible individual by constrained validation recall, lower false-positive rate, average precision and name; ensemble requires prespecified recall gain and latency gates",
   "evaluation_status": "previously inspected benchmark; not an untouched holdout",
-  "feature_implementation_sha256": "25476667f5dd2696a27c571adc2ae29d86a0ad94516fbd45efbe7224580ba505"
+  "feature_implementation_sha256": "25476667f5dd2696a27c571adc2ae29d86a0ad94516fbd45efbe7224580ba505",
+  "model_implementation_sha256": "020798b2a58ac3a5e82ce2990fa590848307dcf35e2a23797217c3e4213c6c17"
 }

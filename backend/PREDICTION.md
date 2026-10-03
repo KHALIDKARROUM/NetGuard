@@ -8,9 +8,12 @@ recreates both files; it also saves an identical copy in its output directory.
 ## Contract
 
 The saved pipeline creates 29 physical features from the original measurements,
-orders them explicitly, applies the training-fitted RobustScaler, and scores the
-validation-selected histogram gradient boosting model. All transformations and
-scores use float64. Decisions are `score >= saved_threshold`; responses retain
+orders them explicitly, applies the training-fitted StandardScaler, and scores the
+validation-selected supervised model. The current model averages logistic
+regression, random forest and histogram gradient boosting with fixed equal weights.
+Shared input transformations and scores use float64; estimator internals use
+their scikit-learn training/inference conventions consistently. Decisions are
+`score >= saved_threshold`; responses retain
 the full numerical score. See [the feature dictionary](../notebooks/FEATURES.md).
 
 The fixed threshold maximizes attack recall with **validation false-positive
@@ -19,15 +22,21 @@ Score ties are indivisible; the selector considers real attainable thresholds,
 including a finite reject-all threshold if necessary. Equal recall prefers
 fewer false positives, then a higher threshold. The model comparison uses
 constrained validation recall, lower false-positive rate, average precision,
-then name. No benchmark labels select the threshold or deployed model.
+then name. The supervised soft vote is eligible only with at least a two-point
+validation recall gain and at most twice the best individual's median batch
+prediction latency. No benchmark labels select the threshold or deployed model.
 
-Artifact schema 2 requires explicit `score_calibration` settings: `method` is
+Artifact schema 3 requires explicit `score_calibration` settings: `method` is
 `identity`, `parameters` is empty, and `fitted_on` is null. Scores remain
 uncalibrated classifier outputs; no learned calibration or reference score
 distribution is needed at inference. `threshold_selection` stores the budget,
 validation normal/attack counts, observed false positives and recall. Both
 settings are also exposed by `GET /api/predict/info` and checked against the
 artifact's manifest.
+The manifest also verifies the custom model implementation hash, and metadata
+exposes the saved validation comparison and ensemble decision. The prediction
+artifact contains only the selected fitted pipeline, not the other experimental
+candidate pipelines.
 
 Every connection requires these ten measured fields:
 
@@ -58,6 +67,10 @@ preprocessing, infers hidden fields from neighbors, or recalibrates scores.
 raw benchmark measurements with the saved threshold. Earlier experiment metrics
 are a separate `historical_metrics` field and do not select the deployed model.
 PCA is descriptive; its labels come from the same saved classification decisions.
+The comparison response additionally includes saved `validation_comparison`,
+`benchmark_comparison`, `ensemble_decision`, and `latency_protocol`. The dashboard's
+validation tab shows all five candidates. These tables are stored with the model;
+live single/batch prediction needs no CSV or candidate artifact.
 
 ## Runtime and artifacts
 
@@ -127,11 +140,11 @@ and using this complete pipeline, rather than reusing older fitted artifacts.
 
 The 1% target applies to the validation partition used for threshold selection.
 Benchmark and future traffic can have different false-positive rates and recall.
-The current threshold is **0.9458945040124691**. Validation observes 42 false
-positives among 13,248 normal rows (**0.317%**) and detects 12,846 of 17,506
-attacks (**73.38% recall**). The frozen benchmark result is 248 false positives
-among 37,000 normal rows (**0.670%**) and 37,811 detections among 45,332 attacks
-(**83.41% recall**, F1 **0.9068**). The threshold favors the fewest false positives
+The current threshold is **0.8631127466983196**. Validation observes 132 false
+positives among 13,248 normal rows (**0.996%**) and detects 13,829 of 17,506
+attacks (**79.00% recall**). The frozen benchmark result is 1,095 false positives
+among 37,000 normal rows (**2.959%**) and 39,218 detections among 45,332 attacks
+(**86.51% recall**, F1 **0.9158**). The threshold favors the fewest false positives
 among operating points with the same maximum feasible recall; it need not use
 the full 1% budget.
 The notebook reports both validation and frozen-threshold benchmark results;
