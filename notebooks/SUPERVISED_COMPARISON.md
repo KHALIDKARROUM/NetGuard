@@ -39,11 +39,11 @@ Percentages below are classification metrics; times are milliseconds.
 
 | Candidate | Accuracy | Balanced accuracy | Precision | Recall | F1 | ROC-AUC | AP | False positives | FPR | Single median / p95 | 256-row batch median / p95 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Dummy prior | 43.08% | 50.00% | 0.00% | 0.00% | 0.00% | 0.5000 | 0.5692 | 0 | 0.000% | 25.94 / 28.57 | 25.56 / 29.56 |
-| Logistic regression | 45.76% | 52.25% | 88.87% | 5.38% | 10.15% | 0.9344 | 0.9314 | 118 | 0.891% | 27.35 / 43.63 | 29.72 / 35.83 |
-| Random forest | 82.81% | 84.78% | 98.94% | 70.55% | 82.37% | 0.9819 | 0.9851 | 132 | 0.996% | 37.49 / 68.55 | 47.46 / 122.33 |
-| Gradient boosting | 84.71% | 86.53% | 99.67% | 73.38% | 84.53% | 0.9354 | 0.9531 | 42 | 0.317% | 32.08 / 36.22 | 36.81 / 38.21 |
-| **Supervised soft vote** | 87.61% | 89.00% | 99.05% | 79.00% | 87.90% | 0.9714 | 0.9802 | 132 | 0.996% | 44.71 / 47.16 | 56.45 / 64.91 |
+| Dummy prior | 43.08% | 50.00% | 0.00% | 0.00% | 0.00% | 0.5000 | 0.5692 | 0 | 0.000% | 28.79 / 63.66 | 30.10 / 61.82 |
+| Logistic regression | 45.76% | 52.25% | 88.87% | 5.38% | 10.15% | 0.9344 | 0.9314 | 118 | 0.891% | 28.94 / 33.23 | 30.11 / 33.32 |
+| Random forest | 82.81% | 84.78% | 98.94% | 70.55% | 82.37% | 0.9819 | 0.9851 | 132 | 0.996% | 87.34 / 136.87 | 101.06 / 130.98 |
+| Gradient boosting | 84.71% | 86.53% | 99.67% | 73.38% | 84.53% | 0.9354 | 0.9531 | 42 | 0.317% | 61.05 / 75.77 | 67.89 / 76.35 |
+| **Supervised soft vote** | 87.61% | 89.00% | 99.05% | 79.00% | 87.90% | 0.9714 | 0.9802 | 132 | 0.996% | 78.85 / 87.27 | 90.55 / 107.73 |
 
 The authoritative unrounded results, thresholds, counts, timings, convergence,
 training time and model sizes are in
@@ -79,7 +79,7 @@ validation false-positive budget. These policy constants are adjustable before
 a new development run, not retrospectively to fit benchmark results.
 
 The soft vote gained **0.05615 recall (5.62 percentage points)** over gradient
-boosting and took **1.5336x batch latency**, so it passed both rules. It becomes
+boosting and took **1.3338x batch latency**, so it passed both rules. It becomes
 the shared API artifact with fixed threshold **0.8631127466983196**. Storage
 and memory are a substantial additional cost: about **63.6 MB** versus **0.6 MB**
 for gradient boosting. The decision is based on this one validation split and

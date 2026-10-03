@@ -1,7 +1,7 @@
 {
   "artifact_schema_version": 3,
   "feature_schema_version": 2,
-  "artifact_sha256": "69e0ffe2f5ee3d7127e2d5509a9f8e6e25f13cb4b3f8bacf99c1d1b9dd6140bd",
+  "artifact_sha256": "e05c143820f71d2347b2bc8c2ccaa57145878747ec9cf7a3598f14e45557d0eb",
   "runtime": {
     "python": "3.13.9",
     "packages": {

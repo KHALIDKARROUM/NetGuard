@@ -306,6 +306,67 @@ with TestClient(api_app) as client:
 print("Notebook/API parity passed for", len(parity_examples), "raw connections, alone and in a batch.")
 print("Completed: raw CSVs -> validation-selected model -> saved predictions.")
 """),
+        markdown("current-generalization-heading", """### 9. Performance on unfamiliar traffic
+
+Evaluate the saved serving artifact on the unchanged original benchmark,
+separating exact ten-measurement signatures seen in actual fitting data from
+unseen signatures. Add a stricter subset unseen anywhere in development.
+The earlier 40.6% overlap described selected feature values, not verified
+physical connections. CSV-local IDs and row order provide no such proof.
+
+Report precision, recall, F1, trapezoidal PR-AUC, average precision and false-
+positive rate with counts and 95% signature-cluster bootstrap intervals.
+Each category is compared with normal traffic in its scope; other attacks
+are excluded rather than counted as false positives. Metrics are binary
+detection metrics, not attack-category classification.
+
+Freeze the selected architecture and parameters. Refit it using three-way
+signature-disjoint fit/calibration/evaluation splits for seeds 42, 43 and 44,
+then repeat all nine withheld attack families, excluding every family signature
+from fit and calibration. No outcome changes the deployed model or threshold.
+The CSVs lack verified host/time/capture identity: these are internal robustness
+experiments, not prospective or external tests. The report describes uncertainty
+limits and failures. This section can run independently in a fresh kernel with
+`python scripts/run_generalization_report.py`; the full runner also executes it.
+"""),
+        code("current-generalization", """from pathlib import Path
+import os
+import sys
+import pandas as pd
+from IPython.display import display
+
+configured_root = os.environ.get("NETGUARD_PROJECT_ROOT")
+report_root = Path(configured_root).resolve() if configured_root else next(
+    p for p in [Path.cwd(), *Path.cwd().parents]
+    if (p / "netguard_workflow/workflow.py").is_file()
+)
+sys.path.insert(0, str(report_root))
+from netguard_workflow.generalization import run_generalization
+
+generalization = run_generalization(
+    report_root, repeats=int(os.environ.get("NETGUARD_BOOTSTRAP_REPEATS", "400")),
+    seeds=(42, 43, 44),
+    baseline_manifest=(Path(os.environ["NETGUARD_OUTPUT_DIR"]) / "manifest.json")
+        if os.environ.get("NETGUARD_OUTPUT_DIR") else None,
+)
+display(pd.DataFrame([generalization["overlap"]]))
+summary_columns = ["scope", "rows", "normal_rows", "attack_rows", "unique_signatures",
+    "precision", "recall", "recall_ci_low", "recall_ci_high", "f1", "pr_auc",
+    "average_precision", "false_positive_rate", "false_positive_rate_ci_low",
+    "false_positive_rate_ci_high", "uncertainty_flags"]
+display(pd.DataFrame(generalization["evaluation"])[summary_columns])
+display(pd.DataFrame(generalization["attack_categories"]).loc[
+    lambda rows: rows.scope == "benchmark_all",
+    ["attack_category", *[name for name in summary_columns if name != "scope"]],
+])
+display(pd.DataFrame(generalization["experiments"])[
+    ["scope", "fit_rows", "calibration_rows", "evaluation_rows",
+     "pairwise_signature_disjoint", "converged"]
+])
+print("Checks:", generalization["checks"])
+print("Uncertainty:", generalization["uncertainty"])
+print("Full results and interpretation: notebooks/GENERALIZATION.md")
+"""),
         markdown("current-limitations", """### Interpretation and remaining work
 
 This workflow establishes a supervised baseline with validation-only decisions
@@ -315,8 +376,11 @@ The API now uses its selected saved pipeline and threshold. This does not establ
 calibrated probabilities or replace independent final evaluation. Isolation
 Forest and novelty LOF remain separate unfamiliar-attack experiments; see
 `notebooks/SUPERVISED_COMPARISON.md` for the leave-one-family-out protocol.
-Uncertainty estimates, additional families, provenance-based splits, and validation of operational alert costs are
-the next scientific improvements. `attack_score` is a classifier output, not a
+The new generalization section reports uncertainty, signature novelty and
+all withheld families. These additional internal experiments do not replace
+verified host/time/capture splits or independent prospective testing. Validation
+of operational alert costs and representative traffic remain necessary.
+`attack_score` is a classifier output, not a
 guarantee of the probability of an attack in production traffic.
 
 ## Historical reference — preserved original cells
@@ -347,10 +411,35 @@ def recover(text, side):
     return json.loads("".join(output))
 
 
+def add_generalization_cells(combined):
+    """Append a current evaluation section without changing historical payloads."""
+    if any(cell["id"] == "current-generalization" for cell in combined["cells"]):
+        return False
+    blueprint = {cell["id"]: cell for cell in corrected_cells()}
+    position = next(i for i, cell in enumerate(combined["cells"]) if cell["id"] == "current-limitations")
+    added = [blueprint["current-generalization-heading"], blueprint["current-generalization"]]
+    combined["cells"][position:position] = added
+    combined["cells"][position+len(added)]["source"] = blueprint["current-limitations"]["source"]
+    provenance = combined["metadata"]["netguard_combination"]
+    for origin in provenance["cell_origins"]:
+        if origin["combined_cell_index"] >= position:
+            origin["combined_cell_index"] += len(added)
+    for item in provenance["source_files"]:
+        for mapping in item["source_cell_to_combined_cell"].values():
+            for key, index in mapping.items():
+                if index >= position:
+                    mapping[key] += len(added)
+    combined["metadata"]["netguard_workflow"]["executable_cell_ids"].append("current-generalization")
+    return True
+
+
 def main():
     path = ROOT/"notebooks/00_netguard_complete.ipynb"
     combined = json.loads(path.read_text(encoding="utf-8"))
     if "netguard_workflow" in combined["metadata"]:
+        if add_generalization_cells(combined):
+            path.write_text(json.dumps(combined, ensure_ascii=False, indent=1)+"\n", encoding="utf-8", newline="\n")
+            print("Added independent generalization section; historical cells preserved.")
         print("Already prepared; validating existing notebooks.")
         validate_all(ROOT)
         return

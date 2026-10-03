@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import shutil
 import sys
 
 import nbformat
@@ -14,7 +15,7 @@ from nbclient import NotebookClient
 from jupyter_client import KernelManager
 from jupyter_client.kernelspec import KernelSpec
 
-from notebook_integrity import validate_all
+from notebook_integrity import validate_all, publish_full_generalization_execution
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -88,7 +89,11 @@ def main():
     report.write_text(json.dumps(result, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n")
     # Copy compact fresh outputs into the main report; historical payloads remain
     # byte-for-byte equivalent as JSON values and the full executed copy is saved.
-    path.write_text(json.dumps(result, ensure_ascii=False, indent=1) + "\n", encoding="utf-8", newline="\n")
+    # Replace atomically, retaining the complete executed copy if a Windows
+    # viewer has the existing large notebook mapped/open.
+    pending = output/"00_netguard_complete.pending.ipynb"
+    shutil.copyfile(report, pending)
+    pending.replace(path)
     validate_all(ROOT)
     evidence = {"status": "passed", "current_cells_executed": client.code_cells_executed,
                 "historical_cells_executed": 0, "notebook_checks": checks,
@@ -102,6 +107,7 @@ def main():
     (ROOT/"data/reports/notebook_workflow_verification.json").write_text(
         json.dumps(verification, indent=2) + "\n", encoding="utf-8", newline="\n"
     )
+    publish_full_generalization_execution(ROOT)
     print(f"Passed: raw data -> model -> {output/'benchmark_predictions.csv'}", flush=True)
     print(f"Executed report: {report}", flush=True)
 

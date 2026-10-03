@@ -1,0 +1,21 @@
+{
+  "status": "passed",
+  "verified_utc": "2026-10-03T22:25:45.243737+00:00",
+  "evaluation_scopes": 16,
+  "category_comparisons": 72,
+  "experimental_partitions_checked": 12,
+  "output_files_hash_checked": 25,
+  "serving_artifact_sha256": "e05c143820f71d2347b2bc8c2ccaa57145878747ec9cf7a3598f14e45557d0eb",
+  "checks": [
+    "input/source/output hashes",
+    "original benchmark signature equality",
+    "row identity and label/category alignment",
+    "frozen decisions and confusion counts",
+    "precision/recall/F1/FPR",
+    "PR-AUC and AP against sklearn",
+    "interval bounds and valid draws",
+    "all split memberships and pairwise group isolation",
+    "complete family-signature exclusion",
+    "calibration class counts and false-positive budgets"
+  ]
+}

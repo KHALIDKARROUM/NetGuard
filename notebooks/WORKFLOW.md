@@ -1,6 +1,6 @@
 # Reproduce the NetGuard notebook report
 
-`00_netguard_complete.ipynb` is the main report. Its first eight code cells are
+`00_netguard_complete.ipynb` is the main report. Its first nine code cells are
 the current workflow. The seven original stages and alternate merge content
 follow as a historical archive, with every original cell payload preserved.
 The seven standalone notebooks are also valid historical archives.
@@ -9,7 +9,7 @@ The seven standalone notebooks are also valid historical archives.
 
 Use **CPython 3.13.9**. Notebook and backend locks share the numerical versions
 in `requirements-model.in`. The notebook environment also includes the backend
-HTTP adapter so its final cell verifies API parity. Historical model files
+HTTP adapter so its inference cell verifies API parity. Historical model files
 created with earlier library versions are not loaded by the current workflow.
 The `.in` file lists direct dependencies; the `.txt` lock pins transitive
 dependencies with package hashes and operating-system markers.
@@ -83,6 +83,13 @@ not by standard Jupyter itself.
    individual/batch parity, and demonstrate raw-input inference through both
    Python and the API adapter. Publish the same artifact and compatibility
    manifest under `models_saved/` for the backend.
+7. Evaluate the frozen artifact on the unchanged benchmark with signature-cluster
+   uncertainty, distinguishing signatures seen in actual fitting data from those
+   unseen in fitting and unseen anywhere in development. Refit the fixed selected
+   architecture for three signature-disjoint fit/calibration/evaluation splits
+   and all nine withheld attack families. Save full binary/category metrics,
+   intervals, partition membership and an interpretation report. None of these
+   evaluations replaces the serving artifact or retunes its threshold.
 
 Generated outputs under `artifacts/notebook_workflow/` are ignored by Git:
 
@@ -146,11 +153,28 @@ Original HEAD/incoming index mappings remain in notebook metadata.
 run, configuration, dataset/artifact hashes and benchmark metrics.
 The dated project audit remains a record of the state before this repair.
 
+The independent ninth cell can also run without retraining the serving model:
+
+```powershell
+.venv-workflow/Scripts/python.exe scripts/run_generalization_report.py
+.venv-workflow/Scripts/python.exe scripts/verify_generalization_report.py
+```
+
+It executes in a fresh kernel and preserves all other notebook cells/outputs.
+Its execution evidence is `data/reports/generalization_notebook_execution.json`.
+The full notebook runner executes all nine current cells. See
+[the generalization report](GENERALIZATION.md) for 95% signature-cluster intervals,
+all sample counts, category comparisons and scientific limits. Committed
+`data/reports/generalization*.csv`/JSON contain full metrics; generated predictions,
+partition memberships and output hashes live under `artifacts/generalization/`.
+
 The existing test set was previously used for development and must not be
 presented as an untouched final holdout. This workflow does not demonstrate
-future traffic or unseen attack-family performance, calibrated probabilities,
-or prospective deployment accuracy. It establishes a reproducible binary-classification
-baseline. Grouping by input signature reduces one leakage route but is not
+future traffic, calibrated probabilities, or prospective deployment accuracy.
+The new section evaluates withheld families within the familiar dataset; it
+does not prove detection of arbitrary future attacks. It establishes a
+reproducible binary-classification baseline with additional internal robustness
+evidence. Grouping by input signature reduces one leakage route but is not
 capture-time or host isolation. Those require additional provenance.
 
 The backend now serves this pipeline and its fixed threshold. Its dashboard
@@ -163,7 +187,9 @@ prediction in an isolated copy with no data directory and dataset reads blocked.
 The 1% budget is an empirical validation constraint, not a promise about other
 traffic. Benchmark results are measured at the frozen threshold and may exceed
 the target. Broader model tuning, checking the budget against real
-alert costs, uncertainty estimates and independent final testing remain work.
+alert costs and independent final testing remain work. Reported uncertainty is
+conditional on observed signature groups and fixed models/thresholds; verified
+host/time/capture provenance is unavailable in the supplied CSVs.
 
 See [the supervised comparison guide](SUPERVISED_COMPARISON.md) for the full
 tables, timing protocol and declared ensemble complexity rules. Compact results

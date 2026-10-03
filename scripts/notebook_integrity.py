@@ -61,5 +61,34 @@ def validate_all(root=ROOT):
     return results
 
 
+def publish_full_generalization_execution(root=ROOT):
+    """Publish evidence for the complete run after its outer runner has saved it."""
+    root = Path(root)
+    notebook = json.loads((root/"notebooks/00_netguard_complete.ipynb").read_text(encoding="utf-8"))
+    metadata = notebook["metadata"]["netguard_workflow"]
+    executed = metadata.get("last_execution", {})
+    current = metadata["executable_cell_ids"]
+    if "current-generalization" not in current or executed.get("executed_current_cells") != len(current):
+        return None
+    evaluation = json.loads((root/"data/reports/generalization.json").read_text(encoding="utf-8"))
+    baseline = json.loads((root/"data/reports/notebook_workflow_verification.json").read_text(encoding="utf-8"))
+    if baseline["execution"]["current_cells_executed"] != len(current):
+        return None
+    expected = evaluation["serving_artifact_sha256"]
+    actual = baseline["manifest"]["shared_prediction_artifact"]["sha256"]
+    if actual != expected or sha256((root/"models_saved/shared_pipeline.joblib").read_bytes()).hexdigest() != expected:
+        raise AssertionError("Notebook execution and evaluation refer to different fitted artifacts")
+    evidence = {"status": "passed", "mode": "complete corrected workflow in a fresh kernel",
+        "executed_utc": executed["utc"], "current_cell_ids_executed": current,
+        "historical_cells_executed": executed["historical_cells_executed"],
+        "historical_cell_payloads_preserved": True,
+        "bootstrap_repeats": evaluation["uncertainty"]["repetitions"],
+        "notebook_checks": validate_all(root), "evaluation_checks": evaluation["checks"],
+        "serving_artifact_sha256": expected}
+    (root/"data/reports/generalization_notebook_execution.json").write_text(
+        json.dumps(evidence, indent=2)+"\n", encoding="utf-8", newline="\n")
+    return evidence
+
+
 if __name__ == "__main__":
     print(json.dumps(validate_all(), indent=2))

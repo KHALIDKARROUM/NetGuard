@@ -1,0 +1,77 @@
+{
+  "status": "passed",
+  "mode": "complete corrected workflow in a fresh kernel",
+  "executed_utc": "2026-10-03T22:20:39.992340+00:00",
+  "current_cell_ids_executed": [
+    "current-environment",
+    "current-data",
+    "current-split",
+    "current-features",
+    "current-training",
+    "current-evaluation",
+    "current-save",
+    "current-predict",
+    "current-generalization"
+  ],
+  "historical_cells_executed": 0,
+  "historical_cell_payloads_preserved": true,
+  "bootstrap_repeats": 400,
+  "notebook_checks": [
+    {
+      "notebook": "00_netguard_complete.ipynb",
+      "cells": 305,
+      "preserved_origins_checked": 269,
+      "current_code_cells": 9
+    },
+    {
+      "notebook": "01_eda.ipynb",
+      "cells": 59,
+      "preserved_origins_checked": 57,
+      "current_code_cells": 0
+    },
+    {
+      "notebook": "02_preprocessing.ipynb",
+      "cells": 28,
+      "preserved_origins_checked": 26,
+      "current_code_cells": 0
+    },
+    {
+      "notebook": "03_feature_engineering.ipynb",
+      "cells": 45,
+      "preserved_origins_checked": 43,
+      "current_code_cells": 0
+    },
+    {
+      "notebook": "04_isolation_forest.ipynb",
+      "cells": 36,
+      "preserved_origins_checked": 34,
+      "current_code_cells": 0
+    },
+    {
+      "notebook": "05_dbscan.ipynb",
+      "cells": 33,
+      "preserved_origins_checked": 31,
+      "current_code_cells": 0
+    },
+    {
+      "notebook": "06_model_improvements.ipynb",
+      "cells": 33,
+      "preserved_origins_checked": 31,
+      "current_code_cells": 0
+    },
+    {
+      "notebook": "07_evaluation.ipynb",
+      "cells": 49,
+      "preserved_origins_checked": 47,
+      "current_code_cells": 0
+    }
+  ],
+  "evaluation_checks": {
+    "original_raw_files_unchanged": true,
+    "serving_artifact_unchanged": true,
+    "original_benchmark_confusion_and_metrics_reproduced": true,
+    "signature_hash_matches_exact_equality": true,
+    "all_new_partitions_pairwise_signature_disjoint": true
+  },
+  "serving_artifact_sha256": "e05c143820f71d2347b2bc8c2ccaa57145878747ec9cf7a3598f14e45557d0eb"
+}

@@ -152,7 +152,7 @@ attack probabilities. Historical ensemble results used test-informed choices
 and remain explicitly historical.
 
 The current supervised ensemble gained **5.62 percentage points of validation
-recall** over the best individual (gradient boosting), with **1.53x** complete
+recall** over the best individual (gradient boosting), with **1.33x** complete
 256-row prediction latency. It passed the declared 2-point gain / 2x latency
 rules. Its fitted artifact is about 64 MB, versus 0.6 MB for gradient boosting,
 so deployment memory and storage costs are higher.
@@ -180,3 +180,13 @@ See [the shared prediction contract and parity checks](backend/PREDICTION.md).
 The [no-data verification](data/reports/prediction_without_data.json) checks
 cold startup and live single/batch predictions with no data directory and with
 dataset reads blocked.
+
+The [generalization report](notebooks/GENERALIZATION.md) separates benchmark
+signatures seen in actual fitting data from unseen signatures, with sample
+counts and 95% signature-cluster intervals. It reports precision, recall, F1,
+PR-AUC, average precision and false alarms, including every attack category.
+Additional three-way grouped splits and all nine withheld-family experiments
+refit the fixed design without changing the deployed artifact or its threshold.
+Feature equality does not prove identical physical connections. The supplied
+CSV files lack verified host/time/capture provenance, so these results support
+internal robustness claims and require independent prospective evaluation.
