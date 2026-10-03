@@ -16,8 +16,12 @@ from threadpoolctl import threadpool_limits
 
 from .features import FEATURE_SCHEMA_VERSION, RAW_INPUTS, FEATURE_NAMES
 
-ARTIFACT_SCHEMA_VERSION = 1
+ARTIFACT_SCHEMA_VERSION = 2
 RUNTIME_PACKAGES = ("numpy", "pandas", "scipy", "scikit-learn", "joblib", "threadpoolctl")
+SCORE_CALIBRATION = {
+    "method": "identity", "parameters": {}, "fitted_on": None,
+    "output": "uncalibrated classifier attack score",
+}
 
 
 class ArtifactError(ValueError):
@@ -51,8 +55,16 @@ def validate_bundle(bundle):
     if bundle.get("raw_inputs") != list(RAW_INPUTS) or bundle.get("features") != list(FEATURE_NAMES):
         raise ArtifactError("The artifact feature order does not match the shared feature contract.")
     threshold = bundle.get("threshold")
-    if not isinstance(threshold, (int, float)) or not np.isfinite(threshold) or not 0 <= threshold <= 1:
-        raise ArtifactError("The fixed classification threshold must be finite and between 0 and 1.")
+    if not isinstance(threshold, (int, float)) or not np.isfinite(threshold) or not 0 <= threshold <= np.nextafter(1.0, np.inf):
+        raise ArtifactError("The fixed threshold must be in [0, 1], or one float64 step above 1 to reject all scores.")
+    if bundle.get("score_calibration") != SCORE_CALIBRATION:
+        raise ArtifactError("Unsupported or missing saved score calibration settings; retrain the artifact.")
+    selection = bundle.get("threshold_selection", {})
+    budget = selection.get("max_false_positive_rate")
+    if not isinstance(budget, (int, float)) or not np.isfinite(budget) or not 0 <= budget < 1:
+        raise ArtifactError("A finite validation false-positive budget in [0, 1) must be saved.")
+    if bundle.get("config", {}).get("max_false_positive_rate") != budget:
+        raise ArtifactError("The saved threshold-selection budget differs from training configuration.")
     pipeline = bundle.get("pipeline")
     if pipeline is None or list(pipeline.named_steps) != ["raw_features", "scaler", "model"]:
         raise ArtifactError("The saved artifact must contain feature creation, scaling and model scoring.")
@@ -108,6 +120,8 @@ def save_prediction_artifact(bundle, path):
         "precision": bundle["precision"], "raw_inputs": bundle["raw_inputs"],
         "features": bundle["features"], "threshold": bundle["threshold"],
         "threshold_policy": bundle["threshold_policy"], "model_name": bundle["model_name"],
+        "score_calibration": bundle["score_calibration"],
+        "threshold_selection": bundle["threshold_selection"],
         "model_selection": bundle["selection_policy"],
         "evaluation_status": bundle["evaluation_status"],
         "feature_implementation_sha256": bundle["feature_implementation_sha256"],
@@ -132,7 +146,8 @@ def load_prediction_artifact(path):
             raise ArtifactError("The prediction artifact hash does not match its manifest.")
         bundle = validate_bundle(joblib.load(path))
         if any(bundle.get(key) != manifest.get(key) for key in (
-            "runtime", "threshold", "precision", "raw_inputs", "features", "feature_schema_version", "model_name"
+            "runtime", "threshold", "precision", "raw_inputs", "features", "feature_schema_version", "model_name",
+            "threshold_policy", "score_calibration", "threshold_selection", "feature_implementation_sha256",
         )):
             raise ArtifactError("The prediction artifact and manifest are inconsistent.")
         return bundle
@@ -157,6 +172,8 @@ class PredictionService:
         return {
             "name": self.bundle["model_name"], "threshold": self.bundle["threshold"],
             "threshold_policy": self.bundle["threshold_policy"],
+            "threshold_selection": self.bundle["threshold_selection"],
+            "score_calibration": self.bundle["score_calibration"],
             "selection_policy": self.bundle["selection_policy"],
             "feature_count": len(FEATURE_NAMES), "raw_inputs": list(RAW_INPUTS),
             "precision": self.bundle["precision"], "feature_schema_version": FEATURE_SCHEMA_VERSION,

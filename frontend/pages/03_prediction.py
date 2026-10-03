@@ -254,6 +254,7 @@ with result_col:
             best_model.get("name", "Model unavailable"),
             [
                 ("Threshold", best_model.get("threshold", "-")),
+                ("Validation false-alarm target", f"{100 * best_model.get('threshold_selection', {}).get('max_false_positive_rate', 0.01):.1f}%"),
                 ("Evaluation", "Previously inspected benchmark"),
                 ("Components", len(best_model.get("components", []))),
                 ("Backend", os.getenv("BACKEND_URL", "http://localhost:5000")),

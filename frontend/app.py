@@ -138,6 +138,7 @@ with right:
             best_model.get("name", "Current model"),
             [
                 ("Threshold", best_model.get("threshold", "-")),
+                ("Validation false-alarm target", f"{100 * best_model.get('threshold_selection', {}).get('max_false_positive_rate', 0.01):.1f}%"),
                 ("Evaluation", "Previously inspected benchmark"),
                 ("Precision", format_number(best_metrics.get("precision"))),
                 ("Recall", format_number(best_metrics.get("recall"))),

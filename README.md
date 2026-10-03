@@ -135,12 +135,17 @@ Then open:
 
 The dashboard serves `models_saved/shared_pipeline.joblib`. It was retrained
 using float64 raw features, fit-only preprocessing, and grouped validation for
-model and threshold selection. The fixed threshold is **0.4641181101371265**;
-the API performs no reference-data lookup, calibration, fitting or threshold selection.
+model and threshold selection. The fixed threshold is **0.9458945040124691**,
+chosen for maximum validation attack recall with false-positive rate at most
+**1%**. The API performs no reference-data lookup, fitting or threshold selection.
+Score calibration is saved explicitly as identity (no learned calibration).
 Missing or incompatible artifacts make prediction and health return HTTP 503.
 
-The current benchmark F1 is 0.8690, with a **34.8% false-positive rate**. This is
-a reproducible baseline, not an operationally validated intrusion detector.
+Validation false-positive rate is **0.317%** (42/13,248 normal rows), with
+**73.38% attack recall**. At the same frozen threshold, the benchmark has
+**0.670% false-positive rate** (248/37,000), **83.41% recall**, and F1 **0.9068**.
+These are measured operating points; the validation budget does not guarantee
+the same false-alarm rate on other traffic.
 The benchmark was previously inspected; scores are not calibrated production
 attack probabilities. Historical ensemble results used test-informed choices
 and remain explicitly historical.
@@ -162,3 +167,6 @@ The [feature dictionary](notebooks/FEATURES.md) defines physical features and
 their zero-denominator policies before training-only scaling.
 The same fitted artifact is now used by the notebook and dashboard backend.
 See [the shared prediction contract and parity checks](backend/PREDICTION.md).
+The [no-data verification](data/reports/prediction_without_data.json) checks
+cold startup and live single/batch predictions with no data directory and with
+dataset reads blocked.

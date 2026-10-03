@@ -13,13 +13,12 @@ from pathlib import Path
 import json
 import platform
 
-import joblib
 import numpy as np
 import pandas as pd
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.metrics import (
-    average_precision_score, confusion_matrix, f1_score, precision_recall_curve,
+    average_precision_score, confusion_matrix, f1_score,
     precision_score, recall_score, roc_auc_score,
 )
 from sklearn.model_selection import StratifiedGroupKFold
@@ -34,6 +33,7 @@ from .features import (
 from .inference import (
     ARTIFACT_SCHEMA_VERSION, predict_raw, runtime_versions,
     save_prediction_artifact, load_prediction_artifact, PredictionService, feature_implementation_hash,
+    SCORE_CALIBRATION,
 )
 
 
@@ -43,10 +43,13 @@ class WorkflowConfig:
     validation_folds: int = 5
     max_iter: int = 150
     threads: int = 2
+    max_false_positive_rate: float = 0.01
 
     def __post_init__(self):
         if self.validation_folds < 2 or self.max_iter < 1 or self.threads < 1:
             raise ValueError("Require at least two folds and positive iterations/threads.")
+        if not np.isfinite(self.max_false_positive_rate) or not 0 <= self.max_false_positive_rate < 1:
+            raise ValueError("The false-positive budget must be finite and in [0, 1).")
 
 
 def _read_raw(path):
@@ -93,14 +96,30 @@ def split_development(train, config):
     return fit_idx, val_idx, groups
 
 
-def _choose_threshold(labels, scores):
-    precision, recall, thresholds = precision_recall_curve(labels, scores)
-    f1 = np.divide(
-        2 * precision[:-1] * recall[:-1], precision[:-1] + recall[:-1],
-        out=np.zeros_like(thresholds), where=(precision[:-1] + recall[:-1]) > 0,
-    )
-    # For equal F1, choose the highest threshold (fewer alerts).
-    best = np.flatnonzero(f1 == f1.max())[-1]
+def _choose_threshold(labels, scores, max_false_positive_rate=0.01):
+    """Maximize held-out recall under an empirical FPR budget using score >= t.
+
+    Move all tied scores together, rather than interpolating an unattainable ROC
+    point. Equal recall prefers fewer false positives, then a higher threshold.
+    A finite reject-all candidate makes even constant scores feasible.
+    """
+    labels, scores = np.asarray(labels), np.asarray(scores, dtype=np.float64)
+    if labels.ndim != 1 or scores.ndim != 1 or len(labels) != len(scores) or not len(labels):
+        raise ValueError("Supply equal-length, nonempty one-dimensional validation labels and scores.")
+    if not np.isin(labels, [0, 1]).all() or len(np.unique(labels)) != 2:
+        raise ValueError("Threshold selection needs both normal (0) and attack (1) validation rows.")
+    if not np.isfinite(scores).all() or (scores < 0).any() or (scores > 1).any():
+        raise ValueError("Validation classifier scores must be finite and between 0 and 1.")
+    if not np.isfinite(max_false_positive_rate) or not 0 <= max_false_positive_rate < 1:
+        raise ValueError("The false-positive budget must be finite and in [0, 1).")
+    order = np.argsort(-scores, kind="stable")
+    ordered_scores, ordered_labels = scores[order], labels[order]
+    ends = np.flatnonzero(np.r_[ordered_scores[:-1] != ordered_scores[1:], True])
+    thresholds = np.r_[np.nextafter(ordered_scores[0], np.inf), ordered_scores[ends]]
+    tp = np.r_[0, np.cumsum(ordered_labels == 1)[ends]]
+    fp = np.r_[0, np.cumsum(ordered_labels == 0)[ends]]
+    eligible = np.flatnonzero(fp / np.count_nonzero(labels == 0) <= max_false_positive_rate)
+    best = eligible[np.lexsort((-thresholds[eligible], fp[eligible], -tp[eligible]))[0]]
     return float(thresholds[best])
 
 
@@ -138,11 +157,11 @@ def fit_baselines(train, fit_idx, val_idx, config):
             ])
             pipeline.fit(X_fit, train.iloc[fit_idx].label)
             scores = pipeline.predict_proba(X_val)[:, 1]
-            threshold = _choose_threshold(train.iloc[val_idx].label, scores)
+            threshold = _choose_threshold(train.iloc[val_idx].label, scores, config.max_false_positive_rate)
             fitted[name] = {"pipeline": pipeline, "threshold": threshold, "model_name": name}
             rows.append({"model": name, **score_metrics(train.iloc[val_idx].label, scores, threshold)})
     comparison = pd.DataFrame(rows).sort_values(
-        ["f1", "average_precision", "model"], ascending=[False, False, True]
+        ["recall", "false_positive_rate", "average_precision", "model"], ascending=[False, True, False, True]
     ).reset_index(drop=True)
     winner = comparison.iloc[0].model
     bundle = {**fitted[winner], "config": asdict(config),
@@ -152,8 +171,17 @@ def fit_baselines(train, fit_idx, val_idx, config):
               "artifact_schema_version": ARTIFACT_SCHEMA_VERSION,
               "precision": "float64", "runtime": runtime_versions(),
               "feature_implementation_sha256": feature_implementation_hash(),
-              "threshold_policy": "maximum validation F1; equal F1 chooses higher threshold",
-              "selection_policy": "validation F1, then average precision, then name",
+              "score_calibration": {**SCORE_CALIBRATION, "parameters": {}},
+              "threshold_policy": "maximum validation recall under the configured false-positive budget; ties prefer fewer false positives, then higher threshold",
+              "selection_policy": "validation recall under budget, then lower false-positive rate, then average precision, then name",
+              "threshold_selection": {
+                  "partition": "grouped development validation; disjoint from model fitting",
+                  "max_false_positive_rate": config.max_false_positive_rate,
+                  "normal_rows": int((train.iloc[val_idx].label == 0).sum()),
+                  "attack_rows": int((train.iloc[val_idx].label == 1).sum()),
+                  "validation_metrics": comparison.iloc[0].drop(labels="model").to_dict(),
+                  "interpretation": "empirical validation constraint; not a guarantee on other traffic",
+              },
               "evaluation_status": "previously inspected benchmark; not an untouched holdout"}
     return bundle, comparison
 
@@ -213,6 +241,9 @@ def save_run(root, output_dir, bundle, train, fit_idx, val_idx, predictions,
     split.iloc[val_idx, split.columns.get_loc("partition")] = "validation"
     split.to_csv(output_dir / "development_split.csv", index=False)
     summary = {"selected_model": bundle["model_name"], "benchmark": benchmark_metrics,
+               "score_calibration": bundle["score_calibration"],
+               "threshold_selection": bundle["threshold_selection"],
+               "benchmark_meets_false_positive_budget": benchmark_metrics["false_positive_rate"] <= bundle["config"]["max_false_positive_rate"],
                "validation": validation.to_dict(orient="records"),
                "evaluation_status": bundle["evaluation_status"]}
     (output_dir / "metrics.json").write_text(json.dumps(summary, indent=2, allow_nan=False), encoding="utf-8")
@@ -237,6 +268,7 @@ def save_run(root, output_dir, bundle, train, fit_idx, val_idx, predictions,
         "preprocessing_order": list(bundle["pipeline"].named_steps),
         "physical_feature_checks": quality,
         "threshold": bundle["threshold"], "threshold_policy": bundle["threshold_policy"],
+        "score_calibration": bundle["score_calibration"], "threshold_selection": bundle["threshold_selection"],
         "model_selection": bundle["selection_policy"], "selected_model": bundle["model_name"],
         "fit_rows": len(fit_idx), "validation_rows": len(val_idx),
         "benchmark_rows": len(predictions),

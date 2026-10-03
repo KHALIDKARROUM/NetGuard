@@ -1,7 +1,7 @@
 {
-  "artifact_schema_version": 1,
+  "artifact_schema_version": 2,
   "feature_schema_version": 2,
-  "artifact_sha256": "135c88e1cc16063eba91df4947215201d24c04cc54ae0b865f1df676285013fc",
+  "artifact_sha256": "71a01f7703879487f0f94f97271d4a0ce99998b298fa42fcb5a1b2d23b976454",
   "runtime": {
     "python": "3.13.9",
     "packages": {
@@ -57,10 +57,37 @@
     "log1p_sload",
     "log1p_dload"
   ],
-  "threshold": 0.4641181101371265,
-  "threshold_policy": "maximum validation F1; equal F1 chooses higher threshold",
+  "threshold": 0.9458945040124691,
+  "threshold_policy": "maximum validation recall under the configured false-positive budget; ties prefer fewer false positives, then higher threshold",
   "model_name": "hist_gradient_boosting",
-  "model_selection": "validation F1, then average precision, then name",
+  "score_calibration": {
+    "method": "identity",
+    "parameters": {},
+    "fitted_on": null,
+    "output": "uncalibrated classifier attack score"
+  },
+  "threshold_selection": {
+    "partition": "grouped development validation; disjoint from model fitting",
+    "max_false_positive_rate": 0.01,
+    "normal_rows": 13248,
+    "attack_rows": 17506,
+    "validation_metrics": {
+      "rows": 30754,
+      "threshold": 0.9458945040124691,
+      "precision": 0.9967411545623837,
+      "recall": 0.7338055523820405,
+      "f1": 0.8452984141606896,
+      "roc_auc": 0.9353997215619931,
+      "average_precision": 0.9530998700533726,
+      "false_positive_rate": 0.003170289855072464,
+      "tn": 13206,
+      "fp": 42,
+      "fn": 4660,
+      "tp": 12846
+    },
+    "interpretation": "empirical validation constraint; not a guarantee on other traffic"
+  },
+  "model_selection": "validation recall under budget, then lower false-positive rate, then average precision, then name",
   "evaluation_status": "previously inspected benchmark; not an untouched holdout",
   "feature_implementation_sha256": "25476667f5dd2696a27c571adc2ae29d86a0ad94516fbd45efbe7224580ba505"
 }

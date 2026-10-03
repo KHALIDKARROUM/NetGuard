@@ -1,0 +1,94 @@
+{
+  "status": "passed",
+  "verified_utc": "2026-10-03T11:54:20.784235+00:00",
+  "transport": "live Uvicorn loopback HTTP server in a cold separate process",
+  "runtime": {
+    "python": "3.13.9",
+    "packages": {
+      "numpy": "2.2.6",
+      "pandas": "2.2.3",
+      "scipy": "1.15.3",
+      "scikit-learn": "1.6.1",
+      "joblib": "1.4.2",
+      "threadpoolctl": "3.6.0"
+    }
+  },
+  "artifact_sha256": "71a01f7703879487f0f94f97271d4a0ce99998b298fa42fcb5a1b2d23b976454",
+  "model": "hist_gradient_boosting",
+  "threshold": 0.9458945040124691,
+  "threshold_policy": "maximum validation recall under the configured false-positive budget; ties prefer fewer false positives, then higher threshold",
+  "threshold_selection": {
+    "partition": "grouped development validation; disjoint from model fitting",
+    "max_false_positive_rate": 0.01,
+    "normal_rows": 13248,
+    "attack_rows": 17506,
+    "validation_metrics": {
+      "rows": 30754,
+      "threshold": 0.9458945040124691,
+      "precision": 0.9967411545623837,
+      "recall": 0.7338055523820405,
+      "f1": 0.8452984141606896,
+      "roc_auc": 0.9353997215619931,
+      "average_precision": 0.9530998700533726,
+      "false_positive_rate": 0.003170289855072464,
+      "tn": 13206,
+      "fp": 42,
+      "fn": 4660,
+      "tp": 12846
+    },
+    "interpretation": "empirical validation constraint; not a guarantee on other traffic"
+  },
+  "score_calibration": {
+    "method": "identity",
+    "parameters": {},
+    "fitted_on": null,
+    "output": "uncalibrated classifier attack score"
+  },
+  "raw_inputs": [
+    "sbytes",
+    "dbytes",
+    "spkts",
+    "dpkts",
+    "dur",
+    "rate",
+    "sload",
+    "dload",
+    "sttl",
+    "dttl"
+  ],
+  "precision": "float64",
+  "synthetic_connections": 7,
+  "prediction_comparisons": 22,
+  "maximum_score_difference": 0.0,
+  "decision_mismatches": 0,
+  "score_tolerance": 1e-12,
+  "dataset_endpoint_http_status": 404,
+  "dataset_open_attempts": 0,
+  "isolation": {
+    "copied": [
+      "backend Python sources",
+      "netguard_workflow Python sources",
+      "shared prediction artifact",
+      "artifact manifest"
+    ],
+    "data_directory_present": false,
+    "csv_files_present": false,
+    "source_checkout_removed_from_import_path": true,
+    "audit_hook_installed_before_api_import": true,
+    "audit_hook_rejects": [
+      "all CSV opens",
+      "opens within original checkout data directory"
+    ],
+    "process_stopped_and_temporary_checkout_removed": true
+  },
+  "checks": {
+    "cold_start_health": true,
+    "single_and_batch_parity": true,
+    "row_and_field_order_parity": true,
+    "artifact_identity_matches": true,
+    "fixed_saved_threshold": true,
+    "full_precision_scores": true,
+    "prediction_still_works_after_dataset_404": true
+  },
+  "scope": "Synthetic measurement parity and absence of dataset reads; not an accuracy evaluation."
+}

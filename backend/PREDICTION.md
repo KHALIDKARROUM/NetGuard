@@ -13,6 +13,22 @@ validation-selected histogram gradient boosting model. All transformations and
 scores use float64. Decisions are `score >= saved_threshold`; responses retain
 the full numerical score. See [the feature dictionary](../notebooks/FEATURES.md).
 
+The fixed threshold maximizes attack recall with **validation false-positive
+rate at most 1%**. The model is fitted on separate grouped development rows.
+Score ties are indivisible; the selector considers real attainable thresholds,
+including a finite reject-all threshold if necessary. Equal recall prefers
+fewer false positives, then a higher threshold. The model comparison uses
+constrained validation recall, lower false-positive rate, average precision,
+then name. No benchmark labels select the threshold or deployed model.
+
+Artifact schema 2 requires explicit `score_calibration` settings: `method` is
+`identity`, `parameters` is empty, and `fitted_on` is null. Scores remain
+uncalibrated classifier outputs; no learned calibration or reference score
+distribution is needed at inference. `threshold_selection` stores the budget,
+validation normal/attack counts, observed false positives and recall. Both
+settings are also exposed by `GET /api/predict/info` and checked against the
+artifact's manifest.
+
 Every connection requires these ten measured fields:
 
 | Fields | Accepted measurements |
@@ -82,6 +98,7 @@ First run the [corrected notebook workflow](../notebooks/WORKFLOW.md), then:
 ```powershell
 .venv-workflow/Scripts/python.exe -m unittest discover -s tests -v
 .venv-api/Scripts/python.exe scripts/verify_prediction_parity.py --live
+.venv-api/Scripts/python.exe scripts/verify_prediction_without_data.py
 ```
 
 The verifier starts and stops a local API process, checks 512 reproducibly
@@ -93,6 +110,14 @@ then checks dashboard metrics and routes. Evidence is saved to
 `data/reports/shared_prediction_parity.json`. The final notebook cell separately
 checks 33 connections using the actual FastAPI request adapter.
 
+The no-data verifier copies only source files and the model/manifest into an
+isolated directory, installs a file-access guard before importing the backend,
+and starts a fresh live API process. The guard blocks CSV opens and any opens
+under the original data directory. Synthetic single and batch predictions must
+match the shared service, while dataset exploration returns 404. Evidence is
+saved to `data/reports/prediction_without_data.json`. This check needs no raw
+dataset and does not measure predictive accuracy.
+
 This follows scikit-learn's guidance on [consistent preprocessing and pipelines](https://scikit-learn.org/stable/common_pitfalls.html)
 and [matching training/serving versions for persisted models](https://scikit-learn.org/stable/model_persistence.html).
 The numerical mismatch in the earlier serving path is addressed by retraining
@@ -100,8 +125,18 @@ and using this complete pipeline, rather than reusing older fitted artifacts.
 
 ## Interpretation
 
-The fixed threshold maximizes validation F1. Benchmark F1 is 0.8690 and the
-false-positive rate is **34.8% of normal connections**. The benchmark was already
-inspected and is not a new independent holdout. Classifier scores are not
-calibrated production attack probabilities. An operational alert budget,
-calibration and prospective evaluation remain necessary scientific work.
+The 1% target applies to the validation partition used for threshold selection.
+Benchmark and future traffic can have different false-positive rates and recall.
+The current threshold is **0.9458945040124691**. Validation observes 42 false
+positives among 13,248 normal rows (**0.317%**) and detects 12,846 of 17,506
+attacks (**73.38% recall**). The frozen benchmark result is 248 false positives
+among 37,000 normal rows (**0.670%**) and 37,811 detections among 45,332 attacks
+(**83.41% recall**, F1 **0.9068**). The threshold favors the fewest false positives
+among operating points with the same maximum feasible recall; it need not use
+the full 1% budget.
+The notebook reports both validation and frozen-threshold benchmark results;
+`data/reports/notebook_workflow_verification.json` contains the measured counts.
+The benchmark was already inspected and is not an independent final holdout.
+Classifier scores are not calibrated production attack probabilities. Checking
+alert costs, calibration on separate development data, and prospective evaluation
+remain necessary scientific work.

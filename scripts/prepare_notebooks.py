@@ -37,7 +37,8 @@ deterministic domain features calculated **before** fitted scaling. No missing
 measurement is reconstructed from benchmark neighbours.
 
 Training/validation input signatures are kept together. Preprocessing is fitted
-on the fit partition; model selection and a fixed threshold use validation only.
+on the fit partition; model selection and a fixed threshold use validation only,
+maximizing attack recall under a 1% empirical validation false-positive budget.
 The existing test file is a **previously inspected benchmark**, not an untouched
 holdout. These results do not establish future or unknown-attack performance.
 
@@ -52,8 +53,8 @@ cells in order and stop at **Historical reference**. Do not use the editor's
 unfiltered Run All: historical cells can rerun old training and overwrite legacy
 artifacts. No historical cell is silently rewritten or removed.
 
-Outputs go to `artifacts/notebook_workflow/`; the existing dashboard artifacts
-remain separate. See `notebooks/WORKFLOW.md` for setup and limitations.
+Outputs go to `artifacts/notebook_workflow/`; the same complete prediction
+artifact is published to `models_saved/` for the API. See `notebooks/WORKFLOW.md`.
 """),
         markdown("current-environment-heading", """### 1. Environment and reproducibility
 
@@ -170,15 +171,28 @@ print("Engineered predictor count:", feature_preview.shape[1])
 Compare a class-prior dummy with a supervised histogram gradient boosting
 baseline. Settings are declared in `WorkflowConfig`, not optimized against the
 benchmark. Early stopping is disabled to avoid an ungrouped internal split.
-For each candidate, choose the threshold maximizing validation F1; equal F1
-chooses the higher threshold. Select the candidate using validation F1, then
-average precision. A deployment false-alarm budget is a future policy decision.
+For each candidate, maximize attack recall subject to a maximum **1% empirical
+validation false-positive rate**. All equal scores move together; do not
+interpolate an unattainable operating point. Equal recall prefers fewer false
+positives, then the higher threshold. Select the candidate by constrained recall,
+lower false-positive rate, average precision, then name. This budget is declared
+before benchmark evaluation and is not a guarantee on future traffic.
+
+Save score calibration as **identity / no learned calibration**, with no fitted
+reference distribution or parameters. Scores are uncalibrated classifier outputs.
+The artifact includes this setting, the fixed threshold, target budget, validation
+class counts, observed false positives, and attack recall. Actual benchmark
+results are reported without moving the threshold to satisfy its labels.
 The selected pipeline remains fitted on the fit partition, so its threshold
 matches its validation scores; it is not silently refitted on validation rows.
+See [scikit-learn threshold guidance](https://scikit-learn.org/stable/modules/classification_threshold.html)
+for why threshold selection uses separate validation data.
 """),
         code("current-training", """bundle, validation_comparison = fit_baselines(development, fit_idx, val_idx, config)
 display(validation_comparison)
 print("Frozen model:", bundle["model_name"], "| fixed threshold:", bundle["threshold"])
+print("Maximum validation false-positive rate:", config.max_false_positive_rate)
+print("Saved score calibration:", bundle["score_calibration"])
 """),
         markdown("current-evaluation-heading", """### 6. Previously inspected benchmark evaluation
 
@@ -193,13 +207,22 @@ not time forecasts; a new untouched/prospective holdout is still required.
     bundle, benchmark, development
 )
 display(pd.DataFrame([benchmark_metrics]))
+validation_point = bundle["threshold_selection"]["validation_metrics"]
+display(pd.DataFrame([
+    {"partition": name, "target_fpr": config.max_false_positive_rate,
+     "observed_fpr": values["false_positive_rate"], "attack_recall": values["recall"],
+     "false_positives": values["fp"], "normal_rows": values["tn"] + values["fp"],
+     "within_budget": values["false_positive_rate"] <= config.max_false_positive_rate}
+    for name, values in [("validation: threshold selection", validation_point),
+                         ("previously inspected benchmark: frozen threshold", benchmark_metrics)]
+]))
 display(slice_metrics)
 display(category_metrics)
 display(predictions.head(5))
 """),
         markdown("current-save-heading", """### 7. Persist artifacts and verify prediction parity
 
-Save the complete fitted pipeline and fixed threshold, row-level predictions,
+Save the complete fitted pipeline, fixed threshold and score calibration settings, row-level predictions,
 development membership, validation comparison, category/slice metrics and hashes.
 Reload the artifact and verify that scores and decisions match both before/after
 serialization and for individual versus batch inputs. The model needs the ten
@@ -259,7 +282,9 @@ print("Completed: raw CSVs -> validation-selected model -> saved predictions.")
 """),
         markdown("current-limitations", """### Interpretation and remaining work
 
-This workflow establishes a supervised baseline with validation-only decisions.
+This workflow establishes a supervised baseline with validation-only decisions
+under a declared 1% empirical validation false-positive budget. The benchmark
+false-positive rate may differ; no benchmark-dependent retuning is performed.
 The API now uses its saved pipeline and threshold. This does not establish
 calibrated probabilities or replace independent final evaluation. Additional
 baselines, uncertainty estimates, unseen attack-family

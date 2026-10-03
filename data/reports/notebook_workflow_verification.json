@@ -58,7 +58,7 @@
     "executed_notebook": "00_netguard_complete.executed.ipynb"
   },
   "manifest": {
-    "created_utc": "2026-10-03T11:15:19.171268+00:00",
+    "created_utc": "2026-10-03T11:52:37.730501+00:00",
     "python": "3.13.9",
     "packages": {
       "numpy": "2.2.6",
@@ -75,7 +75,8 @@
       "seed": 42,
       "validation_folds": 5,
       "max_iter": 150,
-      "threads": 2
+      "threads": 2,
+      "max_false_positive_rate": 0.01
     },
     "raw_inputs": [
       "sbytes",
@@ -122,7 +123,7 @@
     ],
     "feature_precision": "float64",
     "feature_schema_version": 2,
-    "artifact_schema_version": 1,
+    "artifact_schema_version": 2,
     "preprocessing_order": [
       "raw_features",
       "scaler",
@@ -208,9 +209,36 @@
         }
       }
     },
-    "threshold": 0.4641181101371265,
-    "threshold_policy": "maximum validation F1; equal F1 chooses higher threshold",
-    "model_selection": "validation F1, then average precision, then name",
+    "threshold": 0.9458945040124691,
+    "threshold_policy": "maximum validation recall under the configured false-positive budget; ties prefer fewer false positives, then higher threshold",
+    "score_calibration": {
+      "method": "identity",
+      "parameters": {},
+      "fitted_on": null,
+      "output": "uncalibrated classifier attack score"
+    },
+    "threshold_selection": {
+      "partition": "grouped development validation; disjoint from model fitting",
+      "max_false_positive_rate": 0.01,
+      "normal_rows": 13248,
+      "attack_rows": 17506,
+      "validation_metrics": {
+        "rows": 30754,
+        "threshold": 0.9458945040124691,
+        "precision": 0.9967411545623837,
+        "recall": 0.7338055523820405,
+        "f1": 0.8452984141606896,
+        "roc_auc": 0.9353997215619931,
+        "average_precision": 0.9530998700533726,
+        "false_positive_rate": 0.003170289855072464,
+        "tn": 13206,
+        "fp": 42,
+        "fn": 4660,
+        "tp": 12846
+      },
+      "interpretation": "empirical validation constraint; not a guarantee on other traffic"
+    },
+    "model_selection": "validation recall under budget, then lower false-positive rate, then average precision, then name",
     "selected_model": "hist_gradient_boosting",
     "fit_rows": 144587,
     "validation_rows": 30754,
@@ -225,27 +253,27 @@
       "UNSW_NB15_testing-set.csv": "734fe6642edf758f7c94d7d9149426b49d202fe8e7bf0bef47392489c3c0a559"
     },
     "source_sha256": {
-      "netguard_workflow/workflow.py": "ed7a4f0c520e5e7d845ce10965d6e41ebb043c62ba9be04b707b2589273559de",
+      "netguard_workflow/workflow.py": "d6c96e4781080d4ddba1615f483ecfaea055aab9d45fc7d10cb431f9d28d16f0",
       "requirements-notebooks.txt": "adcb7a97dd4e2a425eed335f63994f8500ce5f004530b3877880c5cf40b21ef2",
       "netguard_workflow/features.py": "25476667f5dd2696a27c571adc2ae29d86a0ad94516fbd45efbe7224580ba505",
-      "netguard_workflow/inference.py": "af109d838d717c715f61d64e08401a4caa886ed5d1b4150680f5c2d01b00b548",
+      "netguard_workflow/inference.py": "c337f305fc20d6a576ffa9c6add6e2784f994ed7a28f3d0be6dda2404e1c5423",
       "requirements-model.in": "5148dc976d4bd1dcf91f3dfba9b02668d101a8e898270273dc92ee93dc97b408"
     },
     "output_sha256": {
-      "model.joblib": "135c88e1cc16063eba91df4947215201d24c04cc54ae0b865f1df676285013fc",
-      "benchmark_predictions.csv": "cdcd5e66f25750ed2c979c6e9a7452cdba86a04af0f8af8efbc4ae30ac1fc09a",
-      "validation_comparison.csv": "92fbfcd0187dd119e5051f42686178391e813ed891ad2e6d47992884689a7085",
-      "benchmark_slices.csv": "fdf3a842432cc6fd163e9008ac51d1b945a9de0f2b549b465e5aaed6dc26129a",
-      "attack_category_metrics.csv": "cc44aec464a74ad990fd24bd35e6e2c9c5c8cad78fea08a7e1954fcaf242b8d1",
+      "model.joblib": "71a01f7703879487f0f94f97271d4a0ce99998b298fa42fcb5a1b2d23b976454",
+      "benchmark_predictions.csv": "dbe9703775d195ffc0457273145477b5eff2ea6ffbab5ba79f7f45a45e4c94ca",
+      "validation_comparison.csv": "fd33595141a1a1bd849874e4a343eaa06e4017797ba3c10e2e3dfb8772c75f72",
+      "benchmark_slices.csv": "1ab4b5e9c2401990e69ee01dcd1e75e44937ba2dbb0d3412e561e6b9a14590d2",
+      "attack_category_metrics.csv": "d45e03218c419c0b037a5a45da7a4bf1d8a62a9c9081a3eee8dc5fd0dc711a32",
       "development_split.csv": "72f343d0c6f5268f8729cd1506ac7b2db6230e9082a374ef8a4072e3992f797f",
-      "metrics.json": "226eee718d681aa592acbbd6e2c417da69b36cc2149a6132e6a28341b77a1c71",
+      "metrics.json": "8f6eade7da5958dea70c2797331d6fef55647660182dfadf0ad11f5664fd274d",
       "feature_catalog.json": "874167b6fc70ca998a48dd8922aa56a52a4a3e01bf79384c6abb3d167d96cfdb",
       "feature_quality_report.json": "32b4d2b2dd4d23d42d103dc5b6bd7e4a767e6f0fd9f69e425c575288c17891f3",
-      "model.manifest.json": "8f0fd730f181782e32cc8c95f7e7149fd42798aa058fa65e2b49959984019943"
+      "model.manifest.json": "a52bbc578b5cc3f730c3e98c0c78a773343f3f10e710ce483ff35f872bcdf1c0"
     },
     "shared_prediction_artifact": {
       "path": "models_saved/shared_pipeline.joblib",
-      "sha256": "135c88e1cc16063eba91df4947215201d24c04cc54ae0b865f1df676285013fc",
+      "sha256": "71a01f7703879487f0f94f97271d4a0ce99998b298fa42fcb5a1b2d23b976454",
       "same_bytes_as_notebook_artifact": true
     }
   },
@@ -253,48 +281,76 @@
     "selected_model": "hist_gradient_boosting",
     "benchmark": {
       "rows": 82332,
-      "threshold": 0.4641181101371265,
-      "precision": 0.7766295569411397,
-      "recall": 0.9864113650401483,
-      "f1": 0.86903963696081,
+      "threshold": 0.9458945040124691,
+      "precision": 0.9934838014661447,
+      "recall": 0.8340907085502515,
+      "f1": 0.9068364691633389,
       "roc_auc": 0.9758296847761023,
       "average_precision": 0.9821790744015734,
-      "false_positive_rate": 0.3475945945945946,
-      "tn": 24139,
-      "fp": 12861,
-      "fn": 616,
-      "tp": 44716
+      "false_positive_rate": 0.006702702702702703,
+      "tn": 36752,
+      "fp": 248,
+      "fn": 7521,
+      "tp": 37811
     },
+    "score_calibration": {
+      "method": "identity",
+      "parameters": {},
+      "fitted_on": null,
+      "output": "uncalibrated classifier attack score"
+    },
+    "threshold_selection": {
+      "partition": "grouped development validation; disjoint from model fitting",
+      "max_false_positive_rate": 0.01,
+      "normal_rows": 13248,
+      "attack_rows": 17506,
+      "validation_metrics": {
+        "rows": 30754,
+        "threshold": 0.9458945040124691,
+        "precision": 0.9967411545623837,
+        "recall": 0.7338055523820405,
+        "f1": 0.8452984141606896,
+        "roc_auc": 0.9353997215619931,
+        "average_precision": 0.9530998700533726,
+        "false_positive_rate": 0.003170289855072464,
+        "tn": 13206,
+        "fp": 42,
+        "fn": 4660,
+        "tp": 12846
+      },
+      "interpretation": "empirical validation constraint; not a guarantee on other traffic"
+    },
+    "benchmark_meets_false_positive_budget": true,
     "validation": [
       {
         "model": "hist_gradient_boosting",
         "rows": 30754,
-        "threshold": 0.4641181101371265,
-        "precision": 0.8021090943026457,
-        "recall": 0.9819490460413572,
-        "f1": 0.8829647892749827,
+        "threshold": 0.9458945040124691,
+        "precision": 0.9967411545623837,
+        "recall": 0.7338055523820405,
+        "f1": 0.8452984141606896,
         "roc_auc": 0.9353997215619931,
         "average_precision": 0.9530998700533726,
-        "false_positive_rate": 0.3201237922705314,
-        "tn": 9007,
-        "fp": 4241,
-        "fn": 316,
-        "tp": 17190
+        "false_positive_rate": 0.003170289855072464,
+        "tn": 13206,
+        "fp": 42,
+        "fn": 4660,
+        "tp": 12846
       },
       {
         "model": "dummy_prior",
         "rows": 30754,
-        "threshold": 0.7043164323210247,
-        "precision": 0.5692267672497886,
-        "recall": 1.0,
-        "f1": 0.7254869457107336,
+        "threshold": 0.7043164323210248,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
         "roc_auc": 0.5,
         "average_precision": 0.5692267672497886,
-        "false_positive_rate": 1.0,
-        "tn": 0,
-        "fp": 13248,
-        "fn": 0,
-        "tp": 17506
+        "false_positive_rate": 0.0,
+        "tn": 13248,
+        "fp": 0,
+        "fn": 17506,
+        "tp": 0
       }
     ],
     "evaluation_status": "previously inspected benchmark; not an untouched holdout"

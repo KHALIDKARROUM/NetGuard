@@ -1,6 +1,6 @@
 {
   "status": "passed",
-  "verified_utc": "2026-10-03T11:20:14.340904+00:00",
+  "verified_utc": "2026-10-03T11:54:44.952977+00:00",
   "transport": "live Uvicorn loopback HTTP server in a separate process",
   "runtime": {
     "python": "3.13.9",
@@ -13,9 +13,9 @@
       "threadpoolctl": "3.6.0"
     }
   },
-  "artifact_sha256": "135c88e1cc16063eba91df4947215201d24c04cc54ae0b865f1df676285013fc",
+  "artifact_sha256": "71a01f7703879487f0f94f97271d4a0ce99998b298fa42fcb5a1b2d23b976454",
   "model": "hist_gradient_boosting",
-  "threshold": 0.4641181101371265,
+  "threshold": 0.9458945040124691,
   "raw_connections": 518,
   "benchmark_connections": 512,
   "boundary_connections": 6,

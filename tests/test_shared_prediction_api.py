@@ -40,7 +40,8 @@ class SharedPredictionChecks(unittest.TestCase):
             service = PredictionService(path)
             expected = service.predict(self.rows)
             app = create_app(path, enable_logging=False)
-            with TestClient(app) as client, patch("pandas.read_csv", side_effect=AssertionError("Prediction must not read benchmark data")):
+            # Block CSV reads before cold startup as well as during requests.
+            with patch("pandas.read_csv", side_effect=AssertionError("Prediction must not read datasets")), TestClient(app) as client:
                 self.assertEqual(client.get("/health").status_code, 200)
                 self.assertEqual(client.get("/api/predict/info").json()["best_model"]["precision"], "float64")
                 records = self.rows.to_dict(orient="records")
@@ -94,15 +95,17 @@ class SharedPredictionChecks(unittest.TestCase):
     def test_missing_or_modified_artifact_returns_503_without_fallback(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder)/"model.joblib"
-            for damage in ("missing", "hash", "runtime"):
+            for damage in ("missing", "hash", "runtime", "calibration"):
                 if damage != "missing":
                     self.artifact(folder)
                     manifest_path = artifact_manifest_path(path)
                     manifest = json.loads(manifest_path.read_text())
                     if damage == "hash":
                         manifest["artifact_sha256"] = "0"*64
-                    else:
+                    elif damage == "runtime":
                         manifest["runtime"]["packages"]["scikit-learn"] = "1.5.1"
+                    else:
+                        manifest["score_calibration"]["method"] = "test_percentile"
                     manifest_path.write_text(json.dumps(manifest))
                 with self.assertRaises(ArtifactError):
                     load_prediction_artifact(path)

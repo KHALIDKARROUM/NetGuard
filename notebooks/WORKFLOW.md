@@ -66,8 +66,12 @@ not by standard Jupyter itself.
    zero-denominator policies. Schema 2 includes exact and explicitly smoothed
    ratios; older workflow artifacts must be retrained.
 4. Fit a dummy prior and histogram gradient boosting baseline. Choose model
-   and a fixed decision threshold using validation F1 only; tie policies are
-   documented in the notebook and manifest. Do not refit after selection.
+   and a fixed decision threshold by maximizing validation attack recall under
+   a 1% empirical false-positive budget. Equal recall prefers fewer false
+   positives, then a higher threshold. Candidate selection uses constrained
+   recall, lower false-positive rate, average precision, then name. All score
+   ties move together; the target is not an interpolated ROC point. Do not
+   refit after selection.
 5. Evaluate the previously inspected benchmark, including category and
    seen/unseen input-signature slices.
 6. Save the fitted pipeline and threshold, verify artifact reload and
@@ -110,12 +114,21 @@ Required measured columns are `sbytes`, `dbytes`, `spkts`, `dpkts`, `dur`, `rate
 Load only trusted model artifacts. Keep the package available so custom fitted
 transformers can be deserialized.
 
+The artifact and its manifest save `score_calibration` as `identity`, with
+empty parameters and no fitting partition: no probability calibration or
+reference-data score normalization is applied. They also save
+`threshold_selection`, including the configured false-positive budget,
+validation class counts, achieved false-positive rate and attack recall.
+Change `WorkflowConfig(max_false_positive_rate=...)` before training to declare
+a different budget; never adjust it to improve benchmark results.
+
 ## Verification and interpretation
 
 ```powershell
 .venv-workflow/Scripts/python.exe scripts/notebook_integrity.py
 .venv-workflow/Scripts/python.exe -m unittest discover -s tests -v
 .venv-api/Scripts/python.exe scripts/verify_prediction_parity.py --live
+.venv-api/Scripts/python.exe scripts/verify_prediction_without_data.py
 ```
 
 Integrity checks validate notebook schemas, unique IDs, absence of conflict
@@ -138,5 +151,9 @@ metrics use the same raw benchmark inputs and full inference path. See
 [the prediction guide](../backend/PREDICTION.md) for backend setup and the exact
 HTTP contract. `data/reports/shared_prediction_parity.json` records verification
 against a separate live API process in a fresh backend-only environment.
-Expanding baseline comparisons, setting an operational false-alarm budget,
-uncertainty estimates and independent final testing remain subsequent work.
+`data/reports/prediction_without_data.json` records cold startup and live
+prediction in an isolated copy with no data directory and dataset reads blocked.
+The 1% budget is an empirical validation constraint, not a promise about other
+traffic. Benchmark results are measured at the frozen threshold and may exceed
+the target. Expanding baseline comparisons, checking the budget against real
+alert costs, uncertainty estimates and independent final testing remain work.
