@@ -1,5 +1,7 @@
 # NetGuard Anomaly Detection
 
+[![NetGuard checks](https://github.com/KHALIDKARROUM/NetGuard/actions/workflows/ci.yml/badge.svg)](https://github.com/KHALIDKARROUM/NetGuard/actions/workflows/ci.yml)
+
 Streamlit + FastAPI workspace for exploring UNSW-NB15 network traffic,
 evaluating a supervised baseline, and scoring individual connections or batches.
 
@@ -136,9 +138,10 @@ analysis results; successful reads are otherwise cached for up to 60 seconds.
 Predictions are always submitted to the backend and are never cached.
 
 Frontend flow and CSV validation checks, from the root with the frontend
-dependencies and `pytest` installed:
+test dependencies installed in its separate environment:
 
 ```powershell
+python -m pip install -r frontend/requirements-dev.txt
 python -m pytest frontend/tests -q
 ```
 
@@ -157,6 +160,31 @@ Both services are local by default. To configure protected API access or share
 the dashboard, follow [security and deployment](SECURITY.md). Shared mode
 requires an API key; remote dashboard access also needs an authenticated HTTPS
 proxy. Docker backend logs are stored in a named volume.
+
+## Automated Checks
+
+[NetGuard checks](https://github.com/KHALIDKARROUM/NetGuard/actions/workflows/ci.yml)
+runs on every push and pull request, and can be started manually from GitHub's
+Actions tab. It runs these checks in parallel:
+
+- Backend, security, feature, and model tests under CPython 3.13.9 with the
+  hash-locked backend dependencies.
+- Dashboard flows, CSV validation, and file-security tests under Python 3.10
+  with the pinned frontend requirements and test dependencies.
+- Separate backend and frontend Docker image builds, plus Compose configuration
+  validation. These builds do not publish images or deploy the application.
+
+Each job also checks dependency consistency where applicable. Actions are
+pinned to commit hashes, the workflow uses read-only repository permissions,
+and newer runs cancel superseded checks on the same branch or pull request.
+The tests use synthetic traffic and mocked dashboard responses; they do not
+need a running local API, API keys, or external dataset downloads.
+
+To run the backend suite locally with the configured backend environment:
+
+```powershell
+.venv-api/Scripts/python.exe -m unittest discover -s tests -v
+```
 
 ## Model Notes
 
