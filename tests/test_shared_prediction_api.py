@@ -55,13 +55,16 @@ class SharedPredictionChecks(unittest.TestCase):
                     single = client.post("/api/predict/single", json=dict(reversed(list(record.items()))))
                     self.assertEqual(single.status_code, 200, single.text)
                     value = single.json()
-                    self.assertEqual(value["score"], results[i]["score"])
+                    # Matrix/vector math can differ by the last float64 bit.
+                    # Use the documented parity tolerance; decisions stay exact.
+                    np.testing.assert_allclose(value["score"], results[i]["score"], rtol=0, atol=1e-12)
                     self.assertEqual(value["prediction"], results[i]["prediction"])
                     self.assertEqual(value["threshold"], service.bundle["threshold"])
                     self.assertEqual(value["artifact_sha256"], service.artifact_sha256)
                     self.assertEqual(value["input"], record)
                 reversed_batch = client.post("/api/predict/batch", json={"connections": records[::-1]}).json()["predictions"]
-                self.assertEqual([r["score"] for r in reversed_batch], [r["score"] for r in results][::-1])
+                np.testing.assert_allclose([r["score"] for r in reversed_batch], [r["score"] for r in results][::-1], rtol=0, atol=1e-12)
+                np.testing.assert_array_equal([r["prediction"]["label"] for r in reversed_batch], [r["prediction"]["label"] for r in results][::-1])
                 self.assertTrue(any(r["score"] != round(r["score"], 6) for r in results))
 
     def test_missing_invalid_and_unknown_measurements_return_422(self):
