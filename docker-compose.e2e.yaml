@@ -1,0 +1,6 @@
+# Use the same service configuration with images loaded by the end-to-end job.
+services:
+  backend:
+    image: netguard-e2e-backend:test
+  frontend:
+    image: netguard-e2e-frontend:test

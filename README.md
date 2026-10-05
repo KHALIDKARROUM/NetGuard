@@ -173,18 +173,60 @@ Actions tab. It runs these checks in parallel:
   with the pinned frontend requirements and test dependencies.
 - Separate backend and frontend Docker image builds, plus Compose configuration
   validation. These builds do not publish images or deploy the application.
+- Real Compose stacks in local and protected shared mode, with browser-driven
+  CSV uploads, single/batch predictions, downloads, invalid input rejection,
+  API-key checks, and verification of the container restrictions.
 
 Each job also checks dependency consistency where applicable. Actions are
 pinned to commit hashes, the workflow uses read-only repository permissions,
 and newer runs cancel superseded checks on the same branch or pull request.
-The tests use synthetic traffic and mocked dashboard responses; they do not
-need a running local API, API keys, or external dataset downloads.
+Unit tests use synthetic traffic and mocked dashboard responses. End-to-end
+tests start the actual images and saved model with the checked-in dataset and
+synthetic upload measurements. Shared-mode checks generate a temporary API key;
+no repository secrets or external dataset downloads are needed.
 
 To run the backend suite locally with the configured backend environment:
 
 ```powershell
 .venv-api/Scripts/python.exe -m unittest discover -s tests -v
 ```
+
+## Docker End-to-End Verification
+
+The two `Docker end-to-end` checks in GitHub Actions exercise both services
+together after the image builds pass. Services must report healthy before
+testing starts. Each run uses its own Compose project and removes its containers
+and log volume afterward. Failed runs retain browser screenshots, traces, and
+container diagnostics for seven days.
+
+To repeat the shared-mode checks locally, start Docker and use a fresh
+PowerShell terminal at the repository root:
+
+```powershell
+python -m venv .venv-e2e
+.venv-e2e/Scripts/python.exe -m pip install -r tests/e2e/requirements.txt
+.venv-e2e/Scripts/python.exe -m playwright install chromium
+$env:COMPOSE_PROJECT_NAME = "netguard-e2e-local-" + [guid]::NewGuid().ToString("N")
+$env:COMPOSE_FILE = "docker-compose.yaml:docker-compose.e2e.yaml"
+$env:COMPOSE_PATH_SEPARATOR = ":"
+$env:NETGUARD_BACKEND_PORT = "5101"
+$env:NETGUARD_FRONTEND_PORT = "8602"
+$env:NETGUARD_DEPLOYMENT_MODE = "shared"
+$env:NETGUARD_API_KEY = python -c "import secrets; print(secrets.token_urlsafe(32))"
+try {
+    docker compose up --build --wait --wait-timeout 180
+    if ($LASTEXITCODE -ne 0) { throw "Container startup failed" }
+    .venv-e2e/Scripts/python.exe -m pytest tests/e2e -v --tracing retain-on-failure --screenshot only-on-failure --output artifacts/docker_e2e/browser
+} finally {
+    docker compose down --volumes --remove-orphans
+}
+```
+
+For the local-mode checks, set `NETGUARD_DEPLOYMENT_MODE=local` and an empty
+`NETGUARD_API_KEY` before starting the stack. The default application ports stay
+5001 and 8502; the test configuration uses 5101 and 8602 to keep the normal
+workspace separate. `NETGUARD_BACKEND_PORT` and `NETGUARD_FRONTEND_PORT` can also
+select other loopback ports when needed.
 
 ## Model Notes
 

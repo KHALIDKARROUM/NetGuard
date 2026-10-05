@@ -130,3 +130,13 @@ The checks cover missing/wrong/duplicate API keys, shared-mode startup, origin
 and host rejection, request and streaming limits, slow bodies, concurrency,
 rate limits, error redaction, CSV boundaries and exports, redirect handling,
 and prediction parity with the fitted notebook pipeline.
+
+The GitHub Actions `Docker end-to-end` jobs verify API-key, host, origin,
+body-size, batch, and CSV restrictions through running non-root, read-only
+containers in local and shared modes, including real browser uploads and
+prediction downloads. See the
+[Docker verification instructions](README.md#docker-end-to-end-verification).
+The test key is generated for each shared-mode run and masked in logs; no real
+deployment credential is used. These checks verify backend service access.
+Individual dashboard sign-in and HTTPS remain deployment requirements for
+remote sharing.

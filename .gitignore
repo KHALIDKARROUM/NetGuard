@@ -38,12 +38,14 @@ backend/logs/
 # Reproducible notebook runtime and generated outputs
 .venv-workflow/
 .venv-api/
+.venv-e2e/
 .uv-cache/
 artifacts/notebook_workflow/
 artifacts/prediction_verification/
 artifacts/novelty_experiments/
 artifacts/generalization/
 artifacts/ui_review/
+artifacts/docker_e2e/
 
 # OS
 .DS_Store
