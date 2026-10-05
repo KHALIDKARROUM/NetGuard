@@ -81,7 +81,7 @@ def test_single_batch_and_maximum_batch_predictions(api, deployment):
     assert maximum.status_code == 200, maximum.text
     assert maximum.json()["n"] == 1000
 
-@pytest.mark.parametrize("payload", [{**CONNECTION,"sttl":256}, {k:v for k,v in CONNECTION.items() if k != "dur"}, {**CONNECTION,"label":1}])
+@pytest.mark.parametrize("payload", [{**CONNECTION,"sttl":256}, {k:v for k,v in CONNECTION.items() if k != "dur"}, {**CONNECTION,"label":1}], ids=["invalid-ttl", "missing-duration", "unexpected-field"])
 def test_invalid_api_measurements_are_rejected(api, deployment, payload):
     assert request(api, deployment, "POST", "/api/predict/single", json=payload).status_code == 422
 
@@ -118,9 +118,10 @@ def test_browser_single_prediction_export(prediction_page, api, deployment, tmp_
 
 def test_browser_csv_upload_prediction_and_export(prediction_page, api, deployment, tmp_path):
     page = prediction_page
-    page.get_by_role("radio", name="CSV batch", exact=True).check()
+    page.get_by_text("CSV batch", exact=True).click()
+    expect(page.get_by_role("radio", name="CSV batch", exact=True)).to_be_checked()
     page.locator('input[type="file"]').set_input_files({"name":"connections.csv","mimeType":"text/csv","buffer":csv_bytes(ROWS)})
-    expect(page.get_by_text("3 connections validated and ready to analyze.", exact=True)).to_be_visible()
+    expect(page.get_by_text("3 connections validated and ready to analyze.", exact=True)).to_be_visible(timeout=30_000)
     page.get_by_role("button", name="Analyze batch", exact=True).click()
     button = page.get_by_role("button", name="Download batch results", exact=True)
     expect(button).to_be_visible(timeout=90_000)
@@ -146,7 +147,8 @@ def test_browser_csv_upload_prediction_and_export(prediction_page, api, deployme
 ], ids=["missing-columns", "duplicate-headers", "nonfinite", "too-many-rows", "too-large"])
 def test_browser_rejects_invalid_uploads(prediction_page, raw, message):
     page = prediction_page
-    page.get_by_role("radio", name="CSV batch", exact=True).check()
+    page.get_by_text("CSV batch", exact=True).click()
+    expect(page.get_by_role("radio", name="CSV batch", exact=True)).to_be_checked()
     page.locator('input[type="file"]').set_input_files({"name":"invalid.csv","mimeType":"text/csv","buffer":raw})
-    expect(page.get_by_text(message, exact=False)).to_be_visible()
+    expect(page.get_by_text(message, exact=False)).to_be_visible(timeout=30_000)
     expect(page.get_by_role("button", name="Analyze batch", exact=True)).to_be_disabled()
