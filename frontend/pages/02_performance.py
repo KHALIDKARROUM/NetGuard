@@ -1,306 +1,139 @@
-"""Model performance comparison page."""
-
+"""Focused, on-demand analysis of validation candidates and benchmark behavior."""
 from __future__ import annotations
-
-import os
 import sys
-
+from pathlib import Path
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-
-from config import (  # noqa: E402
-    ACCENT,
-    DANGER,
-    PAGE_CONFIG,
-    PALETTE,
-    PLOTLY_LAYOUT,
-    SUCCESS,
-    WARNING,
-    api_get,
-    explain_api_error,
-    format_number,
-    render_app_shell,
-    render_callout,
-    render_kv_panel,
-    render_metric_cards,
-    render_page_header,
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from config import (
+    ACCENT, DANGER, PAGE_CONFIG, panel, PALETTE, PLOTLY_LAYOUT, SUCCESS, api_get, explain_api_error,
+    format_number, format_rate, render_app_shell, render_callout, render_empty_state,
+    render_footer, render_kv_panel, render_metric_cards, render_page_header, render_section_header,
 )
-
+from charts import distribution_chart, show_chart
 
 st.set_page_config(**PAGE_CONFIG)
 render_app_shell("performance")
-
+render_page_header("Model performance", "MEASURE WHAT MATTERS", "Compare validation candidates and inspect how the deployed model handles benchmark traffic.")
 try:
-    compare = api_get("/api/models/compare", timeout=30)
+    with st.spinner("Loading model evaluation… The first evaluation may take a moment."):
+        compare = api_get("/api/models/compare", timeout=90)
 except Exception as exc:
-    render_callout(f"Model comparison endpoint failed: {explain_api_error(exc)}", "danger")
+    render_callout(explain_api_error(exc), "warning")
+    render_empty_state("Evaluation unavailable", "Load the saved model and dataset, then select Refresh data.", "shield")
+    render_footer()
     st.stop()
-
 metrics = compare.get("metrics", [])
 if not metrics:
-    render_callout("No model metrics were returned by the backend.", "warning")
+    render_empty_state("No evaluation results", "No model metrics were returned by the service.", "shield")
+    render_footer()
     st.stop()
+best = next((m for m in metrics if m.get("model") == compare.get("best_model")), metrics[0])
+render_metric_cards([
+    dict(label="F1 score", value=format_number(best.get("f1")), sub="Precision and recall balance · 0–1", icon="shield"),
+    dict(label="ROC-AUC", value=format_number(best.get("roc_auc")), sub="Class separation · 0–1", icon="activity", tone="violet"),
+    dict(label="Attack recall", value=format_rate(best.get("recall")), sub="Benchmark attacks detected", icon="target"),
+    dict(label="False-alarm rate", value=format_rate(best.get("false_positive_rate"), 2), sub="Normal benchmark traffic flagged", icon="activity", tone="danger"),
+])
+render_callout("The model and threshold were frozen using validation data. The benchmark was previously inspected; independent final testing is still needed.")
 
-df_metrics = pd.DataFrame(metrics)
-if "perf_score" in df_metrics.columns:
-    df_metrics = df_metrics.sort_values("perf_score", ascending=False).reset_index(drop=True)
-
-best = df_metrics.iloc[0].to_dict()
-model_names = df_metrics["model"].tolist()
-
-render_page_header(
-    "Model Performance",
-    "Evaluation board",
-    "The deployed model scores raw benchmark measurements using its saved preprocessing and fixed threshold.",
-    [
-        compare.get("source", "-"),
-        f"{len(compare.get('validation_comparison', []))} validation candidates",
-        best.get("model", "best model"),
-    ],
-)
-
-render_metric_cards(
-    [
-        {
-            "label": "Model F1",
-            "value": format_number(best.get("f1")),
-            "sub": best.get("model", ""),
-            "tone": "success",
-        },
-        {
-            "label": "ROC-AUC",
-            "value": format_number(best.get("roc_auc")),
-            "sub": "separation quality",
-            "tone": "accent",
-        },
-        {
-            "label": "Recall",
-            "value": format_number(best.get("recall")),
-            "sub": "attack coverage",
-        },
-        {
-            "label": "False alarms",
-            "value": format_number(best.get("false_positive_rate")),
-            "sub": "share of normal benchmark traffic",
-            "tone": "accent",
-        },
-    ]
-)
-
-left, right = st.columns([0.95, 1.05], gap="large")
-with left:
-    st.markdown(
-        """
-        <div class="panel">
-            <div class="panel-title">Selection</div>
-            <div class="panel-heading">Chosen using validation data</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    render_callout("This benchmark was previously inspected. Independent final testing is still needed.", "info")
-    decision = compare.get("ensemble_decision", {})
-    if decision:
-        retained = decision.get("retained", False)
-        render_callout(
-            f"The supervised ensemble was {'retained' if retained else 'rejected'} under the declared validation gain and prediction-time rules.", "info")
-
-with right:
-    render_kv_panel(
-        "Best model",
-        best.get("model", "-"),
-        [
-            ("F1", format_number(best.get("f1"))),
-            ("ROC-AUC", format_number(best.get("roc_auc"))),
-            ("Precision", format_number(best.get("precision"))),
-            ("Recall", format_number(best.get("recall"))),
-            ("Inference", f"{format_number(best.get('inference_s'))} s"),
-        ],
-    )
-
-tab_validation, tab_table, tab_roc, tab_confusion, tab_scores, tab_pca = st.tabs(
-    ["Validation comparison", "Deployed model", "ROC", "Confusion", "Scores", "PCA"]
-)
-
-with tab_validation:
+view = st.radio("Analysis view", ["Validation comparison", "ROC curve", "Confusion matrix", "Score distribution", "Feature projection"], horizontal=True, label_visibility="collapsed", key="performance_view")
+if view == "Validation comparison":
     validation = pd.DataFrame(compare.get("validation_comparison", []))
-    if not validation.empty:
-        st.caption("Same grouped split, physical features and training-fitted standardization. Each threshold uses the 1% validation false-alarm budget. Times include raw feature creation, scaling, scoring and the decision; network time is excluded.")
-        columns = [name for name in ["model", "selected", "accuracy", "balanced_accuracy", "precision", "recall", "f1",
-                   "roc_auc", "average_precision", "false_positive_rate", "fp", "fn", "threshold",
-                   "single_latency_median_ms", "single_latency_p95_ms", "batch_latency_median_ms",
-                   "batch_latency_p95_ms", "batch_rows", "artifact_bytes", "converged"] if name in validation]
-        st.dataframe(validation[columns], use_container_width=True, hide_index=True)
+    if validation.empty:
+        render_empty_state("No validation comparison", "Run the notebook workflow to generate candidate results.", "layers")
     else:
-        render_callout("The saved model has no validation comparison table. Rerun the notebook workflow.", "warning")
-
-with tab_table:
-    columns = [
-        col
-        for col in [
-            "model",
-            "roc_auc",
-            "f1",
-            "recall",
-            "precision",
-            "avg_precision",
-            "inference_s",
-            "perf_score",
-        ]
-        if col in df_metrics.columns
-    ]
-    st.dataframe(df_metrics[columns], use_container_width=True, hide_index=True)
-
-with tab_roc:
-    with st.spinner("Loading ROC curves..."):
-        try:
-            roc_payload = api_get("/api/models/viz", params={"type": "roc"}, timeout=160)
-        except Exception as exc:
-            render_callout(f"ROC endpoint failed: {explain_api_error(exc)}", "danger")
+        left, right = st.columns([1.5, 1], gap="medium")
+        with left, panel():
+            render_section_header("Candidate detection coverage", "Attack recall under each candidate's validation false-alarm budget", "VALIDATION")
+            if "recall" in validation and "model" in validation:
+                chart = validation.sort_values("recall")
+                colors = [ACCENT if bool(row.get("selected", False)) else "#b6c7d1" for row in chart.to_dict("records")]
+                fig = go.Figure(go.Bar(x=chart.recall * 100, y=chart.model, orientation="h", marker_color=colors,
+                    text=[f"{v:.1%}" for v in chart.recall], textposition="outside", cliponaxis=False,
+                    hovertemplate="%{y}<br>Attack recall: %{x:.1f}%<extra></extra>"))
+                fig.update_layout(**PLOTLY_LAYOUT, height=300, xaxis_title="Attack recall (%)", showlegend=False)
+                fig.update_xaxes(range=[0, 110])
+                show_chart(fig)
+            st.caption("Teal marks the validation-selected candidate. All candidates use the same grouped split and fit-only preprocessing.")
+        with right:
+            render_kv_panel("DEPLOYED MODEL", best.get("model", "Current model"), [
+                ("Selection", "Grouped validation"), ("Precision", format_rate(best.get("precision"))),
+                ("Recall", format_rate(best.get("recall"))), ("F1", format_number(best.get("f1"))),
+                ("Benchmark inference", f"{format_number(best.get('inference_s'))} s"),
+            ])
+            decision = compare.get("ensemble_decision", {})
+            if decision:
+                render_callout(f"Ensemble {'retained' if decision.get('retained') else 'rejected'} under the declared validation gain and prediction-time rules.")
+        with panel():
+            render_section_header("Validation comparison", "Detection quality at a maximum 1% validation false-alarm budget")
+            cols = [c for c in ["model", "selected", "recall", "precision", "f1", "false_positive_rate", "single_latency_median_ms"] if c in validation]
+            table = validation[cols].copy()
+            for c in ["recall", "precision", "false_positive_rate"]:
+                if c in table:
+                    table[c] = table[c].map(lambda v: format_rate(v, 2))
+            table = table.rename(columns={"model":"Candidate", "selected":"Selected", "recall":"Recall", "precision":"Precision", "f1":"F1", "false_positive_rate":"False alarms", "single_latency_median_ms":"Single latency (ms)"})
+            st.dataframe(table, use_container_width=True, hide_index=True, column_config={
+                "F1":st.column_config.NumberColumn(format="%.3f"),
+                "Single latency (ms)":st.column_config.NumberColumn(format="%.2f"),
+            })
+            with st.expander("Detailed validation results and timing"):
+                st.caption("Timing includes raw feature creation, scaling, scoring, and the decision. Network time is excluded.")
+                st.dataframe(validation, use_container_width=True, hide_index=True)
+            st.download_button("Download validation comparison", validation.to_csv(index=False).encode("utf-8"), "netguard_validation.csv", "text/csv")
+else:
+    kind = {"ROC curve":"roc", "Confusion matrix":"confusion", "Score distribution":"scores", "Feature projection":"pca"}[view]
+    try:
+        with st.spinner(f"Loading {view.lower()}…"):
+            payload = api_get("/api/models/viz", params={"type": kind}, timeout=160).get("data")
+    except Exception as exc:
+        render_callout(explain_api_error(exc), "danger")
+    else:
+        if not payload:
+            render_empty_state("No chart data", "The service returned no results for this analysis.")
+        elif kind == "roc":
+            with panel():
+                render_section_header("Detection across thresholds", "A curve closer to the upper-left corner separates the two classes better.", "BENCHMARK")
+                fig = go.Figure(go.Scatter(x=[0,1], y=[0,1], mode="lines", name="Random baseline", line=dict(color="#c2ccd5", dash="dash", width=1.5)))
+                for i, (name, curve) in enumerate(payload.items()):
+                    fig.add_trace(go.Scatter(x=curve.get("fpr", []), y=curve.get("tpr", []), mode="lines", name=name, line=dict(color=PALETTE[i % len(PALETTE)], width=3)))
+                fig.update_layout(**PLOTLY_LAYOUT, height=430, xaxis_title="False-positive rate", yaxis_title="True-positive rate")
+                show_chart(fig)
+        elif kind == "confusion":
+            with panel():
+                render_section_header("Where predictions agree", "Rows are recorded classes; columns are predicted classes.", "BENCHMARK")
+                names = [m.get("model_name", "Model") for m in payload]
+                chosen = st.selectbox("Evaluated model", names)
+                matrix = payload[names.index(chosen)]
+                fig = go.Figure(go.Heatmap(z=matrix["z"], x=["Predicted normal", "Predicted anomaly"], y=["Actual normal", "Actual anomaly"],
+                    colorscale=[[0,"#eef6f4"],[.5,"#75bbae"],[1,"#126e64"]], text=[[f"{v:,}" for v in row] for row in matrix["z"]],
+                    texttemplate="%{text}", textfont=dict(size=22), showscale=False, xgap=8, ygap=8,
+                    hovertemplate="%{y}<br>%{x}<br>%{z:,} connections<extra></extra>"))
+                fig.update_layout(**PLOTLY_LAYOUT, height=370)
+                fig.update_yaxes(autorange="reversed")
+                show_chart(fig)
+        elif kind == "scores":
+            with panel():
+                render_section_header("How the model scores traffic", "Compare the score distributions for recorded normal and anomaly classes.", "BENCHMARK")
+                chosen = st.selectbox("Evaluated model", list(payload))
+                data = payload[chosen]
+                show_chart(distribution_chart(data.get("normal", []), data.get("anomaly", []), "Model score", 400))
+                render_callout("Model scores are not calibrated production attack probabilities.")
+                with st.expander("Score percentiles"):
+                    st.dataframe(pd.DataFrame([data.get("percentiles", {})]), use_container_width=True, hide_index=True)
         else:
-            curves = roc_payload.get("data", {})
-            fig = go.Figure()
-            fig.add_trace(
-                go.Scatter(
-                    x=[0, 1],
-                    y=[0, 1],
-                    mode="lines",
-                    name="Random",
-                    line=dict(color="#64748b", dash="dash", width=1.4),
-                )
-            )
-            for idx, (name, curve) in enumerate(curves.items()):
-                fig.add_trace(
-                    go.Scatter(
-                        x=curve.get("fpr", []),
-                        y=curve.get("tpr", []),
-                        mode="lines",
-                        name=name,
-                        line=dict(color=PALETTE[idx % len(PALETTE)], width=2.4),
-                    )
-                )
-            fig.update_layout(
-                **PLOTLY_LAYOUT,
-                height=500,
-                xaxis_title="False positive rate",
-                yaxis_title="True positive rate",
-            )
-            st.plotly_chart(fig, use_container_width=True)
-
-with tab_confusion:
-    with st.spinner("Loading confusion matrices..."):
-        try:
-            cm_payload = api_get("/api/models/viz", params={"type": "confusion"}, timeout=160)
-        except Exception as exc:
-            render_callout(f"Confusion endpoint failed: {explain_api_error(exc)}", "danger")
-        else:
-            matrices = cm_payload.get("data", [])
-            selected = st.selectbox("Model", [m.get("model_name", "") for m in matrices])
-            matrix = next((m for m in matrices if m.get("model_name") == selected), None)
-            if matrix:
-                heat = go.Figure(
-                    go.Heatmap(
-                        z=matrix["z"],
-                        x=matrix.get("x", ["Pred normal", "Pred anomaly"]),
-                        y=matrix.get("y", ["Real normal", "Real anomaly"]),
-                        colorscale=[[0, "#111d2e"], [0.55, ACCENT], [1, SUCCESS]],
-                        text=[[f"{value:,}" for value in row] for row in matrix["z"]],
-                        texttemplate="%{text}",
-                        showscale=False,
-                    )
-                )
-                heat.update_layout(
-                    **PLOTLY_LAYOUT,
-                    height=420,
-                    title=f"{selected} | F1 {format_number(matrix.get('f1'))} | AUC {format_number(matrix.get('roc_auc'))}",
-                )
-                st.plotly_chart(heat, use_container_width=True)
-
-with tab_scores:
-    with st.spinner("Loading score distributions..."):
-        try:
-            score_payload = api_get("/api/models/viz", params={"type": "scores"}, timeout=160)
-        except Exception as exc:
-            render_callout(f"Score endpoint failed: {explain_api_error(exc)}", "danger")
-        else:
-            distributions = score_payload.get("data", {})
-            selected = st.selectbox("Score model", list(distributions.keys()))
-            data = distributions[selected]
-            chart_col, info_col = st.columns([1.2, 0.8], gap="large")
-            with chart_col:
+            with panel():
+                render_section_header("Traffic in feature space", "A two-dimensional PCA view of training-scaled features. Color shows the model's prediction.", "DESCRIPTIVE")
                 fig = go.Figure()
-                fig.add_trace(
-                    go.Histogram(
-                        x=data.get("normal", []),
-                        name="Normal",
-                        marker_color=SUCCESS,
-                        opacity=0.65,
-                        nbinsx=50,
-                        histnorm="probability density",
-                    )
-                )
-                fig.add_trace(
-                    go.Histogram(
-                        x=data.get("anomaly", []),
-                        name="Anomaly",
-                        marker_color=DANGER,
-                        opacity=0.55,
-                        nbinsx=50,
-                        histnorm="probability density",
-                    )
-                )
-                fig.update_layout(
-                    **PLOTLY_LAYOUT,
-                    height=430,
-                    barmode="overlay",
-                    xaxis_title="Anomaly score",
-                    yaxis_title="Density",
-                )
-                st.plotly_chart(fig, use_container_width=True)
-            with info_col:
-                render_kv_panel(
-                    "Percentiles",
-                    selected,
-                    [(key.upper(), format_number(value)) for key, value in data.get("percentiles", {}).items()],
-                )
-
-with tab_pca:
-    model_choice = st.selectbox("PCA model", model_names, index=0)
-    with st.spinner("Loading PCA projection..."):
-        try:
-            pca_payload = api_get(
-                "/api/models/viz",
-                params={"type": "pca", "model": model_choice},
-                timeout=160,
-            )
-        except Exception as exc:
-            render_callout(f"PCA endpoint failed: {explain_api_error(exc)}", "danger")
-        else:
-            data = pca_payload.get("data", {})
-            colors = [DANGER if label == 1 else ACCENT for label in data.get("labels", [])]
-            fig = go.Figure(
-                go.Scattergl(
-                    x=data.get("x", []),
-                    y=data.get("y", []),
-                    mode="markers",
-                    marker=dict(
-                        color=colors,
-                        size=5,
-                        opacity=0.72,
-                        line=dict(width=0),
-                    ),
-                    text=[f"score={format_number(score)}" for score in data.get("scores", [])],
-                    name=data.get("model_used", model_choice),
-                )
-            )
-            fig.update_layout(
-                **PLOTLY_LAYOUT,
-                height=520,
-                xaxis_title=data.get("pc1_label", "PC1"),
-                yaxis_title=data.get("pc2_label", "PC2"),
-                showlegend=False,
-            )
-            st.plotly_chart(fig, use_container_width=True)
+                for label, name, color in [(0,"Predicted normal",SUCCESS),(1,"Predicted anomaly",DANGER)]:
+                    indices = [i for i, v in enumerate(payload.get("labels", [])) if v == label]
+                    fig.add_trace(go.Scattergl(x=[payload["x"][i] for i in indices], y=[payload["y"][i] for i in indices], mode="markers", name=name,
+                        marker=dict(color=color, size=5, opacity=.5), text=[f"Score {format_number(payload['scores'][i])}" for i in indices], hovertemplate="%{text}<extra>%{fullData.name}</extra>"))
+                fig.update_layout(**PLOTLY_LAYOUT, height=450, xaxis_title=payload.get("pc1_label", "PC1"), yaxis_title=payload.get("pc2_label", "PC2"))
+                show_chart(fig)
+with st.expander("Deployed model · full benchmark metrics"):
+    columns = [c for c in ["model", "accuracy", "roc_auc", "f1", "recall", "precision", "false_positive_rate", "inference_s"] if c in best]
+    st.dataframe(pd.DataFrame(metrics)[columns], use_container_width=True, hide_index=True)
+render_footer()

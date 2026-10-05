@@ -1,169 +1,86 @@
-"""Streamlit overview dashboard."""
-
+"""The NetGuard workspace overview."""
 from __future__ import annotations
-
-import os
 import sys
-
-import pandas as pd
-import plotly.graph_objects as go
+from pathlib import Path
 import streamlit as st
 
-sys.path.insert(0, os.path.dirname(__file__))
-
-from config import (  # noqa: E402
-    ACCENT,
-    DANGER,
-    PAGE_CONFIG,
-    PLOTLY_LAYOUT,
-    SUCCESS,
-    api_get,
-    explain_api_error,
-    format_number,
-    format_percent,
-    render_app_shell,
-    render_callout,
-    render_kv_panel,
-    render_metric_cards,
-    render_page_header,
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from config import (
+    PAGE_CONFIG, panel, api_get, explain_api_error, format_number, format_percent, format_rate,
+    render_app_shell, render_callout, render_empty_state, render_footer, render_hero,
+    render_metric_cards, render_page_header, render_score_bars, render_section_header,
 )
-
+from charts import show_chart, traffic_donut
 
 st.set_page_config(**PAGE_CONFIG)
-render_app_shell("home")
+health = render_app_shell("home")
+render_page_header("Workspace overview", "YOUR NETWORK, AT A GLANCE", "A single place to explore traffic and understand your detection model.")
+render_hero()
 
-health = dataset_info = compare_info = model_info = None
-errors: list[str] = []
-
-for label, path, timeout in (
-    ("health", "/health", 5),
-    ("dataset", "/api/dataset/info", 12),
-    ("models", "/api/models/compare", 20),
-    ("prediction", "/api/predict/best_model", 45),
-):
-    try:
-        payload = api_get(path, timeout=timeout)
-        if label == "health":
-            health = payload
-        elif label == "dataset":
-            dataset_info = payload
-        elif label == "models":
-            compare_info = payload
-        else:
-            model_info = payload
-    except Exception as exc:
-        errors.append(f"{label}: {explain_api_error(exc)}")
-
-overview = dataset_info.get("overview", {}) if dataset_info else {}
-test_set = overview.get("test_set", {})
-train_set = overview.get("train_set", {})
-label_dist = dataset_info.get("label_distribution", {}) if dataset_info else {}
-metrics = compare_info.get("metrics", []) if compare_info else []
-best_model = model_info.get("best_model", {}) if model_info else {}
-best_metrics = best_model.get("metrics", {})
-
-render_page_header(
-    "NetGuard Operations",
-    "Live anomaly detection dashboard",
-    "UNSW-NB15 traffic, model evaluation, and connection scoring in one control surface.",
-    [
-        "API online" if health and health.get("status") == "ok" else "API pending",
-        best_model.get("name", "Model unavailable"),
-        f"{len(metrics)} models" if metrics else "",
-    ],
-)
-
+dataset = model_info = {}
+errors = []
+with st.spinner("Loading workspace insights…"):
+    for label, path in [("Dataset", "/api/dataset/info"), ("Model", "/api/predict/best_model")]:
+        try:
+            payload = api_get(path, timeout=15)
+            if label == "Dataset":
+                dataset = payload
+            else:
+                model_info = payload
+        except Exception as exc:
+            errors.append((label, explain_api_error(exc)))
 if errors:
-    render_callout("Some backend data is unavailable: " + " | ".join(errors), "warning")
+    render_callout("Some insights are unavailable. You can still navigate the workspace.", "warning")
+    with st.expander("View service details"):
+        for label, message in errors:
+            st.caption(f"{label}: {message}")
 
-render_metric_cards(
-    [
-        {
-            "label": "Train rows",
-            "value": f"{train_set.get('n_rows', 0):,}" if train_set else "-",
-            "sub": "featured training traffic",
-            "tone": "accent",
-        },
-        {
-            "label": "Test rows",
-            "value": f"{test_set.get('n_rows', 0):,}" if test_set else "-",
-            "sub": f"{format_percent(test_set.get('anomaly_rate'))} anomalies" if test_set else "-",
-        },
-        {
-            "label": "Model F1",
-            "value": format_number(best_metrics.get("f1")),
-            "sub": best_model.get("name", "deployed model"),
-            "tone": "success",
-        },
-        {
-            "label": "ROC-AUC",
-            "value": format_number(best_metrics.get("roc_auc")),
-            "sub": "model separation",
-            "tone": "accent",
-        },
-    ]
-)
+overview = dataset.get("overview", {})
+train = overview.get("train_set", {})
+test = overview.get("test_set", {})
+model = model_info.get("best_model", {})
+metrics = model.get("metrics", {})
+render_metric_cards([
+    dict(label="Training connections", value=format_number(train.get("n_rows"), 0), sub="UNSW-NB15 training set", icon="database"),
+    dict(label="Benchmark connections", value=format_number(test.get("n_rows"), 0), sub=f"{format_percent(test.get('anomaly_rate'))} labeled anomalies" if test else "Dataset unavailable", icon="layers", tone="violet"),
+    dict(label="Detection F1", value=format_number(metrics.get("f1")), sub="Previously inspected benchmark · 0–1", icon="shield"),
+    dict(label="Attack recall", value=format_rate(metrics.get("recall")), sub="Share of benchmark attacks detected", icon="target"),
+])
 
-left, right = st.columns([1.05, 0.95], gap="large")
-
-with left:
-    st.markdown(
-        """
-        <div class="panel">
-            <div class="panel-title">Model selection</div>
-            <div class="panel-heading">Chosen using validation data</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    if metrics:
-        render_callout("The notebook and API use the same saved model and threshold. These metrics describe a previously inspected benchmark.", "info")
+left, right = st.columns([1.1, 1], gap="medium")
+with left, panel():
+    render_section_header("Traffic composition", "Labeled connections in the benchmark dataset", "UNSW-NB15")
+    pie = dataset.get("label_distribution", {}).get("pie_chart", {})
+    if pie and sum(pie.get("values", [])):
+        show_chart(traffic_donut(pie["labels"], pie["values"]))
+        normal, anomaly = st.columns(2)
+        with normal:
+            render_callout(f"Normal traffic · {pie['values'][0]:,}", "success")
+        with anomaly:
+            render_callout(f"Anomaly traffic · {pie['values'][1]:,}", "danger")
     else:
-        render_callout("Model comparison is not loaded yet.", "warning")
+        render_empty_state("Traffic insights unavailable", "Connect the analysis service to view the dataset profile.", "database")
+with right, panel():
+    render_section_header("Detection quality", "The saved model's benchmark operating point", "DEPLOYED MODEL")
+    if model:
+        st.markdown(f"**{model.get('name', 'Current model')}**")
+        render_score_bars({"Precision": metrics.get("precision", 0), "Recall": metrics.get("recall", 0), "F1 score": metrics.get("f1", 0), "ROC-AUC": metrics.get("roc_auc", 0)})
+        st.caption(f"Decision threshold: {format_number(model.get('threshold'), 6)} · False alarms: {format_rate(metrics.get('false_positive_rate'), 2)}")
+        render_callout("Selected on validation data. Benchmark results describe previously inspected traffic.")
+        st.page_link("pages/02_performance.py", label="Explore model performance", icon=":material/arrow_forward:")
+    else:
+        render_empty_state("Model insights unavailable", "Load the saved model to see its detection quality.", "shield")
 
-with right:
-    render_kv_panel(
-        "Backend",
-        "Service state",
-        [
-            ("URL", os.getenv("BACKEND_URL", "http://localhost:5000")),
-            ("Status", health.get("status", "unknown") if health else "offline"),
-            ("Version", health.get("version", "-") if health else "-"),
-            ("Models ready", health.get("models_ready", "-") if health else "-"),
-        ],
-    )
-    if best_model:
-        render_kv_panel(
-            "Deployment",
-            best_model.get("name", "Current model"),
-            [
-                ("Threshold", best_model.get("threshold", "-")),
-                ("Validation false-alarm target", f"{100 * best_model.get('threshold_selection', {}).get('max_false_positive_rate', 0.01):.1f}%"),
-                ("Evaluation", "Previously inspected benchmark"),
-                ("Precision", format_number(best_metrics.get("precision"))),
-                ("Recall", format_number(best_metrics.get("recall"))),
-            ],
-        )
-
-if label_dist.get("pie_chart"):
-    chart_col, table_col = st.columns([0.9, 1.1], gap="large")
-    pie = label_dist["pie_chart"]
-    with chart_col:
-        fig = go.Figure(
-            go.Pie(
-                labels=pie["labels"],
-                values=pie["values"],
-                hole=0.62,
-                marker=dict(colors=[SUCCESS, DANGER], line=dict(color="#070b12", width=3)),
-                textinfo="percent",
-                textfont=dict(color="#e5edf7"),
-            )
-        )
-        fig.update_layout(**PLOTLY_LAYOUT, height=330, showlegend=True)
-        st.plotly_chart(fig, use_container_width=True)
-
-    with table_col:
-        if metrics:
-            df = pd.DataFrame(metrics)
-            display_cols = [col for col in ["model", "roc_auc", "f1", "recall", "precision", "false_positive_rate"] if col in df]
-            st.dataframe(df[display_cols], use_container_width=True, hide_index=True)
+render_section_header("Continue your analysis", "Choose a starting point for your next investigation.")
+for col, title, copy, path, label, material_icon in zip(
+    st.columns(3, gap="medium"),
+    ["Explore the dataset", "Evaluate detection", "Investigate a connection"],
+    ["Inspect traffic classes, feature distributions, and individual records.", "Compare validation candidates and understand model behavior.", "Score one connection or a CSV batch with the deployed model."],
+    ["pages/01_dataset.py", "pages/02_performance.py", "pages/03_prediction.py"],
+    ["Open dataset explorer", "View performance", "Open prediction lab"],
+    [":material/database:", ":material/monitoring:", ":material/radar:"],
+):
+    with col, panel():
+        render_section_header(title, copy)
+        st.page_link(path, label=label, icon=material_icon)
+render_footer()

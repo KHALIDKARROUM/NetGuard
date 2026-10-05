@@ -1,6 +1,6 @@
 # NetGuard Anomaly Detection
 
-Dark Streamlit + FastAPI application for exploring UNSW-NB15 network traffic,
+Streamlit + FastAPI workspace for exploring UNSW-NB15 network traffic,
 evaluating a supervised baseline, and scoring individual connections or batches.
 
 ## What Changed
@@ -8,7 +8,9 @@ evaluating a supervised baseline, and scoring individual connections or batches.
 - Backend moved to a clean FastAPI API surface with cached loaders and stable routes.
 - Runtime merge conflicts were resolved across backend, frontend, Dockerfiles, requirements, and model reports.
 - The notebook and backend share a validation-selected supervised pipeline and saved threshold; the current winner is a fixed soft vote of logistic regression, random forest and gradient boosting.
-- Streamlit was rebuilt as a dark operations dashboard with shared UI components.
+- All four screens share a navy sidebar, light workspace, teal accents, responsive layouts, and consistent chart and card components.
+- Dataset exploration includes filtered record previews, feature search, and CSV downloads. Performance charts load only when selected.
+- The prediction lab groups the ten measured inputs, explains decisions beside the form, and supports validated CSV batches of up to 1,000 connections with downloadable results.
 - Prediction requires ten measured raw fields and uses the same 29 physical features, training-fitted preprocessing, float64 precision and feature order as training.
 - Single/batch predictions and dashboard metrics are verified against the notebook's saved predictions. Historical ensemble artifacts remain reference material.
 
@@ -50,7 +52,14 @@ NetGuard/
 |-- frontend/                        # Streamlit dashboard
 |   |-- Dockerfile
 |   |-- app.py                       # Overview page
-|   |-- config.py                    # Shared UI and API helpers
+|   |-- config.py                    # Public shared imports
+|   |-- api.py                       # API client and short-lived read caching
+|   |-- theme.py                     # Color and chart tokens
+|   |-- ui.py                        # Shared navigation and UI components
+|   |-- styles.css                   # Responsive visual system
+|   |-- charts.py                    # Shared chart builders
+|   |-- prediction_inputs.py         # Input definitions and CSV validation
+|   |-- .streamlit/config.toml       # Native widget theme
 |   |-- requirements.txt
 |   |
 |   `-- pages/
@@ -118,6 +127,18 @@ Frontend, in its separate environment with `frontend/requirements.txt` installed
 cd frontend
 $env:BACKEND_URL="http://localhost:5000"
 streamlit run app.py
+```
+
+The local frontend opens at `http://localhost:8501`. Start it from `frontend/`
+so Streamlit loads the checked-in widget theme. Use **Refresh data** to reload
+analysis results; successful reads are otherwise cached for up to 60 seconds.
+Predictions are always submitted to the backend and are never cached.
+
+Frontend flow and CSV validation checks, from the root with the frontend
+dependencies and `pytest` installed:
+
+```powershell
+python -m pytest frontend/tests/test_dashboard.py
 ```
 
 Docker Compose:
