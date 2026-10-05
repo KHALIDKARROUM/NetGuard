@@ -2,8 +2,10 @@
 
 from pathlib import Path
 import os
+from typing import Literal
+from urllib.parse import urlsplit
 
-from pydantic import Field, field_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -101,13 +103,62 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
+        populate_by_name=True,
+        hide_input_in_errors=True,
     )
 
-    api_host: str = Field(default="0.0.0.0")
+    api_host: str = Field(default="127.0.0.1")
     api_port: int = Field(default=5000, ge=1024, le=65535)
     api_debug: bool = Field(default=False)
     log_level: str = Field(default="INFO")
     prediction_artifact: Path = Field(default=MODELS_DIR / "shared_pipeline.joblib")
+    deployment_mode: Literal["local", "shared"] = Field(default="local", validation_alias="NETGUARD_DEPLOYMENT_MODE")
+    api_key: SecretStr | None = Field(default=None, validation_alias="NETGUARD_API_KEY")
+    allowed_hosts: list[str] = Field(default_factory=lambda: ["localhost", "127.0.0.1", "backend"])
+    cors_origins: list[str] = Field(default_factory=lambda: [
+        "http://localhost:8501", "http://127.0.0.1:8501",
+        "http://localhost:8502", "http://127.0.0.1:8502",
+    ])
+    max_request_bytes: int = Field(default=1024 * 1024, ge=1024, le=16 * 1024 * 1024)
+    request_body_timeout: float = Field(default=10, gt=0, le=60)
+    requests_per_minute: int = Field(default=120, ge=1, le=10_000)
+    max_inflight_requests: int = Field(default=2, ge=1, le=8)
+
+    @field_validator("api_key", mode="before")
+    @classmethod
+    def empty_key_is_unset(cls, value):
+        return None if value == "" else value
+
+    @field_validator("api_key")
+    @classmethod
+    def validate_api_key(cls, value):
+        if value is not None:
+            secret = value.get_secret_value()
+            if len(secret) < 32 or not secret.isascii() or any(char.isspace() for char in secret):
+                raise ValueError("NETGUARD_API_KEY must contain at least 32 ASCII characters without whitespace")
+        return value
+
+    @field_validator("allowed_hosts")
+    @classmethod
+    def validate_hosts(cls, hosts):
+        if not hosts or any(not host or any(char in host for char in "*/:@ ") for host in hosts):
+            raise ValueError("allowed_hosts must contain explicit hostnames without wildcards, schemes or ports")
+        return hosts
+
+    @field_validator("cors_origins")
+    @classmethod
+    def validate_origins(cls, origins):
+        for origin in origins:
+            parsed = urlsplit(origin)
+            if parsed.scheme not in {"http", "https"} or not parsed.hostname or parsed.username or parsed.password or parsed.path or parsed.query or parsed.fragment or "*" in origin:
+                raise ValueError("cors_origins must contain exact HTTP(S) origins without paths or wildcards")
+        return origins
+
+    @model_validator(mode="after")
+    def require_shared_authentication(self):
+        if self.deployment_mode == "shared" and self.api_key is None:
+            raise ValueError("Shared deployments require NETGUARD_API_KEY")
+        return self
 
     @field_validator("log_level")
     @classmethod

@@ -28,6 +28,9 @@ backend/logs/
 
 # Variables d'environnement
 .env
+.env.*
+!**/.env.example
+**/.streamlit/secrets.toml
 
 # Jupyter
 .ipynb_checkpoints/

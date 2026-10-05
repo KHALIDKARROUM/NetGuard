@@ -8,6 +8,14 @@ font = "sans serif"
 
 [client]
 toolbarMode = "minimal"
+showErrorDetails = false
+
+[server]
+address = "127.0.0.1"
+enableCORS = true
+enableXsrfProtection = true
+maxUploadSize = 2
+maxMessageSize = 8
 
 [browser]
 gatherUsageStats = false

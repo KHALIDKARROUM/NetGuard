@@ -10,4 +10,6 @@
 **/__pycache__/
 backend/backend_venv/
 backend/logs/
-backend/.env
+**/.env
+**/.env.*
+**/secrets.toml

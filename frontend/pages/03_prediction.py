@@ -1,8 +1,6 @@
 """Connection and CSV batch scoring through the shared, frozen model."""
 from __future__ import annotations
-import csv
 import hashlib
-import io
 import json
 import sys
 from pathlib import Path
@@ -19,6 +17,7 @@ from config import (
 )
 from charts import show_chart
 from prediction_inputs import DEFAULTS, INTEGER_FIELDS, MAX_EXACT_COUNT, PRESETS, validate_connections
+from file_security import read_connection_csv, safe_csv
 
 def apply_preset() -> None:
     st.session_state._prediction_preset = st.session_state.prediction_preset
@@ -141,8 +140,9 @@ else:
     with left, panel():
         render_section_header("Score a batch", "Upload a CSV containing up to 1,000 measured connections.", "01 · UPLOAD")
         template = pd.DataFrame(list(PRESETS.values()))
-        st.download_button("Download CSV template", template.to_csv(index=False).encode("utf-8"), "netguard_batch_template.csv", "text/csv")
+        st.download_button("Download CSV template", safe_csv(template), "netguard_batch_template.csv", "text/csv")
         upload = st.file_uploader("Connection measurements", type=["csv"], help="Ten required measurement columns. Maximum 1,000 rows and 2 MB.")
+        st.caption("NetGuard processes uploads for this session and does not save a copy of the uploaded file.")
         if upload is not None:
             raw = upload.getvalue()
             file_key = hashlib.sha256(raw).hexdigest()
@@ -151,13 +151,7 @@ else:
                 st.session_state.batch_result = None
                 st.session_state.batch_error = None
             try:
-                if len(raw) > 2 * 1024 * 1024:
-                    raise ValueError("The CSV is too large. Keep uploads below 2 MB.")
-                text = raw.decode("utf-8-sig")
-                header = next(csv.reader(io.StringIO(text)), [])
-                if len(header) != len(set(header)):
-                    raise ValueError("CSV headers must be unique.")
-                frame = pd.read_csv(io.StringIO(text), dtype=str, nrows=1001)
+                frame = read_connection_csv(raw)
                 connections = validate_connections(frame)
                 render_callout(f"{len(connections):,} connections validated and ready to analyze.", "success")
                 if extra := [c for c in frame if c not in DEFAULTS]:
@@ -188,6 +182,6 @@ else:
                 anomalies = sum(p["prediction"]["label"] == 1 for p in batch.get("predictions", []))
                 render_section_header("Batch results", f"{len(rows):,} connections analyzed · {anomalies:,} flagged anomalies", "02 · RESULTS")
                 st.dataframe(results, use_container_width=True, hide_index=True)
-                st.download_button("Download batch results", results.to_csv(index=False).encode("utf-8"), "netguard_batch_results.csv", "text/csv")
+                st.download_button("Download batch results", safe_csv(results), "netguard_batch_results.csv", "text/csv")
                 render_callout("Model scores are not calibrated production attack probabilities.")
 render_footer()

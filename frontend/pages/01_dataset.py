@@ -12,6 +12,7 @@ from config import (
     render_footer, render_kv_panel, render_metric_cards, render_page_header, render_section_header, render_tags,
 )
 from charts import distribution_chart, show_chart, traffic_donut
+from file_security import safe_csv
 
 st.set_page_config(**PAGE_CONFIG)
 render_app_shell("dataset")
@@ -81,7 +82,7 @@ elif view == "Browse records":
             else:
                 st.dataframe(sample[columns], use_container_width=True, hide_index=True, height=380)
                 st.caption(f"Showing {len(sample):,} of {n} preview records · label 0 = normal, 1 = anomaly")
-                st.download_button("Download filtered records", sample[columns].to_csv(index=False).encode("utf-8"), "netguard_records.csv", "text/csv")
+                st.download_button("Download filtered records", safe_csv(sample[columns]), "netguard_records.csv", "text/csv")
 
 elif view == "Feature distributions":
     try:
@@ -115,7 +116,7 @@ else:
                 render_empty_state("No matching features", "Try a shorter feature name.")
             else:
                 st.dataframe(stats, use_container_width=True, hide_index=True, height=440)
-                st.download_button("Download feature statistics", stats.to_csv(index=False).encode("utf-8"), "netguard_feature_statistics.csv", "text/csv")
+                st.download_button("Download feature statistics", safe_csv(stats), "netguard_feature_statistics.csv", "text/csv")
         else:
             render_empty_state("Statistics unavailable", "No numeric statistics were returned by the service.")
 render_footer()

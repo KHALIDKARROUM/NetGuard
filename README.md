@@ -13,6 +13,7 @@ evaluating a supervised baseline, and scoring individual connections or batches.
 - The prediction lab groups the ten measured inputs, explains decisions beside the form, and supports validated CSV batches of up to 1,000 connections with downloadable results.
 - Prediction requires ten measured raw fields and uses the same 29 physical features, training-fitted preprocessing, float64 precision and feature order as training.
 - Single/batch predictions and dashboard metrics are verified against the notebook's saved predictions. Historical ensemble artifacts remain reference material.
+- Security controls include optional API authentication, explicit host/origin allowlists, bounded requests and uploads, safer CSV exports, and restricted Docker services. See [security and deployment](SECURITY.md).
 
 ## Stack
 
@@ -118,7 +119,7 @@ Backend, from the repository root using CPython 3.13.9:
 ```powershell
 uv venv .venv-api --python 3.13.9
 uv pip sync backend/requirements.txt --python .venv-api/Scripts/python.exe --require-hashes
-.venv-api/Scripts/python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 5000
+.venv-api/Scripts/python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 5000 --no-proxy-headers
 ```
 
 Frontend, in its separate environment with `frontend/requirements.txt` installed:
@@ -138,7 +139,7 @@ Frontend flow and CSV validation checks, from the root with the frontend
 dependencies and `pytest` installed:
 
 ```powershell
-python -m pytest frontend/tests/test_dashboard.py
+python -m pytest frontend/tests -q
 ```
 
 Docker Compose:
@@ -151,6 +152,11 @@ Then open:
 
 - Frontend: `http://localhost:8502`
 - API docs: `http://localhost:5001/docs`
+
+Both services are local by default. To configure protected API access or share
+the dashboard, follow [security and deployment](SECURITY.md). Shared mode
+requires an API key; remote dashboard access also needs an authenticated HTTPS
+proxy. Docker backend logs are stored in a named volume.
 
 ## Model Notes
 

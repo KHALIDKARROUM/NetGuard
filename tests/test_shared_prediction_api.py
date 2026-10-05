@@ -10,6 +10,7 @@ import pandas as pd
 from fastapi.testclient import TestClient
 
 from backend.main import create_app
+from backend.config import Settings
 from netguard_workflow.inference import (
     ArtifactError, PredictionService, artifact_manifest_path,
     load_prediction_artifact, save_prediction_artifact,
@@ -41,7 +42,7 @@ class SharedPredictionChecks(unittest.TestCase):
             expected = service.predict(self.rows)
             app = create_app(path, enable_logging=False)
             # Block CSV reads before cold startup as well as during requests.
-            with patch("pandas.read_csv", side_effect=AssertionError("Prediction must not read datasets")), TestClient(app) as client:
+            with patch("pandas.read_csv", side_effect=AssertionError("Prediction must not read datasets")), TestClient(app, base_url="http://localhost") as client:
                 self.assertEqual(client.get("/health").status_code, 200)
                 self.assertEqual(client.get("/api/predict/info").json()["best_model"]["precision"], "float64")
                 records = self.rows.to_dict(orient="records")
@@ -64,7 +65,7 @@ class SharedPredictionChecks(unittest.TestCase):
                 self.assertTrue(any(r["score"] != round(r["score"], 6) for r in results))
 
     def test_missing_invalid_and_unknown_measurements_return_422(self):
-        with tempfile.TemporaryDirectory() as folder, TestClient(create_app(self.artifact(folder), enable_logging=False)) as client:
+        with tempfile.TemporaryDirectory() as folder, TestClient(create_app(self.artifact(folder), enable_logging=False), base_url="http://localhost") as client:
             valid = self.rows.iloc[1].to_dict()
             variants = [{}, {**valid, "dur": -1}, {**valid, "sttl": 256},
                         {**valid, "spkts": 1.25}, {**valid, "dbytes": 2**53},
@@ -79,12 +80,32 @@ class SharedPredictionChecks(unittest.TestCase):
             self.assertEqual(client.post("/api/predict/batch", json={"connections": []}).status_code, 422)
             self.assertEqual(client.post("/api/predict/batch", json={"connections": [valid]*1001}).status_code, 422)
 
+    def test_authenticated_predictions_preserve_scores_and_block_unauthorized_inference(self):
+        key = "test-only-key-" + "x" * 32
+        config = Settings(_env_file=None, api_key=key, deployment_mode="shared")
+        with tempfile.TemporaryDirectory() as folder:
+            path = self.artifact(folder)
+            expected = PredictionService(path).predict(self.rows.iloc[[1]])
+            app = create_app(path, enable_logging=False, service_settings=config)
+            with TestClient(app, base_url="http://localhost") as client:
+                row = self.rows.iloc[1].to_dict()
+                service = app.state.cache["shared_prediction_service"]
+                with patch.object(service, "predict", wraps=service.predict) as predict:
+                    for headers in [{}, {"X-API-Key":"incorrect"}]:
+                        self.assertEqual(client.post("/api/predict/single", json=row, headers=headers).status_code, 401)
+                    predict.assert_not_called()
+                    response = client.post("/api/predict/single", json=row, headers={"X-API-Key":key})
+                    self.assertEqual(response.status_code, 200, response.text)
+                    self.assertEqual(response.json()["score"], expected.attack_score.iloc[0])
+                    self.assertEqual(response.json()["prediction"]["label"], expected.predicted_label.iloc[0])
+                    predict.assert_called_once()
+
     def test_fixed_threshold_boundary_is_identical_for_single_and_batch(self):
         with tempfile.TemporaryDirectory() as folder:
             path = self.artifact(folder)
             score = PredictionService(path).predict(self.rows.iloc[[1]]).attack_score.iloc[0]
             self.artifact(folder, {**self.bundle, "threshold": float(score)})
-            with TestClient(create_app(path, enable_logging=False)) as client:
+            with TestClient(create_app(path, enable_logging=False), base_url="http://localhost") as client:
                 row = self.rows.iloc[1].to_dict()
                 single = client.post("/api/predict/single", json=row).json()
                 batch = client.post("/api/predict/batch", json={"connections": [row, row]}).json()
@@ -109,7 +130,7 @@ class SharedPredictionChecks(unittest.TestCase):
                     manifest_path.write_text(json.dumps(manifest))
                 with self.assertRaises(ArtifactError):
                     load_prediction_artifact(path)
-                with TestClient(create_app(path, enable_logging=False)) as client:
+                with TestClient(create_app(path, enable_logging=False), base_url="http://localhost") as client:
                     self.assertEqual(client.get("/health").status_code, 503)
                     response = client.post("/api/predict/single", json=self.rows.iloc[1].to_dict())
                     self.assertEqual(response.status_code, 503, response.text)

@@ -13,6 +13,7 @@ from config import (
     render_footer, render_kv_panel, render_metric_cards, render_page_header, render_section_header,
 )
 from charts import distribution_chart, show_chart
+from file_security import safe_csv
 
 st.set_page_config(**PAGE_CONFIG)
 render_app_shell("performance")
@@ -82,7 +83,7 @@ if view == "Validation comparison":
             with st.expander("Detailed validation results and timing"):
                 st.caption("Timing includes raw feature creation, scaling, scoring, and the decision. Network time is excluded.")
                 st.dataframe(validation, use_container_width=True, hide_index=True)
-            st.download_button("Download validation comparison", validation.to_csv(index=False).encode("utf-8"), "netguard_validation.csv", "text/csv")
+            st.download_button("Download validation comparison", safe_csv(validation), "netguard_validation.csv", "text/csv")
 else:
     kind = {"ROC curve":"roc", "Confusion matrix":"confusion", "Score distribution":"scores", "Feature projection":"pca"}[view]
     try:

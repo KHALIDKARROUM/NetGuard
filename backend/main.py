@@ -16,6 +16,9 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from fastapi.exception_handlers import http_exception_handler
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from backend.config import (
     LOG_BACKUP_COUNT,
@@ -28,6 +31,7 @@ from backend.config import (
 from backend.routes import comparison_router, dataset_router, metrics_router, prediction_router
 from backend.utils.prediction_pipeline import get_prediction_service
 from netguard_workflow import ArtifactError
+from backend.security import RequestGuardMiddleware, SECURITY_HEADERS, SecurityHeadersMiddleware
 
 
 def setup_logging() -> None:
@@ -63,7 +67,9 @@ async def lifespan(app: FastAPI):
     logging.getLogger(__name__).info("NetGuard API stopped")
 
 
-def create_app(artifact_path=None, enable_logging=True) -> FastAPI:
+def create_app(artifact_path=None, enable_logging=True, service_settings=None) -> FastAPI:
+    configuration = service_settings or settings
+    docs_enabled = configuration.deployment_mode == "local"
     app = FastAPI(
         title="NetGuard Anomaly Detection API",
         description=(
@@ -71,24 +77,38 @@ def create_app(artifact_path=None, enable_logging=True) -> FastAPI:
             "and raw single/batch inference through the shared notebook pipeline."
         ),
         version="5.0.0",
-        docs_url="/docs",
-        redoc_url="/redoc",
+        docs_url="/docs" if docs_enabled else None,
+        redoc_url="/redoc" if docs_enabled else None,
+        openapi_url="/openapi.json" if docs_enabled else None,
         lifespan=lifespan,
     )
-    app.state.prediction_artifact_path = Path(artifact_path or settings.prediction_artifact)
+    app.state.prediction_artifact_path = Path(artifact_path or configuration.prediction_artifact)
     app.state.enable_logging = enable_logging
+    app.state.security_settings = configuration
 
+    app.add_middleware(RequestGuardMiddleware, settings=configuration)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_origins=configuration.cors_origins,
+        allow_methods=["GET", "POST"],
+        allow_headers=["Content-Type", "X-API-Key"],
+        allow_credentials=False,
     )
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=configuration.allowed_hosts, www_redirect=False)
+    app.add_middleware(SecurityHeadersMiddleware)
 
     app.include_router(dataset_router)
     app.include_router(comparison_router)
     app.include_router(metrics_router)
     app.include_router(prediction_router)
+
+    @app.exception_handler(StarletteHTTPException)
+    async def service_exception_handler(request: Request, exc: StarletteHTTPException):
+        if exc.status_code >= 500:
+            logging.getLogger(__name__).error("Service error (%s) on %s: %s", exc.status_code, request.url.path, exc.detail)
+            detail = "The analysis service is unavailable. Check the server configuration." if exc.status_code == 503 else "Internal server error."
+            return JSONResponse(status_code=exc.status_code, content={"detail": detail}, headers=exc.headers)
+        return await http_exception_handler(request, exc)
 
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -105,8 +125,10 @@ def create_app(artifact_path=None, enable_logging=True) -> FastAPI:
         except ArtifactError as exc:
             return JSONResponse(status_code=503, content={
                 "status": "unavailable", "service": "netguard-backend", "version": "5.0.0",
-                "models_ready": False, "detail": str(exc),
+                "models_ready": False, "detail": "The saved model is unavailable. Check the server configuration.",
             })
+        if configuration.api_key is not None:
+            return {"status": "ok", "service": "netguard-backend", "models_ready": True}
         return {
             "status": "ok",
             "service": "netguard-backend",
@@ -120,7 +142,7 @@ def create_app(artifact_path=None, enable_logging=True) -> FastAPI:
         return {
             "service": "NetGuard Anomaly Detection API",
             "version": "5.0.0",
-            "docs": "/docs",
+            "docs": "/docs" if docs_enabled else None,
             "routes": {
                 "dataset": [
                     "GET /api/dataset/info",
@@ -141,10 +163,11 @@ def create_app(artifact_path=None, enable_logging=True) -> FastAPI:
 
     @app.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception):
-        logging.getLogger(__name__).exception("Unhandled error on %s", request.url)
+        logging.getLogger(__name__).exception("Unhandled error on %s", request.url.path)
         return JSONResponse(
             status_code=500,
             content={"detail": "Internal server error."},
+            headers={**SECURITY_HEADERS, "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"},
         )
 
     return app
@@ -162,4 +185,5 @@ if __name__ == "__main__":
         port=settings.api_port,
         reload=settings.api_debug,
         log_level=settings.log_level.lower(),
+        proxy_headers=False,
     )

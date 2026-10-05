@@ -25,6 +25,8 @@ def validate_connections(frame: pd.DataFrame) -> list[dict]:
     for index, record in enumerate(frame[list(DEFAULTS)].to_dict("records"), start=1):
         connection = {}
         for field, value in record.items():
+            if len(str(value)) > 128:
+                raise ValueError(f"Row {index} · {field}: numeric measurement is too long.")
             try:
                 number = Decimal(str(value))
             except (InvalidOperation, ValueError):

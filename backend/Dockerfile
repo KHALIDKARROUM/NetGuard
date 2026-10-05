@@ -6,7 +6,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
     API_HOST=0.0.0.0 \
     API_PORT=5000 \
     API_DEBUG=false \
-    LOG_LEVEL=INFO
+    LOG_LEVEL=INFO \
+    OMP_NUM_THREADS=1 \
+    OPENBLAS_NUM_THREADS=1 \
+    MKL_NUM_THREADS=1
 
 WORKDIR /app
 
@@ -17,11 +20,15 @@ COPY backend/ backend/
 COPY netguard_workflow/ netguard_workflow/
 COPY models_saved/shared_pipeline.joblib models_saved/shared_pipeline.joblib
 COPY models_saved/shared_pipeline.manifest.json models_saved/shared_pipeline.manifest.json
-RUN mkdir -p backend/logs
+RUN useradd --create-home --uid 10001 --user-group netguard \
+    && mkdir -p backend/logs \
+    && chown -R netguard:netguard backend/logs
+
+USER 10001:10001
 
 EXPOSE 5000
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')" || exit 1
 
-CMD ["sh", "-c", "gunicorn backend.main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind ${API_HOST}:${API_PORT} --timeout 180"]
+CMD ["sh", "-c", "gunicorn backend.main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind ${API_HOST}:${API_PORT} --forwarded-allow-ips '' --timeout 180"]
