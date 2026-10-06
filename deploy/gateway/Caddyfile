@@ -7,7 +7,7 @@
 }
 
 http://{$NETGUARD_PUBLIC_HOST} {
-    redir https://{$NETGUARD_PUBLIC_HOST}{uri} permanent
+    redir https://{$NETGUARD_PUBLIC_HOST}{uri} 308
 }
 
 https://{$NETGUARD_PUBLIC_HOST} {
