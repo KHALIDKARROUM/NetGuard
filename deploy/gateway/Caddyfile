@@ -1,0 +1,51 @@
+{
+    admin localhost:2019
+    email {$NETGUARD_ACME_EMAIL}
+    http_port 8080
+    https_port 8443
+    auto_https disable_redirects
+}
+
+http://{$NETGUARD_PUBLIC_HOST} {
+    redir https://{$NETGUARD_PUBLIC_HOST}{uri} permanent
+}
+
+https://{$NETGUARD_PUBLIC_HOST} {
+    import /etc/caddy/tls-options.caddy
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy same-origin
+        Cache-Control no-store
+        -Server
+    }
+    route {
+        # Only the gateway may supply identity and forwarding metadata.
+        request_header -Remote-User
+        request_header -Remote-Groups
+        request_header -Remote-Email
+        request_header -Remote-Name
+        request_header -X-Original-URL
+        request_header -X-Forwarded-Method
+        request_header -X-Forwarded-Uri
+        request_header -X-API-Key
+        @portal path /auth /auth/*
+        handle @portal {
+            reverse_proxy auth:9091
+        }
+        handle {
+            forward_auth auth:9091 {
+                uri /auth/api/authz/forward-auth
+                copy_headers Remote-User Remote-Groups Remote-Email Remote-Name
+            }
+            # No backend route is published through the dashboard gateway.
+            @backend path /api /api/* /health /docs /redoc /openapi.json
+            respond @backend 404
+            reverse_proxy frontend:8501 {
+                # Recheck long-lived Streamlit connections periodically.
+                stream_timeout 5m
+            }
+        }
+    }
+}

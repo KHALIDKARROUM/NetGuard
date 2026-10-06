@@ -1,0 +1,2 @@
+# Production uses Caddy's automatic, publicly trusted ACME certificates.
+# The isolated sharing test replaces this file with its own local-CA issuer.

@@ -39,6 +39,7 @@ backend/logs/
 .venv-workflow/
 .venv-api/
 .venv-e2e/
+.venv-sharing/
 .uv-cache/
 artifacts/notebook_workflow/
 artifacts/prediction_verification/
@@ -46,6 +47,8 @@ artifacts/novelty_experiments/
 artifacts/generalization/
 artifacts/ui_review/
 artifacts/docker_e2e/
+deploy/private/
+artifacts/sharing_e2e/
 
 # OS
 .DS_Store

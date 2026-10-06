@@ -2,6 +2,7 @@
 from __future__ import annotations
 import html
 import math
+import os
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterable, Sequence
@@ -72,6 +73,8 @@ def render_app_shell(active_key: str) -> dict | None:
         st.markdown(f'<div class="brand"><span class="brand-mark">{icon("shield", 25)}</span><div class="brand-name">NetGuard<span>NETWORK INTELLIGENCE</span></div></div><div class="workspace-chip"><span class="workspace-icon">N</span><div>Research workspace<small>UNSW-NB15 dataset</small></div></div><div class="nav-label">WORKSPACE</div>', unsafe_allow_html=True)
         for key, label, path, material_icon in NAV_ITEMS:
             st.page_link(path, label=label, icon=material_icon, disabled=key == active_key)
+        if auth_portal := os.environ.get("NETGUARD_AUTH_PORTAL_URL"):
+            st.markdown(f'<a href="{escape(auth_portal)}" target="_self">Account &amp; sign out</a>', unsafe_allow_html=True)
         st.markdown(f'<div class="sidebar-note"><span class="sidebar-note-icon">{icon("shield", 23)}</span><strong>Understand your traffic.</strong><p>Explore the data, evaluate your model, and investigate connections.</p><span class="sidebar-tag">Supervised detection</span></div>', unsafe_allow_html=True)
         try:
             health = api_get("/health", timeout=3)

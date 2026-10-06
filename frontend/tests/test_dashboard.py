@@ -120,6 +120,13 @@ def test_offline_pages_keep_navigation(monkeypatch):
         assert any("Analysis service offline" in m.value for m in test.markdown)
     api_get.clear()
 
+def test_sharing_account_link_leaves_dashboard_in_same_tab(service, monkeypatch):
+    monkeypatch.setenv("NETGUARD_AUTH_PORTAL_URL", "https://netguard.example.com/auth/")
+    test = app("03_prediction.py")
+    link = next(m.value for m in test.markdown if "Account &amp; sign out" in m.value)
+    assert 'href="https://netguard.example.com/auth/"' in link
+    assert 'target="_self"' in link
+
 def test_csv_preserves_exact_counts():
     row = {**DEFAULTS, "sbytes":str(MAX_EXACT_COUNT-1), "dbytes":"1"}
     result = validate_connections(pd.DataFrame([row]))

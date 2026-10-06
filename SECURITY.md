@@ -79,17 +79,37 @@ different service.
 ## Share the dashboard
 
 The API key authenticates the **Streamlit service**, not individual dashboard
-users. Anyone who can open the dashboard can use its API access. Before allowing
-remote access, put the dashboard behind an HTTPS reverse proxy with user
-authentication, such as your organization's SSO, and keep the API reachable only
-from the frontend/proxy. Enable `NETGUARD_DEPLOYMENT_MODE=shared` and set the key.
+users. Use the [named-account sharing configuration](deploy/README.md) for remote
+access. It adds an Authelia password portal and a Caddy HTTPS gateway, requires
+shared API mode, and removes host ports from the backend, dashboard, and auth
+service. Only the gateway exposes ports 80/443; the backend is on a separate
+internal network and has no public gateway route.
 
-Configure exact public backend hostnames with `ALLOWED_HOSTS` and exact browser
-origins with `CORS_ORIGINS`, using JSON arrays. Wildcards are rejected. Adjust
-Streamlit's public browser address for your reverse proxy and retain its
-CORS/XSRF protections. Configure TLS, authentication and rate limits at the
-proxy as well. Restrict trusted forwarding to your actual proxy if you choose
-to enable proxy-header handling in the server.
+Each account has an Argon2id password hash and must belong to the approved
+`netguard-users` group. There is no default account or public registration.
+Independent session/storage secrets and the service API key are generated in
+an ignored private directory. Passwords are entered through a hidden prompt;
+the account-management commands never accept them as command-line arguments.
+Account changes require recreating the auth container, which invalidates all
+in-memory sessions. Back up the storage key with authentication state.
+
+The gateway authenticates every dashboard HTTP request and WebSocket upgrade,
+including uploads and media downloads. It strips supplied identity headers,
+redirects HTTP to HTTPS, sets HSTS, and fails closed if auth is unavailable.
+Cookies are Secure/HttpOnly/SameSite=Lax with 15-minute inactivity and one-hour
+expiry; remember-me is disabled. Five failed logins within two minutes cause a
+ten-minute account/IP ban. Existing WebSockets remain authorized until they
+close; the gateway caps them at five minutes before another authorization check.
+The account link navigates in the same tab so normal sign-out closes its active
+dashboard connection. All approved users share the research workspace.
+
+Caddy obtains and renews publicly trusted certificates for a configured DNS
+hostname when ports 80/443 are reachable. The original local Compose file has
+neither public TLS nor user sign-in and continues to bind only to loopback.
+Streamlit's CORS/XSRF protections remain enabled in both configurations. Do not
+publish its port directly or include the local-CA sharing test override in a
+public deployment. With a different proxy/SSO deployment, configure exact
+hosts/origins and trust forwarding only from the intended proxy.
 
 The built-in limits apply independently to each worker. The default Docker
 backend has two workers; a reverse proxy sees one combined service and should
@@ -138,5 +158,7 @@ prediction downloads. See the
 [Docker verification instructions](README.md#docker-end-to-end-verification).
 The test key is generated for each shared-mode run and masked in logs; no real
 deployment credential is used. These checks verify backend service access.
-Individual dashboard sign-in and HTTPS remain deployment requirements for
-remote sharing.
+The additional `Dashboard sign-in and HTTPS` job tests actual named-account
+authentication and TLS, including rejected anonymous uploads/WebSockets,
+logout/session replay, login lockout, header spoofing, and authentication outages.
+Its local CA and credentials are disposable; production uses public ACME TLS.

@@ -1,0 +1,11 @@
+# Test-only TLS issuer and loopback bindings; never use for public deployment.
+services:
+  auth:
+    image: netguard-e2e-auth:test
+  gateway:
+    image: netguard-e2e-gateway:test
+    ports: !override
+      - "127.0.0.1:80:8080"
+      - "127.0.0.1:443:8443"
+    volumes:
+      - ./tests/sharing/tls.caddy:/etc/caddy/tls-options.caddy:ro

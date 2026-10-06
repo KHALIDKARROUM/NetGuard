@@ -176,6 +176,8 @@ Actions tab. It runs these checks in parallel:
 - Real Compose stacks in local and protected shared mode, with browser-driven
   CSV uploads, single/batch predictions, downloads, invalid input rejection,
   API-key checks, and verification of the container restrictions.
+- A separate four-service sharing stack with named-account sign-in, HTTPS,
+  protected uploads/downloads, logout, failed-login lockout, and no bypass ports.
 
 Each job also checks dependency consistency where applicable. Actions are
 pinned to commit hashes, the workflow uses read-only repository permissions,
@@ -192,6 +194,10 @@ To run the backend suite locally with the configured backend environment:
 ```
 
 ## Docker End-to-End Verification
+
+For remote sharing, use the [named-account sign-in and HTTPS setup](deploy/README.md).
+Its public configuration exposes only the authenticated HTTPS gateway; the
+service API key remains separate from dashboard user accounts.
 
 The two `Docker end-to-end` checks in GitHub Actions exercise both services
 together after the image builds pass. Services must report healthy before

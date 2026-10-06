@@ -1,0 +1,81 @@
+# Merge with docker-compose.yaml. Compose 2.24.4+ is required.
+services:
+  backend:
+    ports: !reset []
+    environment:
+      NETGUARD_DEPLOYMENT_MODE: shared
+      NETGUARD_API_KEY: "${NETGUARD_API_KEY:?Initialize the sharing configuration first}"
+    networks: [api]
+  frontend:
+    ports: !reset []
+    environment:
+      NETGUARD_API_KEY: "${NETGUARD_API_KEY:?Initialize the sharing configuration first}"
+      NETGUARD_AUTH_PORTAL_URL: "https://${NETGUARD_PUBLIC_HOST:?Set the public dashboard hostname}/auth/"
+      STREAMLIT_BROWSER_SERVER_ADDRESS: "${NETGUARD_PUBLIC_HOST:?Set the public dashboard hostname}"
+      STREAMLIT_BROWSER_SERVER_PORT: "443"
+    networks: [api, dashboard]
+  auth:
+    build:
+      context: ./deploy/auth
+    environment:
+      NETGUARD_PUBLIC_HOST: "${NETGUARD_PUBLIC_HOST:?Set the public dashboard hostname}"
+      AUTHELIA_SESSION_SECRET_FILE: /run/secrets/session_secret
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/storage_key
+    secrets: [dashboard_users, session_secret, storage_key]
+    volumes:
+      - auth_state:/var/lib/authelia
+    networks: [authentication]
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    restart: unless-stopped
+  gateway:
+    build:
+      context: ./deploy/gateway
+    environment:
+      NETGUARD_PUBLIC_HOST: "${NETGUARD_PUBLIC_HOST:?Set the public dashboard hostname}"
+      NETGUARD_ACME_EMAIL: "${NETGUARD_ACME_EMAIL:?Set the certificate contact email}"
+    ports:
+      - "80:8080"
+      - "443:8443"
+    volumes:
+      - gateway_data:/data
+      - gateway_config:/config
+    networks: [edge, dashboard, authentication]
+    depends_on:
+      frontend:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    restart: unless-stopped
+
+networks:
+  api:
+    internal: true
+  dashboard:
+    internal: true
+  authentication:
+    internal: true
+  edge:
+
+volumes:
+  auth_state:
+  gateway_data:
+  gateway_config:
+
+secrets:
+  dashboard_users:
+    file: "${NETGUARD_PRIVATE_DIR:-./deploy/private}/users.json"
+  session_secret:
+    file: "${NETGUARD_PRIVATE_DIR:-./deploy/private}/session.key"
+  storage_key:
+    file: "${NETGUARD_PRIVATE_DIR:-./deploy/private}/storage.key"
