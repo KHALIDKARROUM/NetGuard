@@ -39,9 +39,14 @@ def test_account_lifecycle_keeps_service_secrets(tmp_path):
     users.update_user(tmp_path, "add", "bobby", PASSWORD, "bobby@example.com", "Bob")
     with pytest.raises(ValueError, match="already exists"):
         users.update_user(tmp_path, "add", "bobby", PASSWORD, "bobby@example.com", "Bob")
+    database = json.loads((tmp_path / "users.json").read_text())
+    database["users"]["alice"].update(groups=[], disabled=True)
+    users.write_private(tmp_path / "users.json", json.dumps(database))
     users.update_user(tmp_path, "password", "alice", "replacement test passphrase")
     database = json.loads((tmp_path / "users.json").read_text())
     assert users.HASHER.verify(database["users"]["alice"]["password"], "replacement test passphrase")
+    assert database["users"]["alice"]["groups"] == []
+    assert database["users"]["alice"]["disabled"] is True
     users.update_user(tmp_path, "remove", "bobby")
     with pytest.raises(ValueError, match="last account"):
         users.update_user(tmp_path, "remove", "alice")

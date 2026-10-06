@@ -99,7 +99,8 @@ def update_user(directory: Path, operation: str, username: str, password: str | 
             del users[username]
         elif operation == "password":
             old = users[username]
-            users[username] = user_record(password or "", old["email"], old["displayname"])
+            replacement = user_record(password or "", old["email"], old["displayname"])
+            old["password"] = replacement["password"]
         else:
             raise ValueError("Unknown account operation.")
     write_private(path, json.dumps(database, indent=2) + "\n")
