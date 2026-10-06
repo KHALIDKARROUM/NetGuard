@@ -1,5 +1,5 @@
 {
-    admin localhost:2019
+    admin 127.0.0.1:2019
     email {$NETGUARD_ACME_EMAIL}
     http_port 8080
     https_port 8443

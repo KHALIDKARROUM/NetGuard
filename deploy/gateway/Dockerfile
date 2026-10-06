@@ -7,4 +7,4 @@ RUN setcap -r /usr/bin/caddy \
 COPY Caddyfile tls-options.caddy /etc/caddy/
 USER 10001:10001
 HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=6 \
-    CMD wget -q -O /dev/null http://localhost:2019/config/ || exit 1
+    CMD wget -q -O /dev/null http://127.0.0.1:2019/config/ || exit 1
