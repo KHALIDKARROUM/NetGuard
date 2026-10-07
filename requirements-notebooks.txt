@@ -29,6 +29,33 @@ attrs==26.1.0 \
     # via
     #   jsonschema
     #   referencing
+catboost==1.2.8 \
+    --hash=sha256:063020755d21de4f5434663a9b1d7cc1507c5b9254e2e8cd9cce9cd3b9ba4bbe \
+    --hash=sha256:0cc4b735c641011f4c4a10c8113619fe2407866ee33b0d37fd53d9f52fab6cff \
+    --hash=sha256:29526147f37aa356b94bd06513cf36ebcd5a83a9186cee25a8223b104c016b9b \
+    --hash=sha256:29f93b4a89ef807e74c16882623c89f1fb781346e1f4fafb29b6949ab4603e14 \
+    --hash=sha256:319086796084fee5e4254300dc81aad1ae0b201cb576a9e87e6c7d030483be7e \
+    --hash=sha256:35a70d32809a21d06dc0ba161bafdd0450ea71fe176a12ee85d7535883b22624 \
+    --hash=sha256:4a1d1aca5caecd919ec476f72c7abd98a704c24fda35506d4d7d71f77f07cb29 \
+    --hash=sha256:54677216e1fef3abfafd62b6dcb9dd151a31cb77b28bc399cff9386287d064cb \
+    --hash=sha256:5ac7c03a619d8eb86d70ec5748c1c9f09d4085033e3a760bf2f7c2892513c8a8 \
+    --hash=sha256:777987e1483824f93b9cb904860ef46dfb3cd184f879e47413bc7163b9514830 \
+    --hash=sha256:810e00c9b570d449ebb2406183b9e1f8b8ce275b4eedeba750b24f088932264b \
+    --hash=sha256:8409c8a2e547469070d73681aa615b5e0b0d78367203d201b2f2b25c33cdcbad \
+    --hash=sha256:8985dd217fe79161b05ed251c5f8a18130e2330d5c77559ac91b99b0cf781e6b \
+    --hash=sha256:8d2b58781c7ff2f974bde857da0d10d867366979193a4e7052746330a8b76b55 \
+    --hash=sha256:910d2596f114a073cb33a145f6114ffb5455b07581a29ec49f67d148cce52999 \
+    --hash=sha256:932542f8b416b43ee07f912a9a964635ccca7397da16b61475c76ae4ae96a1df \
+    --hash=sha256:9950130cac0a2a9c806386eb98c996d62bdedd638453082bb21a50bf11bf5e27 \
+    --hash=sha256:9c04ab1df71501d75cad80757f33d60bab2704b2450401d2c8cf3f3bcb6bd9f8 \
+    --hash=sha256:a2b59f01c9b1631b8be03637bb7d48a4b1ef657c5d797ad0a9eba40e2be7c4cd \
+    --hash=sha256:a72681c50cbfe2fa4a6f85934bc707e0f7ff50a10a51801317418adf09d57cef \
+    --hash=sha256:af140777a4062aabb4aed6731aee0737c6137dcdd5f7354b5d3b11033c1586ae \
+    --hash=sha256:b639da2386c364e2db52f11ade3335fbde11e139ba79bb47a34cb320d236c95b \
+    --hash=sha256:b661840dc65e6ab4e62484dbf1556fed7736bb9196c6b5a3abb003cea39f0f91 \
+    --hash=sha256:c27ed511bbcd78256cbe7de94ba7f2141d8fc3f95e6fa8f66c190f03f80fdac5 \
+    --hash=sha256:f486ae782a8a91b94e697f75270f5d6da53ab35ee55730a8787643d6be6dd8ef
+    # via -r requirements-notebooks.in
 certifi==2026.7.22 \
     --hash=sha256:62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775 \
     --hash=sha256:741e2c3b351ddf169a738da9f2c048608ff7f2c5cc02f1ebc6b118bb090d5d55
@@ -333,6 +360,10 @@ fonttools==4.66.1 \
     --hash=sha256:f08ab7f8461c37ecfdd29ad97fb0c0780b50501bd664bb0f46b6e83ed2b9d2a7 \
     --hash=sha256:fdf4afd75c643e60ef4a96fe64fc8a9def27d2a542112332371a9e5066885f9a
     # via matplotlib
+graphviz==0.21 \
+    --hash=sha256:20743e7183be82aaaa8ad6c93f8893c923bd6658a04c32ee115edb3c8a835f78 \
+    --hash=sha256:54f33de9f4f911d7e84e4191749cac8cc5653f815b06738c54db9a15ab8b1e42
+    # via catboost
 gunicorn==23.0.0 ; sys_platform != 'win32' \
     --hash=sha256:ec400d38950de4dfd418cff8328b2c8faed0edb0d517d3394e457c317908ca4d \
     --hash=sha256:f014447a0101dc57e294f6c18ca6b40227a4c90e9bdb586042628030cba004ec
@@ -631,13 +662,19 @@ matplotlib==3.10.3 \
     --hash=sha256:f6929fc618cb6db9cb75086f73b3219bbb25920cb24cee2ea7a12b04971a4158 \
     --hash=sha256:fd5641a9bb9d55f4dd2afe897a53b537c834b9012684c8444cc105895c8c16fd \
     --hash=sha256:fdfa07c0ec58035242bc8b2c8aae37037c9a886370eef6850703d7583e19964b
-    # via -r requirements-notebooks.in
+    # via
+    #   -r requirements-notebooks.in
+    #   catboost
 matplotlib-inline==0.2.2 \
     --hash=sha256:3c821cf1c209f59fb2d2d64abbf5b23b67bcb2210d663f9918dd851c6da1fcf6 \
     --hash=sha256:72f3fe8fce36b70d4a5b612f899090cd0401deddc4ea90e1572b9f4bfb058c79
     # via
     #   ipykernel
     #   ipython
+narwhals==2.26.0 \
+    --hash=sha256:29326d74f107c347fd1009bd58e38d9f7c7c5b51e6de97bc93dbc325d9038b54 \
+    --hash=sha256:6b9cadca82f375c7e4cf584fdc86ca25da54827307a9c58f94547ee6104b82dd
+    # via plotly
 nbclient==0.10.2 \
     --hash=sha256:4ffee11e788b4a27fabeb7955547e4318a5298f34342a4bfd01f2e1faaeadc3d \
     --hash=sha256:90b7fc6b810630db87a6d0c2250b1f0ab4cf4d3c27a299b0cde78a4ed3fd9193
@@ -710,11 +747,17 @@ numpy==2.2.6 \
     --hash=sha256:fee4236c876c4e8369388054d02d0e9bb84821feb1a64dd59e137e6511a551f8
     # via
     #   -r requirements-model.in
+    #   catboost
     #   contourpy
     #   matplotlib
     #   pandas
     #   scikit-learn
     #   scipy
+    #   xgboost
+nvidia-nccl-cu12==2.32.3 ; platform_machine != 'aarch64' and sys_platform == 'linux' \
+    --hash=sha256:061af42ae1044816820e16b872075e243d1ac0656f51860fbc8e106c257aa83a \
+    --hash=sha256:bb94b2348e4861d5e8aa00b36c3d12d9bdf9c6369b82cbb723de0b582280a21c
+    # via xgboost
 packaging==26.3 \
     --hash=sha256:94edc256424af38762eb31306eed28beb9f0efc50a8837492c9d6fd6004aed79 \
     --hash=sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c
@@ -722,6 +765,7 @@ packaging==26.3 \
     #   gunicorn
     #   ipykernel
     #   matplotlib
+    #   plotly
 pandas==2.2.3 \
     --hash=sha256:062309c1b9ea12a50e8ce661145c6aab431b1e99530d3cd60640e255778bd43a \
     --hash=sha256:15c0e1e02e93116177d29ff83e8b1619c93ddc9c49083f237d4312337a61165d \
@@ -765,7 +809,9 @@ pandas==2.2.3 \
     --hash=sha256:f00d1345d84d8c86a63e476bb4955e46458b304b9575dcf71102b5c705320015 \
     --hash=sha256:f3a255b2c19987fbbe62a9dfd6cff7ff2aa9ccab3fc75218fd4b7530f01efa24 \
     --hash=sha256:fffb8ae78d8af97f849404f21411c95062db1496aeb3e56f146f0355c9989319
-    # via -r requirements-model.in
+    # via
+    #   -r requirements-model.in
+    #   catboost
 parso==0.8.7 \
     --hash=sha256:a8926eb2a1b915486941fdbd31e86a4baf88fe8c210f25f2f35ecec5b574ca1c \
     --hash=sha256:eaaac4c9fdd5e9e8852dc778d2d7405897ec510f2a298071453e5e3a07914bb1
@@ -867,6 +913,10 @@ platformdirs==4.12.2 \
     --hash=sha256:29dbf06d96c500bc6bdbce75fb0a14d63279c93b1842f97e72a135b33e856983 \
     --hash=sha256:eab5f70271a490ef74618bb314fbb86e3c7e82fa3b9c922c2ea0e0a1a155d329
     # via jupyter-core
+plotly==7.1.0 \
+    --hash=sha256:dbb7fa18afce40d0a8e80d1bf162eceb3faa0ce5a77fe741ad09a74cf78f53f3 \
+    --hash=sha256:f860166a4a3d78c69cb1f4a15f28a5c8283eade98a282a698f3bb853a449ace5
+    # via catboost
 prompt-toolkit==3.0.53 \
     --hash=sha256:01c0891d7f9237d5e339f7d3e42cdae80b7534abb1c7c0e3352efba6231492f2 \
     --hash=sha256:9ec8a0ad96d5c56148b3f914aa79c1564c3fde5d2e6b876e7bc327e353cf8fa6
@@ -1441,11 +1491,15 @@ scipy==1.15.3 \
     --hash=sha256:f77f853d584e72e874d87357ad70f44b437331507d1c311457bed8ed2b956126
     # via
     #   -r requirements-model.in
+    #   catboost
     #   scikit-learn
+    #   xgboost
 six==1.17.0 \
     --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274 \
     --hash=sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81
-    # via python-dateutil
+    # via
+    #   catboost
+    #   python-dateutil
 stack-data==0.6.3 \
     --hash=sha256:836a778de4fec4dcd1dcd89ed8abff8a221f58308462e1c4aa2a3cf30148f0b9 \
     --hash=sha256:d5558e0c25a4cb0853cddad3d77da9891a08cb85dd9f9f91b9f8cd66e511e695
@@ -1781,3 +1835,13 @@ websockets==17.1 \
     --hash=sha256:fd8f47dbf2e8adb15c847215f83436de3fdb120b51fdae0fbbdf69fd97a3ad80 \
     --hash=sha256:ff3e2ba7a9f0a110b0555452e9b5a03a34e11662544e01beea15f144b48ba7b7
     # via uvicorn
+xgboost==3.0.5 \
+    --hash=sha256:1a57a0d64a06b596992b664fe17dd1f9782138c6e35ad8fb6355e19a359fa50f \
+    --hash=sha256:40c324c329bf74f44571cdafb7aa7435366309d76ec14b3e16874862aeb14351 \
+    --hash=sha256:660774249d28a729ba8d22dd3d2c048c56e58f65a683b25ef3252e3383fe956f \
+    --hash=sha256:a03210a3e54c9e543f480db9636fee57247cfcd1ae850b353aeac59eea5ca350 \
+    --hash=sha256:c580c82500ad566d927581381550561300492c0bc9c143b2e5be208d16f093d1 \
+    --hash=sha256:d0fe44aaca76e9c4598d3be98ae94661aa53e4c4ceb161dc7183258f0e6fc138 \
+    --hash=sha256:d7f57a04629b52bae91a80e6721b9cdd009b605827a9eca67953675292b4487e \
+    --hash=sha256:f974028c7a0c3ae51ef87e2900405436ddafff46452f6f334f5cc295e921429b
+    # via -r requirements-notebooks.in
