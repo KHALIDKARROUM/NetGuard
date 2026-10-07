@@ -1,160 +1,141 @@
 # Application prediction contract
 
-`netguard_workflow/inference.py` provides the application's `PredictionService`.
-The complete fitted artifact is `models_saved/shared_pipeline.joblib` with its
-`shared_pipeline.manifest.json` sidecar. Its fitted artifact and parity evidence
-come from the original verified shared workflow. The redesigned standalone
-[analysis notebook](../notebooks/00_netguard_complete.ipynb) saves a separate
-portable research model under `artifacts/notebook_report/`.
+The app serves the exact frozen XGBoost, LightGBM and TabM neural network
+exports from the [self-contained notebook](../notebooks/00_netguard_complete.ipynb).
+XGBoost is the validation-selected default. Choose a model in the prediction
+lab, or add `?model=xgboost`, `?model=lightgbm`, or `?model=tabm` to either
+prediction endpoint. `GET /api/predict/best_model` returns the default and
+`available_models`, including each model's threshold and recorded metrics.
 
-## Contract
+## Frozen models and measured inputs
 
-The saved pipeline creates 29 physical features from the original measurements,
-orders them explicitly, applies the training-fitted StandardScaler, and scores the
-validation-selected supervised model. The current model averages logistic
-regression, random forest and histogram gradient boosting with fixed equal weights.
-Shared input transformations and scores use float64; estimator internals use
-their scikit-learn training/inference conventions consistently. Decisions are
-`score >= saved_threshold`; responses retain
-the full numerical score. See the physical feature dictionary in
-[the complete notebook](../notebooks/00_netguard_complete.ipynb).
+Each export includes physical feature creation, fitted preprocessing, the
+trained classifier and its validation threshold. All three create the same
+29 features from ten measured inputs. The boosted trees use the notebook's
+fitted StandardScaler. TabM applies its fitted sign-preserving log transform,
+normal-quantile transform and standardization inside the estimator; its 16
+members' probabilities are averaged. TabM trained with float32 CPU tensors
+and its saved network scores in float64, as verified in the notebook.
 
-The fixed threshold maximizes attack recall with **validation false-positive
-rate at most 1%**. The model is fitted on separate grouped development rows.
-Score ties are indivisible; the selector considers real attainable thresholds,
-including a finite reject-all threshold if necessary. Equal recall prefers
-fewer false positives, then a higher threshold. The model comparison uses
-constrained validation recall, lower false-positive rate, average precision,
-then name. The supervised soft vote is eligible only with at least a two-point
-validation recall gain and at most twice the best individual's median batch
-prediction latency. No benchmark labels select the threshold or deployed model.
+| Model | Saved threshold | Benchmark attack recall | Benchmark false-positive rate |
+| --- | ---: | ---: | ---: |
+| XGBoost (default) | 0.9051103591918945 | 87.269% | 2.895% |
+| LightGBM | 0.9578912437183693 | 84.040% | 1.241% |
+| TabM | 0.9044449631483704 | 81.117% | 0.711% |
 
-Artifact schema 3 requires explicit `score_calibration` settings: `method` is
-`identity`, `parameters` is empty, and `fitted_on` is null. Scores remain
-uncalibrated classifier outputs; no learned calibration or reference score
-distribution is needed at inference. `threshold_selection` stores the budget,
-validation normal/attack counts, observed false positives and recall. Both
-settings are also exposed by `GET /api/predict/info` and checked against the
-artifact's manifest.
-The manifest also verifies the custom model implementation hash, and metadata
-exposes the saved validation comparison and ensemble decision. The prediction
-artifact contains only the selected fitted pipeline, not the other experimental
-candidate pipelines.
+Decisions use `attack_score >= saved_threshold`; responses retain full
+precision. Each threshold maximizes attack recall within a validation
+false-positive budget of 1%. Benchmark data does not select the default or
+thresholds. The benchmark was previously inspected and is not an untouched
+final holdout. Scores are uncalibrated classifier outputs, not production
+attack probabilities. No ensemble passed the notebook's recall gain and
+latency requirements, so the default remains the individual XGBoost.
 
-Every connection requires these ten measured fields:
-
-| Fields | Accepted measurements |
+| Required fields | Accepted measurements |
 | --- | --- |
 | `sbytes`, `dbytes`, `spkts`, `dpkts` | Nonnegative integer byte/packet counts |
 | `dur`, `rate`, `sload`, `dload` | Finite nonnegative recorded values |
 | `sttl`, `dttl` | Integer TTL values from 0 through 255 |
 
-Counts and their byte/packet totals must be at most `2**53-1` for exact float64
-representation. Missing, invalid or unknown fields return HTTP 422. JSON object
-field order and batch row composition do not affect scores. All required values
-must be supplied; UI presets are editable examples, not inferred measurements.
+Counts and their byte/packet totals must be at most `2**53-1` for exact
+float64 representation. Missing, invalid or unknown fields return HTTP 422.
+Unknown model identifiers return HTTP 422 and never become file paths.
+Object field order and batch composition do not affect prediction decisions.
+UI presets are editable examples, not inferred measurements.
 
-`POST /api/predict/single` accepts a connection object:
+`POST /api/predict/single?model=tabm` accepts a connection object:
 
 ```json
 {"sbytes":258,"dbytes":172,"spkts":6,"dpkts":4,"dur":0.121478,"rate":74.08749,"sload":14158.94238,"dload":8495.365234,"sttl":252,"dttl":254}
 ```
 
-`POST /api/predict/batch` accepts `{"connections": [connection, ...]}` with
-1–1,000 connections and returns predictions in the same order. Both endpoints
-return the model name, score, fixed threshold, decision, precision and artifact
-SHA-256. Neither prediction endpoint reads training or benchmark CSVs, fits
-preprocessing, infers hidden fields from neighbors, or recalibrates scores.
+`POST /api/predict/batch?model=lightgbm` accepts
+`{"connections": [connection, ...]}` with 1-1,000 connections. Both endpoints
+return the model, score, fixed threshold, decision, precision and artifact
+SHA-256. Prediction reads no CSVs and fits no preprocessing or model.
 
-`GET /api/models/compare` and visualizations evaluate the deployed pipeline on
-raw benchmark measurements with the saved threshold. Earlier experiment metrics
-are a separate `historical_metrics` field and do not select the deployed model.
-PCA is descriptive; its labels come from the same saved classification decisions.
-The comparison response additionally includes saved `validation_comparison`,
-`benchmark_comparison`, `ensemble_decision`, and `latency_protocol`. The dashboard's
-validation tab shows all five candidates. These tables are stored with the model;
-live single/batch prediction needs no CSV or candidate artifact.
+`GET /api/models/compare` evaluates all three deployed pipelines on raw
+benchmark measurements with their frozen thresholds. ROC, confusion and
+score-distribution views include all three. PCA defaults to XGBoost;
+its `model` parameter can select another deployed pipeline. PCA is descriptive.
+Saved validation and benchmark comparison tables include other notebook
+candidates; those candidates are not all deployed.
 
-## Runtime and artifacts
+## Artifacts and runtime
 
-Use CPython **3.13.9**. `backend/requirements.txt` is a complete hashed lock,
-with the same numerical versions as `requirements-notebooks.txt`:
-NumPy 2.2.6, pandas 2.2.3, SciPy 1.15.3, scikit-learn 1.6.1,
-joblib 1.4.2 and threadpoolctl 3.6.0. Both direct dependency files include
-`requirements-model.in`; regenerate both locks together when changing it.
+`netguard_workflow/deployment.py` loads `models_saved/deployed/registry.json`,
+whose explicit allowlist pins each manifest hash. Each `.manifest.json`
+pins its model bytes, runtime, source provenance, raw input/feature order,
+precision, score calibration and threshold-selection contract. Loading
+checks these declarations and hashes before deserialization, then validates
+the full fitted pipeline, label order and dimensions. All registered models
+must load successfully for the app to be ready. Missing or incompatible
+artifacts return HTTP 503; no historical artifact is used as a fallback.
+Only load trusted project exports: replacing both model and its trusted
+registry can replace executable pickle content.
 
-From the repository root in PowerShell:
+Use CPython **3.13.9** and the hashed `backend/requirements.txt`. Its model
+packages match notebook training: NumPy 2.2.6, pandas 2.2.3, SciPy 1.15.3,
+scikit-learn 1.6.1, XGBoost 3.0.5, LightGBM 4.7.0, Torch 2.8.0, TabM 0.0.3,
+and the remaining dependencies declared in `requirements-serving.in`.
+The exports include notebook classes by value; serving needs no notebook.
+Docker includes the three exports and the OpenMP runtime for the boosting
+libraries. Docker image execution must be checked on the target host;
+current local verification uses Windows processes because no Docker daemon
+is running here. The Linux lock includes Torch's standard PyPI dependencies
+although the models perform inference on CPU.
+
+Run from the repository root:
 
 ```powershell
 uv venv .venv-api --python 3.13.9
 uv pip sync backend/requirements.txt --python .venv-api/Scripts/python.exe --require-hashes
-.venv-api/Scripts/python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 5000
+.venv-api/Scripts/python.exe -m uvicorn backend.main:app --host 127.0.0.1 --port 5000 --no-proxy-headers
 ```
 
-On Linux/macOS use the corresponding `.venv-api/bin/python` path. Docker uses
-the root build context and Python 3.13.9. Prediction needs only the shared code
-and artifact; dataset exploration and evaluation additionally need the raw CSVs.
-
-Artifact loading checks its hash and numerical runtime before deserialization,
-then validates feature implementation, schema/order, fitted preprocessing,
-classes and threshold. Missing or incompatible artifacts return HTTP 503 from
-prediction and health. Historical models are not used as a fallback. Use only
-trusted project artifacts: a hash check detects accidental mismatch, not a
-malicious replacement of both model and manifest.
-
-Each API worker caches its loaded artifact. **Restart every API worker after
-retraining or replacing the artifact and manifest together.** `PREDICTION_ARTIFACT`
-can point to another compatible trusted bundle; `NETGUARD_LOG_DIR` changes the
-log destination.
-
-## Reproduce verification
-
-The existing serving artifact and its original saved workflow predictions are
-the inputs to these API checks. The standalone notebook writes its own output
-folder and does not replace those inputs:
+Use `.venv-api/bin/python` on Linux/macOS. Each worker caches its pipelines.
+After running the notebook again, promote the verified full-data exports
+and **restart every API worker**:
 
 ```powershell
-.venv-workflow/Scripts/python.exe -m unittest discover -s tests -v
-.venv-api/Scripts/python.exe scripts/verify_prediction_parity.py --live
-.venv-api/Scripts/python.exe scripts/verify_prediction_without_data.py
+.venv-workflow/Scripts/python.exe scripts/export_deployment_models.py
 ```
 
-The verifier starts and stops a local API process, checks 512 reproducibly
-sampled benchmark connections against the notebook's saved predictions, and
-adds six boundary cases including zero denominators, TTL edges and counts above
-float32's exact-integer range. It compares individual requests, batch sizes
-1/7/64/1,000, reordered fields and reordered rows at absolute tolerance `1e-12`,
-then checks dashboard metrics and routes. Evidence is saved to
-`data/reports/shared_prediction_parity.json`. The standalone notebook separately
-checks portable model reload and batch-independent raw-input predictions.
+The exporter checks source export hashes, the full 82,332-row benchmark
+decisions, default-model golden scores and single/batch parity before
+publishing. It copies each notebook export byte-for-byte. Fast preview runs
+cannot be promoted. `PREDICTION_ARTIFACT` can override the default with a
+trusted compatible artifact; custom artifacts outside the registry directory
+run as standalone services. `NETGUARD_LOG_DIR` sets the log folder.
 
-The no-data verifier copies only source files and the model/manifest into an
-isolated directory, installs a file-access guard before importing the backend,
-and starts a fresh live API process. The guard blocks CSV opens and any opens
-under the original data directory. Synthetic single and batch predictions must
-match the shared service, while dataset exploration returns 404. Evidence is
-saved to `data/reports/prediction_without_data.json`. This check needs no raw
-dataset and does not measure predictive accuracy.
+`models_saved/shared_pipeline.joblib` remains the historical soft-vote
+artifact. Its loader and original parity verifier remain available for
+reproducing that older result; they are not the app's default.
 
-This follows scikit-learn's guidance on [consistent preprocessing and pipelines](https://scikit-learn.org/stable/common_pitfalls.html)
-and [matching training/serving versions for persisted models](https://scikit-learn.org/stable/model_persistence.html).
-The numerical mismatch in the earlier serving path is addressed by retraining
-and using this complete pipeline, rather than reusing older fitted artifacts.
+## Verify serving
 
-## Interpretation
+```powershell
+.venv-api/Scripts/python.exe -m unittest discover -s tests -v
+.venv-api/Scripts/python.exe scripts/verify_deployed_models.py
+.venv-api/Scripts/python.exe scripts/verify_prediction_without_data.py --artifact models_saved/deployed/xgboost.pkl --report data/reports/deployed_xgboost_without_data.json
+.venv-api/Scripts/python.exe scripts/verify_prediction_without_data.py --artifact models_saved/deployed/lightgbm.pkl --report data/reports/deployed_lightgbm_without_data.json
+.venv-api/Scripts/python.exe scripts/verify_prediction_without_data.py --artifact models_saved/deployed/tabm.pkl --report data/reports/deployed_tabm_without_data.json
+```
 
-The 1% target applies to the validation partition used for threshold selection.
-Benchmark and future traffic can have different false-positive rates and recall.
-The current threshold is **0.8631127466983196**. Validation observes 132 false
-positives among 13,248 normal rows (**0.996%**) and detects 13,829 of 17,506
-attacks (**79.00% recall**). The frozen benchmark result is 1,095 false positives
-among 37,000 normal rows (**2.959%**) and 39,218 detections among 45,332 attacks
-(**86.51% recall**, F1 **0.9158**). The threshold favors the fewest false positives
-among operating points with the same maximum feasible recall; it need not use
-the full 1% budget.
-The notebook reports both validation and frozen-threshold benchmark results;
-`data/reports/notebook_workflow_verification.json` contains the measured counts.
-The benchmark was already inspected and is not an independent final holdout.
-Classifier scores are not calibrated production attack probabilities. Checking
-alert costs, calibration on separate development data, and prospective evaluation
-remain necessary scientific work.
+The deployment verifier starts a separate live HTTP server, compares all
+three models with their original notebook exports on 256 sampled benchmark
+connections and seven synthetic boundary inputs, exercises single requests,
+7/64/1,000-row batches, field/row permutations and a maximum-size batch, and
+checks all dashboard metrics and visualization routes. Evidence is saved
+in `data/reports/deployed_models_verification.json`.
+
+The no-data verifier copies only source and one model/manifest into an
+isolated checkout. A guard installed before API import rejects every CSV
+open and every open under the original data directory. A cold live server
+must reproduce 22 synthetic single/batch decisions while the dataset page
+returns 404. These checks establish serving parity and dataset independence;
+they do not establish accuracy on future network traffic.
+
+For HTTPS hosting with approved accounts, use the existing
+[public deployment guide](../deploy/README.md). A GitHub push alone does
+not publish an online API or dashboard.

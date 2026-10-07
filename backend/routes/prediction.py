@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import pandas as pd
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict, Field
 
 from netguard_workflow import ArtifactError
@@ -45,9 +45,11 @@ DEFAULT_INPUT = {"sbytes": 1500, "dbytes": 5000, "spkts": 10, "dpkts": 15,
                  "dur": 0.5, "rate": 20.0, "sload": 0.0, "dload": 0.0, "sttl": 64, "dttl": 64}
 
 
-def _service(request):
+def _service(request, model=None):
     try:
-        return get_prediction_service(request.app)
+        return get_prediction_service(request.app, model)
+    except KeyError as exc:
+        raise HTTPException(status_code=422, detail="Select an available deployed model.") from exc
     except ArtifactError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
@@ -55,7 +57,9 @@ def _service(request):
 @router.get("/best_model", summary="Information about the validation-selected shared model")
 def get_best_model(request: Request):
     service = _service(request)
+    registry = request.app.state.cache.get("prediction_registry")
     return {"status": 200, "best_model": {**service.metadata, "threshold_value": service.bundle["threshold"]},
+            "available_models": registry.metadata if registry else [{"id": service.bundle["model_name"], "default": True, **service.metadata}],
             "editable_inputs": EDITABLE_INPUTS, "defaults": DEFAULT_INPUT}
 
 
@@ -85,13 +89,15 @@ def _predict(connections, service):
 
 
 @router.post("/single", summary="Predict one measured raw connection")
-def predict_single(payload: ConnectionRequest, request: Request):
-    return _predict([payload], _service(request))[0]
+def predict_single(payload: ConnectionRequest, request: Request,
+                   model: str | None = Query(default=None, max_length=64)):
+    return _predict([payload], _service(request, model))[0]
 
 
 @router.post("/batch", summary="Predict up to 1,000 raw connections using the same fixed threshold")
-def predict_batch(payload: BatchRequest, request: Request):
-    service = _service(request)
+def predict_batch(payload: BatchRequest, request: Request,
+                  model: str | None = Query(default=None, max_length=64)):
+    service = _service(request, model)
     results = _predict(payload.connections, service)
     return {"status": 200, "n": len(results), "predictions": results,
             "model": service.bundle["model_name"], "threshold": float(service.bundle["threshold"]),

@@ -67,7 +67,7 @@ async def lifespan(app: FastAPI):
     logging.getLogger(__name__).info("NetGuard API stopped")
 
 
-def create_app(artifact_path=None, enable_logging=True, service_settings=None) -> FastAPI:
+def create_app(artifact_path=None, enable_logging=True, service_settings=None, registry_path=None) -> FastAPI:
     configuration = service_settings or settings
     docs_enabled = configuration.deployment_mode == "local"
     app = FastAPI(
@@ -83,6 +83,11 @@ def create_app(artifact_path=None, enable_logging=True, service_settings=None) -
         lifespan=lifespan,
     )
     app.state.prediction_artifact_path = Path(artifact_path or configuration.prediction_artifact)
+    candidate_registry = registry_path or configuration.prediction_registry
+    app.state.prediction_registry_path = (
+        Path(candidate_registry) if candidate_registry and artifact_path is None
+        and app.state.prediction_artifact_path.parent == Path(candidate_registry).parent else None
+    )
     app.state.enable_logging = enable_logging
     app.state.security_settings = configuration
 

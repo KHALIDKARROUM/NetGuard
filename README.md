@@ -9,7 +9,7 @@ evaluating a supervised baseline, and scoring individual connections or batches.
 
 - Backend moved to a clean FastAPI API surface with cached loaders and stable routes.
 - Runtime merge conflicts were resolved across backend, frontend, Dockerfiles, requirements, and model reports.
-- The deployed backend uses a validation-selected supervised pipeline and saved threshold; its current winner is a fixed soft vote of logistic regression, random forest and gradient boosting.
+- The deployed backend serves the notebook's frozen XGBoost, LightGBM, and TabM neural network pipelines. XGBoost is the validation-selected default; the prediction lab lets you choose any of the three.
 - All analysis stages and guides are consolidated into one self-contained notebook with consistent charts, inline implementations, portable model export, and standard Run All support.
 - All four screens share a navy sidebar, light workspace, teal accents, responsive layouts, and consistent chart and card components.
 - Dataset exploration includes filtered record previews, feature search, and CSV downloads. Performance charts load only when selected.
@@ -20,7 +20,7 @@ evaluating a supervised baseline, and scoring individual connections or batches.
 
 ## Stack
 
-- Backend: FastAPI, scikit-learn, pandas (CPython 3.13.9, shared numerical lock)
+- Backend: FastAPI, scikit-learn, XGBoost, LightGBM, PyTorch/TabM, pandas (CPython 3.13.9, locked training-compatible runtime)
 - Frontend: Streamlit, Plotly
 - Model artifacts: `models_saved/`
 - Data artifacts: `data/featured/`, `data/preprocessed/`, `data/reports/`
@@ -80,8 +80,14 @@ NetGuard/
 |   `-- visualizations/
 |
 |-- models_saved/                    # Trained model artifacts
-|   |-- shared_pipeline.joblib        # Current complete fitted prediction pipeline
-|   |-- shared_pipeline.manifest.json # Artifact hash, runtime, feature order, threshold
+|   |-- deployed/                     # Current XGBoost, LightGBM and TabM pipelines
+|   |   |-- registry.json             # Allowlisted models, default and manifest hashes
+|   |   |-- xgboost.pkl               # Validation-selected default
+|   |   |-- lightgbm.pkl
+|   |   |-- tabm.pkl
+|   |   `-- *.manifest.json           # Runtime, input order, thresholds and provenance
+|   |-- shared_pipeline.joblib        # Historical supervised soft-vote pipeline
+|   |-- shared_pipeline.manifest.json # Historical artifact compatibility manifest
 |   |-- autoencoder.pt
 |   |-- best_model.pkl
 |   |-- ensemble_3models.pkl
@@ -104,6 +110,10 @@ NetGuard/
 - `GET /api/predict/best_model`
 - `POST /api/predict/single`
 - `POST /api/predict/batch` (1–1,000 connections)
+
+`GET /api/predict/best_model` includes `available_models`. Add `?model=xgboost`,
+`?model=lightgbm`, or `?model=tabm` to either prediction route to choose a model.
+Omitting the parameter uses XGBoost. The input body remains the ten raw measurements.
 
 Compatibility routes are also kept under `/api/metrics/*`.
 
@@ -129,6 +139,14 @@ The local frontend opens at `http://localhost:8501`. Start it from `frontend/`
 so Streamlit loads the checked-in widget theme. Use **Refresh data** to reload
 analysis results; successful reads are otherwise cached for up to 60 seconds.
 Predictions are always submitted to the backend and are never cached.
+
+The trained models are included in `models_saved/deployed/`; inference does not
+need the notebook, training code, or CSV datasets. Dataset and performance pages
+still require the benchmark CSV. To promote a later full notebook run, execute
+`scripts/export_deployment_models.py` in the locked notebook environment, then
+restart every API worker. The exporter checks all 82,332 benchmark decisions,
+preserves the notebook export bytes, and pins every model manifest in the registry.
+See [prediction deployment](backend/PREDICTION.md) for model thresholds and verification.
 
 Frontend flow and CSV validation checks, from the root with the frontend
 test dependencies installed in its separate environment:

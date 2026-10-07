@@ -120,6 +120,35 @@ def test_offline_pages_keep_navigation(monkeypatch):
         assert any("Analysis service offline" in m.value for m in test.markdown)
     api_get.clear()
 
+def test_model_selector_routes_prediction_and_clears_previous_result(service, monkeypatch):
+    original_get = requests.get
+    original_post = requests.post
+    posted = []
+    def get(url, **kwargs):
+        response = original_get(url, **kwargs)
+        if url.endswith("/api/predict/best_model"):
+            data = response.json()
+            data["available_models"] = [{**MODEL, "id":name, "name":name, "default":name == "xgboost"}
+                                        for name in ("xgboost", "lightgbm", "tabm")]
+            response._content = json.dumps(data).encode()
+        return response
+    def post(url, **kwargs):
+        posted.append(url)
+        return original_post(url, **kwargs)
+    monkeypatch.setattr(requests, "get", get)
+    monkeypatch.setattr(requests, "post", post)
+    test = app("03_prediction.py")
+    next(b for b in test.button if b.label == "Analyze connection").click().run()
+    assert test.session_state.prediction_result
+    test.session_state.batch_result = {"stale":True}
+    test.selectbox(key="prediction_model").set_value("tabm").run()
+    assert not test.exception
+    assert test.session_state.prediction_result is None
+    assert test.session_state.batch_result is None
+    next(b for b in test.button if b.label == "Analyze connection").click().run()
+    assert not test.exception
+    assert posted[-1].endswith("/api/predict/single?model=tabm")
+
 def test_sharing_account_link_leaves_dashboard_in_same_tab(service, monkeypatch):
     monkeypatch.setenv("NETGUARD_AUTH_PORTAL_URL", "https://netguard.example.com/auth/")
     test = app("03_prediction.py")

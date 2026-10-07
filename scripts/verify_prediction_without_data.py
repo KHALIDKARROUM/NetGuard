@@ -28,7 +28,8 @@ import numpy as np
 import pandas as pd
 
 from netguard_workflow import PredictionService
-from netguard_workflow.inference import artifact_manifest_path, runtime_versions
+from netguard_workflow.deployment import NotebookPredictionService
+from netguard_workflow.inference import artifact_manifest_path
 
 
 def example_connections():
@@ -65,7 +66,7 @@ def copy_minimal_checkout(destination, artifact):
             target = destination/package/relative
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(path, target)
-    isolated_artifact = destination/"models_saved"/"shared_pipeline.joblib"
+    isolated_artifact = destination/"models_saved"/Path(artifact).name
     isolated_artifact.parent.mkdir()
     shutil.copyfile(artifact, isolated_artifact)
     shutil.copyfile(artifact_manifest_path(artifact), artifact_manifest_path(isolated_artifact))
@@ -161,7 +162,8 @@ def require_success(response):
 
 
 def verify(artifact, output):
-    service = PredictionService(Path(artifact).resolve())
+    loader = NotebookPredictionService if Path(artifact).suffix == ".pkl" else PredictionService
+    service = loader(Path(artifact).resolve())
     records = example_connections()
     expected = service.predict(pd.DataFrame(records))
     differences = []
@@ -212,7 +214,7 @@ def verify(artifact, output):
     return {
         "status": "passed", "verified_utc": datetime.now(timezone.utc).isoformat(),
         "transport": "live Uvicorn loopback HTTP server in a cold separate process",
-        "runtime": runtime_versions(), "artifact_sha256": service.artifact_sha256,
+        "runtime": service.bundle["runtime"], "artifact_sha256": service.artifact_sha256,
         "model": service.bundle["model_name"], "threshold": service.bundle["threshold"],
         "threshold_policy": service.bundle["threshold_policy"],
         "threshold_selection": service.bundle["threshold_selection"],
@@ -241,7 +243,7 @@ def verify(artifact, output):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--artifact", type=Path, default=ROOT/"models_saved/shared_pipeline.joblib")
+    parser.add_argument("--artifact", type=Path, default=ROOT/"models_saved/deployed/xgboost.pkl")
     parser.add_argument("--report", type=Path, default=ROOT/"data/reports/prediction_without_data.json")
     parser.add_argument("--output-dir", type=Path, default=ROOT/"artifacts/prediction_verification")
     args = parser.parse_args()

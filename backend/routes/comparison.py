@@ -25,20 +25,28 @@ def get_state(request):
 def _ensure_scores(state):
     if "metrics_list" in state:
         return
-    service = state["shared_prediction_service"]
+    default_service = state["shared_prediction_service"]
+    registry = state.get("prediction_registry")
+    services = [default_service]
+    if registry:
+        services += [service for name, service in registry.services.items() if name != registry.default]
     raw = load_raw_test_data()
-    started = time.perf_counter()
-    predictions = service.predict(raw)
-    inference_s = time.perf_counter() - started
-    name = service.bundle["model_name"]
-    scores = predictions.attack_score.to_numpy()
-    labels = predictions.predicted_label.to_numpy()
     truth = raw.label.to_numpy()
-    metrics = compute_metrics(name, truth, labels, scores, inference_s)
-    metrics.update(score_metrics(truth, scores, service.bundle["threshold"]))
-    metrics["evaluation_status"] = service.bundle["evaluation_status"]
-    state.update({"all_scores": {name: scores}, "all_predictions": {name: labels},
-                  "metrics_list": [metrics], "best_model_name": name, "y_test": truth,
+    all_scores, all_predictions, metrics_list = {}, {}, []
+    for service in services:
+        started = time.perf_counter()
+        predictions = service.predict(raw)
+        inference_s = time.perf_counter() - started
+        name = service.bundle["model_name"]
+        scores = predictions.attack_score.to_numpy()
+        labels = predictions.predicted_label.to_numpy()
+        metrics = compute_metrics(name, truth, labels, scores, inference_s)
+        metrics.update(score_metrics(truth, scores, service.bundle["threshold"]))
+        metrics["evaluation_status"] = service.bundle["evaluation_status"]
+        all_scores[name], all_predictions[name] = scores, labels
+        metrics_list.append(metrics)
+    state.update({"all_scores": all_scores, "all_predictions": all_predictions,
+                  "metrics_list": metrics_list, "best_model_name": default_service.bundle["model_name"], "y_test": truth,
                   "raw_benchmark": raw})
 
 
@@ -71,15 +79,16 @@ def get_visualization(request: Request,
     try:
         state = get_state(request)
         _ensure_scores(state)
-        name = state["best_model_name"]
-        if model and model != name:
-            raise HTTPException(status_code=422, detail="Select the deployed shared model for current visualizations.")
+        name = model or state["best_model_name"]
+        if name not in state["all_scores"]:
+            raise HTTPException(status_code=422, detail="Select an available deployed model for current visualizations.")
         if type == "pca":
             # PCA is descriptive only; features use the already fitted training scaler.
-            if "X_test_shared" not in state:
-                pipeline = state["shared_prediction_service"].bundle["pipeline"]
-                state["X_test_shared"] = pipeline[:-1].transform(state["raw_benchmark"])
-            data = get_pca_data(state["X_test_shared"], state["all_predictions"][name], state["all_scores"][name])
+            key = f"X_test_{name}"
+            if key not in state:
+                pipeline = get_prediction_service(request.app, name).bundle["pipeline"]
+                state[key] = pipeline[:-1].transform(state["raw_benchmark"])
+            data = get_pca_data(state[key], state["all_predictions"][name], state["all_scores"][name])
             data["model_used"] = name
         elif type == "scores":
             data = get_score_distributions(state["all_scores"], state["y_test"])

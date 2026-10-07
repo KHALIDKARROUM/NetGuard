@@ -1,0 +1,3 @@
+# Registry hashes must survive Windows/Linux checkouts unchanged.
+models_saved/deployed/*.json text eol=lf
+models_saved/deployed/*.pkl binary

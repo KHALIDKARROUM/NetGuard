@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "default": "xgboost",
+  "models": {
+    "xgboost": {
+      "file": "xgboost.pkl",
+      "manifest_sha256": "9da23be9df6eaf9847058be9ab5e3ec3e7dcccbf2cd4f5374a687ae19d290d81"
+    },
+    "lightgbm": {
+      "file": "lightgbm.pkl",
+      "manifest_sha256": "8de055be8aac536429199c262daf3e0e905db1f6da6d196dfd97c76f6df19552"
+    },
+    "tabm": {
+      "file": "tabm.pkl",
+      "manifest_sha256": "0067dcdca5f9e8ed46227b188979c8f02c8597c1ebb3be409701502df0b0a1df"
+    }
+  }
+}

@@ -7,6 +7,8 @@
 !models_saved/
 !models_saved/shared_pipeline.joblib
 !models_saved/shared_pipeline.manifest.json
+!models_saved/deployed/
+!models_saved/deployed/**
 **/__pycache__/
 backend/backend_venv/
 backend/logs/

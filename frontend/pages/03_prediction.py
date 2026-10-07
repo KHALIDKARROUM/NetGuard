@@ -4,6 +4,7 @@ import hashlib
 import json
 import sys
 from pathlib import Path
+from urllib.parse import urlencode
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
@@ -26,6 +27,10 @@ def apply_preset() -> None:
         st.session_state[f"prediction_{field}"] = value
     st.session_state.prediction_result = None
     st.session_state.prediction_error = None
+
+def reset_model_results() -> None:
+    for key in ("prediction_result", "prediction_error", "batch_result", "batch_error"):
+        st.session_state[key] = None
 
 def read_payload() -> dict:
     return {name: (int if name in INTEGER_FIELDS else float)(st.session_state[f"prediction_{name}"]) for name in DEFAULTS}
@@ -55,6 +60,19 @@ except Exception as exc:
     info = {}
     render_callout(explain_api_error(exc), "warning")
 model = info.get("best_model", {})
+available = info.get("available_models", [])
+if available:
+    choices = {item["id"]: item for item in available}
+    default_id = next((item["id"] for item in available if item.get("default")), available[0]["id"])
+    if st.session_state.get("prediction_model") not in choices:
+        st.session_state.prediction_model = default_id
+    selected_id = st.selectbox("Detection model", list(choices), key="prediction_model",
+        format_func=lambda name: {"xgboost": "XGBoost (recommended)", "lightgbm": "LightGBM", "tabm": "TabM neural network"}.get(name, name),
+        on_change=reset_model_results)
+    model = choices[selected_id]
+    prediction_query = "?" + urlencode({"model": selected_id})
+else:
+    prediction_query = ""
 if model:
     st.caption(f"Deployed model: {model.get('name', '—')}  ·  Threshold: {format_number(model.get('threshold'), 6)}  ·  {model.get('feature_count', 29)} physical features")
 
@@ -96,7 +114,7 @@ if mode == "Single connection":
                 connection = validate_connections(pd.DataFrame([read_payload()]))[0]
                 st.session_state._prediction_measurements = connection.copy()
                 with st.spinner("Analyzing connection…"):
-                    st.session_state.prediction_result = api_post("/api/predict/single", connection)
+                    st.session_state.prediction_result = api_post("/api/predict/single" + prediction_query, connection)
             except Exception as exc:
                 st.session_state.prediction_error = explain_api_error(exc)
     with result_col, panel():
@@ -130,7 +148,7 @@ if mode == "Single connection":
         else:
             render_empty_state("Ready when you are", "Add connection measurements, then select Analyze connection to see the score and decision.", "shield")
             if model:
-                render_kv_panel("MODEL CONTEXT", "Validation-selected detection", [("Decision threshold", format_number(model.get("threshold"), 6)),
+                render_kv_panel("MODEL CONTEXT", model.get("name", "Detection model"), [("Decision threshold", format_number(model.get("threshold"), 6)),
                     ("Validation false-alarm target", format_rate(model.get("threshold_selection", {}).get("max_false_positive_rate", .01))),
                     ("Model components", len(model.get("components", []))), ("Input measurements", len(DEFAULTS))])
 else:
@@ -164,7 +182,7 @@ else:
             st.session_state.batch_error = None
             try:
                 with st.spinner("Analyzing batch…"):
-                    st.session_state.batch_result = api_post("/api/predict/batch", {"connections": connections}, timeout=120)
+                    st.session_state.batch_result = api_post("/api/predict/batch" + prediction_query, {"connections": connections}, timeout=120)
             except Exception as exc:
                 st.session_state.batch_error = explain_api_error(exc)
     with right:
@@ -176,7 +194,7 @@ else:
         if st.session_state.get("batch_error"):
             render_callout(st.session_state.batch_error, "danger")
         if batch := st.session_state.get("batch_result"):
-            rows = [{"Row": i, "Classification": p["prediction"]["class_name"], "Model score": p["score"], "Threshold": p["threshold"], **p.get("input", {})} for i,p in enumerate(batch.get("predictions", []), start=1)]
+            rows = [{"Row": i, "Model": p.get("model", ""), "Classification": p["prediction"]["class_name"], "Model score": p["score"], "Threshold": p["threshold"], **p.get("input", {})} for i,p in enumerate(batch.get("predictions", []), start=1)]
             results = pd.DataFrame(rows)
             with panel():
                 anomalies = sum(p["prediction"]["label"] == 1 for p in batch.get("predictions", []))

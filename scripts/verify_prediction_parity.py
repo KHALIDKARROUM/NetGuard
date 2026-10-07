@@ -24,7 +24,7 @@ from netguard_workflow.inference import runtime_versions
 
 
 @contextmanager
-def api_client(live, artifact, output):
+def api_client(live, artifact, output, extra_env=None):
     if not live:
         from fastapi.testclient import TestClient
         from backend.main import create_app
@@ -38,6 +38,7 @@ def api_client(live, artifact, output):
         port = reserved.getsockname()[1]
     env = dict(os.environ, PREDICTION_ARTIFACT=str(artifact),
                NETGUARD_LOG_DIR=str(output/"logs"), LOKY_MAX_CPU_COUNT="2")
+    env.update(extra_env or {})
     with (output/"uvicorn.log").open("w", encoding="utf-8") as log:
         process = subprocess.Popen(
             [sys.executable, "-m", "uvicorn", "backend.main:app", "--host", "127.0.0.1",

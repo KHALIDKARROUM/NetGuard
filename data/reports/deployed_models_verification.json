@@ -1,0 +1,33 @@
+{
+  "status": "passed",
+  "utc": "2026-10-07T23:43:56.307266+00:00",
+  "transport": "live Uvicorn loopback HTTP server in a separate process",
+  "score_tolerance": 1e-12,
+  "default": "xgboost",
+  "models": {
+    "xgboost": {
+      "comparisons": 2075,
+      "max_score_difference": 0.0,
+      "decision_mismatches": 0,
+      "maximum_batch": 1000,
+      "notebook_export_parity": true
+    },
+    "lightgbm": {
+      "comparisons": 2075,
+      "max_score_difference": 0.0,
+      "decision_mismatches": 0,
+      "maximum_batch": 1000,
+      "notebook_export_parity": true
+    },
+    "tabm": {
+      "comparisons": 2075,
+      "max_score_difference": 3.3306690738754696e-16,
+      "decision_mismatches": 0,
+      "maximum_batch": 1000,
+      "notebook_export_parity": true
+    }
+  },
+  "dashboard_benchmark_metrics_match": true,
+  "visualization_routes_pass": true,
+  "scope": "Serving parity with the previously inspected notebook benchmark, not new accuracy testing."
+}

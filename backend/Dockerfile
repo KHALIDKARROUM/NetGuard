@@ -14,12 +14,15 @@ ENV DEBIAN_FRONTEND=noninteractive \
 WORKDIR /app
 
 COPY backend/requirements.txt backend/requirements.txt
-RUN pip install --no-cache-dir --require-hashes -r backend/requirements.txt
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir --require-hashes -r backend/requirements.txt
 
 COPY backend/ backend/
 COPY netguard_workflow/ netguard_workflow/
 COPY models_saved/shared_pipeline.joblib models_saved/shared_pipeline.joblib
 COPY models_saved/shared_pipeline.manifest.json models_saved/shared_pipeline.manifest.json
+COPY models_saved/deployed/ models_saved/deployed/
 RUN useradd --create-home --uid 10001 --user-group netguard \
     && mkdir -p backend/logs \
     && chown -R netguard:netguard backend/logs
