@@ -42,6 +42,8 @@ backend/logs/
 .venv-sharing/
 .uv-cache/
 artifacts/notebook_workflow/
+artifacts/notebook_report/
+netguard_outputs/
 artifacts/prediction_verification/
 artifacts/novelty_experiments/
 artifacts/generalization/

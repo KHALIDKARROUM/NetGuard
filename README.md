@@ -9,7 +9,8 @@ evaluating a supervised baseline, and scoring individual connections or batches.
 
 - Backend moved to a clean FastAPI API surface with cached loaders and stable routes.
 - Runtime merge conflicts were resolved across backend, frontend, Dockerfiles, requirements, and model reports.
-- The notebook and backend share a validation-selected supervised pipeline and saved threshold; the current winner is a fixed soft vote of logistic regression, random forest and gradient boosting.
+- The deployed backend uses a validation-selected supervised pipeline and saved threshold; its current winner is a fixed soft vote of logistic regression, random forest and gradient boosting.
+- All analysis stages and guides are consolidated into one self-contained notebook with consistent charts, inline implementations, portable model export, and standard Run All support.
 - All four screens share a navy sidebar, light workspace, teal accents, responsive layouts, and consistent chart and card components.
 - Dataset exploration includes filtered record previews, feature search, and CSV downloads. Performance charts load only when selected.
 - The prediction lab groups the ten measured inputs, explains decisions beside the form, and supports validated CSV batches of up to 1,000 connections with downloadable results.
@@ -88,16 +89,8 @@ NetGuard/
 |   |-- isolation_forest.pkl
 |   `-- lof.pkl
 |
-`-- notebooks/                       # Main report and preserved historical stages
-    |-- 00_netguard_complete.ipynb
-    |-- WORKFLOW.md
-    |-- 01_eda.ipynb
-    |-- 02_preprocessing.ipynb
-    |-- 03_feature_engineering.ipynb
-    |-- 04_isolation_forest.ipynb
-    |-- 05_dbscan.ipynb
-    |-- 06_model_improvements.ipynb
-    `-- 07_evaluation.ipynb
+`-- notebooks/                       # Single self-contained analysis report
+    `-- 00_netguard_complete.ipynb    # All stages, code, guides, and original source text
 ```
 
 ## API Routes
@@ -259,37 +252,51 @@ recall** over the best individual (gradient boosting), with **1.33x** complete
 256-row prediction latency. It passed the declared 2-point gain / 2x latency
 rules. Its fitted artifact is about 64 MB, versus 0.6 MB for gradient boosting,
 so deployment memory and storage costs are higher.
-The [comparison guide and tables](notebooks/SUPERVISED_COMPARISON.md) cover
-accuracy, false alarms, complete single/batch prediction timing, and the separate
-unfamiliar-attack experiments.
+The [single notebook](notebooks/00_netguard_complete.ipynb) explains the comparison
+rules, accuracy, false alarms, complete prediction timing, and unfamiliar-attack
+experiments. The application still serves its existing verified artifact.
 
 ## Reproducible Data Science Workflow
 
-Use [the combined notebook](notebooks/00_netguard_complete.ipynb) as the main
-project report. Its current sections run from the original raw CSVs to a saved
-supervised baseline and row-level predictions. Preprocessing is fitted on
-training rows, and model/threshold selection uses grouped validation data.
-The existing test file is labelled as a previously inspected benchmark.
+Open [NetGuard's complete notebook](notebooks/00_netguard_complete.ipynb), select
+the notebook environment, and use **Restart Kernel → Run All**. It contains the
+entire analysis implementation and needs only the two original CSV inputs;
+it imports no project Python modules. The setup guide, 29-feature dictionary,
+model decision rules, and robustness methodology are included in the report.
+Original source text from all seven former notebooks and the four guides is
+retained in notebook metadata, with duplicated historical outputs removed.
 
-All original notebook cells and alternate merge content remain available as
-historical reference. The seven source notebooks are repaired JSON notebooks.
-The documented runner executes only corrected sections in a fresh kernel.
+Create or refresh the reproducible environment from the repository root:
 
-Follow [the environment setup and execution guide](notebooks/WORKFLOW.md).
-The [feature dictionary](notebooks/FEATURES.md) defines physical features and
-their zero-denominator policies before training-only scaling.
-The same fitted artifact is now used by the notebook and dashboard backend.
-See [the shared prediction contract and parity checks](backend/PREDICTION.md).
-The [no-data verification](data/reports/prediction_without_data.json) checks
-cold startup and live single/batch predictions with no data directory and with
-dataset reads blocked.
+```powershell
+uv venv .venv-workflow --python 3.13.9
+uv pip sync requirements-notebooks.txt --python .venv-workflow/Scripts/python.exe --require-hashes
+.venv-workflow/Scripts/python.exe scripts/run_notebook.py
+```
 
-The [generalization report](notebooks/GENERALIZATION.md) separates benchmark
-signatures seen in actual fitting data from unseen signatures, with sample
-counts and 95% signature-cluster intervals. It reports precision, recall, F1,
-PR-AUC, average precision and false alarms, including every attack category.
-Additional three-way grouped splits and all nine withheld-family experiments
-refit the fixed design without changing the deployed artifact or its threshold.
-Feature equality does not prove identical physical connections. The supplied
-CSV files lack verified host/time/capture provenance, so these results support
-internal robustness claims and require independent prospective evaluation.
+The runner executes every code cell in a fresh kernel and saves the executed
+report back to the same notebook. Research outputs go to `artifacts/notebook_report/`:
+`netguard_model.pkl`, row-level predictions, validation and benchmark comparisons,
+attack-family tables, signature-cluster intervals, a provenance manifest, and figures.
+The portable model includes notebook-defined classes and loads without the project's
+helper modules. The notebook export is separate from the backend's serving artifact.
+See [the application prediction contract](backend/PREDICTION.md) for API verification.
+
+The main report compares supervised baselines and their fixed soft vote, plus
+normal-reference Isolation Forest, novelty LOF, DBSCAN-derived core-distance scores,
+a reconstruction autoencoder, fixed anomaly votes, and protocol-specific Isolation
+Forest when `proto` is available. Each operating threshold uses validation only.
+The benchmark is explicitly previously inspected. Feature equality does not prove
+connection identity or prospective independence.
+
+For three additional grouped refits and every withheld attack family, enable
+`RUN_EXTENDED_GENERALIZATION` in the notebook or run:
+
+```powershell
+.venv-workflow/Scripts/python.exe scripts/run_notebook.py --extended --bootstrap-repeats 400
+```
+
+For a quick execution check, use `--fast`; those reduced model settings are labelled
+as smoke results. Optional t-SNE is controlled in the notebook's settings cell.
+A standalone copy can read both CSVs beside itself or in a neighbouring `data/`
+folder; `NETGUARD_DATA_DIR` and `NETGUARD_OUTPUT_DIR` override those locations.

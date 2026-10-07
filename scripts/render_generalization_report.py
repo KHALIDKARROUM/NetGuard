@@ -21,7 +21,7 @@ def main():
     renderer = "netguard_workflow/generalization_report.py"
     report["source_sha256"][renderer] = file_sha256(ROOT/renderer)
     report["report_rendered_utc"] = datetime.now(timezone.utc).isoformat()
-    (ROOT/"notebooks/GENERALIZATION.md").write_text(render_report(report), encoding="utf-8", newline="\n")
+    (ROOT/"data/reports/generalization_interpretation.md").write_text(render_report(report), encoding="utf-8", newline="\n")
     report_path.write_text(json.dumps(report, indent=2, allow_nan=False)+"\n", encoding="utf-8", newline="\n")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest.update(report)

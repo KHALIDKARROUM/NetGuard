@@ -1,9 +1,11 @@
-# Shared notebook and API prediction
+# Application prediction contract
 
-`netguard_workflow/inference.py` provides `PredictionService` to both callers.
+`netguard_workflow/inference.py` provides the application's `PredictionService`.
 The complete fitted artifact is `models_saved/shared_pipeline.joblib` with its
-`shared_pipeline.manifest.json` sidecar. The corrected combined notebook
-recreates both files; it also saves an identical copy in its output directory.
+`shared_pipeline.manifest.json` sidecar. Its fitted artifact and parity evidence
+come from the original verified shared workflow. The redesigned standalone
+[analysis notebook](../notebooks/00_netguard_complete.ipynb) saves a separate
+portable research model under `artifacts/notebook_report/`.
 
 ## Contract
 
@@ -14,7 +16,8 @@ regression, random forest and histogram gradient boosting with fixed equal weigh
 Shared input transformations and scores use float64; estimator internals use
 their scikit-learn training/inference conventions consistently. Decisions are
 `score >= saved_threshold`; responses retain
-the full numerical score. See [the feature dictionary](../notebooks/FEATURES.md).
+the full numerical score. See the physical feature dictionary in
+[the complete notebook](../notebooks/00_netguard_complete.ipynb).
 
 The fixed threshold maximizes attack recall with **validation false-positive
 rate at most 1%**. The model is fitted on separate grouped development rows.
@@ -106,7 +109,9 @@ log destination.
 
 ## Reproduce verification
 
-First run the [corrected notebook workflow](../notebooks/WORKFLOW.md), then:
+The existing serving artifact and its original saved workflow predictions are
+the inputs to these API checks. The standalone notebook writes its own output
+folder and does not replace those inputs:
 
 ```powershell
 .venv-workflow/Scripts/python.exe -m unittest discover -s tests -v
@@ -120,8 +125,8 @@ adds six boundary cases including zero denominators, TTL edges and counts above
 float32's exact-integer range. It compares individual requests, batch sizes
 1/7/64/1,000, reordered fields and reordered rows at absolute tolerance `1e-12`,
 then checks dashboard metrics and routes. Evidence is saved to
-`data/reports/shared_prediction_parity.json`. The final notebook cell separately
-checks 33 connections using the actual FastAPI request adapter.
+`data/reports/shared_prediction_parity.json`. The standalone notebook separately
+checks portable model reload and batch-independent raw-input predictions.
 
 The no-data verifier copies only source files and the model/manifest into an
 isolated directory, installs a file-access guard before importing the backend,

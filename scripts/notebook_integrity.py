@@ -1,93 +1,73 @@
-"""Check notebook schemas, conflict markers and archived cell fingerprints."""
+"""Validate the single, self-contained NetGuard analysis notebook."""
 from __future__ import annotations
 
+import ast
 from hashlib import sha256
-from pathlib import Path
 import json
+from pathlib import Path
 import re
 
 import nbformat
 
 ROOT = Path(__file__).resolve().parents[1]
+NOTEBOOK_NAME = "00_netguard_complete.ipynb"
 
 
 def cell_digest(cell):
-    payload = {k: v for k, v in cell.items() if k != "id"}
-    # nbformat normalizes source/output lists to strings, so read original JSON.
+    payload = {key: value for key, value in cell.items() if key != "id"}
     return sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 
 
 def validate_all(root=ROOT):
-    results = []
-    for path in sorted((Path(root)/"notebooks").glob("*.ipynb")):
-        text = path.read_text(encoding="utf-8")
-        if re.search(r"^(<<<<<<<|=======|>>>>>>>)(?: |$)", text, re.MULTILINE):
-            raise AssertionError(f"Unresolved merge conflict in {path}")
-        original = json.loads(text)
-        nbformat.validate(nbformat.from_dict(original))
-        cells = original["cells"]
-        ids = [c["id"] for c in cells]
-        if len(ids) != len(set(ids)):
-            raise AssertionError(f"Duplicate cell IDs in {path}")
-        metadata = original["metadata"]
-        combination = metadata.get("netguard_combination")
-        if combination:
-            origins = combination["cell_origins"]
-        else:
-            origins = metadata.get("netguard_history", {}).get("cell_origins", [])
-        for origin in origins:
-            cell = cells[origin["combined_cell_index"]]
-            if cell["id"] != origin["cell_id"]:
-                raise AssertionError(f"Bad origin mapping in {path}")
-            if cell_digest(cell) != origin["original_cell_sha256_without_id"]:
-                raise AssertionError(f"Historical cell changed in {path}: {cell['id']}")
-        workflow = metadata.get("netguard_workflow", {})
-        executable = workflow.get("executable_cell_ids", [])
-        if executable:
-            indexed = {c["id"]: c for c in cells}
-            if len(executable) != len(set(executable)):
-                raise AssertionError("Duplicate current cell IDs")
-            for cell_id in executable:
-                cell = indexed[cell_id]
-                if cell["cell_type"] != "code" or "netguard-current" not in cell["metadata"].get("tags", []):
-                    raise AssertionError(f"Invalid current workflow cell: {cell_id}")
-            historical_ids = {o["cell_id"] for o in origins}
-            if historical_ids.intersection(executable):
-                raise AssertionError("Historical code cannot be part of the current workflow")
-        results.append({"notebook": path.name, "cells": len(cells),
-                        "preserved_origins_checked": len(origins), "current_code_cells": len(executable)})
-    if len(results) != 8:
-        raise AssertionError("Expected the combined notebook and seven originals")
-    return results
-
-
-def publish_full_generalization_execution(root=ROOT):
-    """Publish evidence for the complete run after its outer runner has saved it."""
-    root = Path(root)
-    notebook = json.loads((root/"notebooks/00_netguard_complete.ipynb").read_text(encoding="utf-8"))
-    metadata = notebook["metadata"]["netguard_workflow"]
-    executed = metadata.get("last_execution", {})
-    current = metadata["executable_cell_ids"]
-    if "current-generalization" not in current or executed.get("executed_current_cells") != len(current):
-        return None
-    evaluation = json.loads((root/"data/reports/generalization.json").read_text(encoding="utf-8"))
-    baseline = json.loads((root/"data/reports/notebook_workflow_verification.json").read_text(encoding="utf-8"))
-    if baseline["execution"]["current_cells_executed"] != len(current):
-        return None
-    expected = evaluation["serving_artifact_sha256"]
-    actual = baseline["manifest"]["shared_prediction_artifact"]["sha256"]
-    if actual != expected or sha256((root/"models_saved/shared_pipeline.joblib").read_bytes()).hexdigest() != expected:
-        raise AssertionError("Notebook execution and evaluation refer to different fitted artifacts")
-    evidence = {"status": "passed", "mode": "complete corrected workflow in a fresh kernel",
-        "executed_utc": executed["utc"], "current_cell_ids_executed": current,
-        "historical_cells_executed": executed["historical_cells_executed"],
-        "historical_cell_payloads_preserved": True,
-        "bootstrap_repeats": evaluation["uncertainty"]["repetitions"],
-        "notebook_checks": validate_all(root), "evaluation_checks": evaluation["checks"],
-        "serving_artifact_sha256": expected}
-    (root/"data/reports/generalization_notebook_execution.json").write_text(
-        json.dumps(evidence, indent=2)+"\n", encoding="utf-8", newline="\n")
-    return evidence
+    directory = Path(root) / "notebooks"
+    paths = sorted(directory.glob("*.ipynb"))
+    if [path.name for path in paths] != [NOTEBOOK_NAME]:
+        raise AssertionError("Expected exactly one consolidated analysis notebook")
+    path = paths[0]
+    source = path.read_text(encoding="utf-8")
+    if re.search(r"^(<<<<<<<|=======|>>>>>>>)(?: |$)", source, re.MULTILINE):
+        raise AssertionError(f"Unresolved merge conflict in {path}")
+    notebook = nbformat.reads(source, as_version=4)
+    nbformat.validate(notebook)
+    ids = [cell.id for cell in notebook.cells]
+    if len(ids) != len(set(ids)):
+        raise AssertionError("Duplicate notebook cell IDs")
+    workflow = notebook.metadata.netguard_workflow
+    code_cells = [cell for cell in notebook.cells if cell.cell_type == "code"]
+    if workflow.get("schema_version") != 2 or not workflow.get("self_contained"):
+        raise AssertionError("The notebook must declare its standalone workflow")
+    if workflow.executable_cell_ids != [cell.id for cell in code_cells]:
+        raise AssertionError("Every code cell must run, in notebook order")
+    for cell in code_cells:
+        if "netguard-current" not in cell.metadata.get("tags", []):
+            raise AssertionError(f"Untagged executable cell: {cell.id}")
+        tree = ast.parse(cell.source, filename=f"<notebook:{cell.id}>")
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom):
+                modules = [node.module or ""]
+                if node.level:
+                    raise AssertionError(f"Relative project import in {cell.id}")
+            elif isinstance(node, ast.Import):
+                modules = [alias.name for alias in node.names]
+            else:
+                continue
+            if any(module.split(".")[0] in {"netguard_workflow", "backend", "frontend", "scripts"}
+                   for module in modules):
+                raise AssertionError(f"External project import in {cell.id}")
+        if any(output.output_type == "error" for output in cell.outputs):
+            raise AssertionError(f"Saved execution error in {cell.id}")
+    legacy = notebook.metadata.netguard_consolidation.legacy_sources
+    if len(legacy) != 7:
+        raise AssertionError("Original source text from all seven stages must be retained")
+    preserved = 0
+    for entry in legacy:
+        digest = sha256(json.dumps(entry["cells"], sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+        if digest != entry["source_sha256"]:
+            raise AssertionError(f"Preserved source changed: {entry['notebook']}")
+        preserved += len(entry["cells"])
+    return [{"notebook": path.name, "cells": len(notebook.cells),
+             "current_code_cells": len(code_cells), "preserved_source_cells_checked": preserved,
+             "self_contained": True, "run_all_supported": True}]
 
 
 if __name__ == "__main__":
