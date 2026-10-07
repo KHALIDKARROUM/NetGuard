@@ -276,20 +276,32 @@ uv pip sync requirements-notebooks.txt --python .venv-workflow/Scripts/python.ex
 
 The runner executes every code cell in a fresh kernel and saves the executed
 report back to the same notebook. Research outputs go to `artifacts/notebook_report/`:
-`netguard_model.pkl`, `neural_network_model.pkl`, row-level predictions, validation and benchmark comparisons,
+`netguard_model.pkl`, `neural_network_model.pkl`, `lightgbm_model.pkl`, `tabm_model.pkl`,
+row-level predictions, validation and benchmark comparisons,
 attack-family tables, signature-cluster intervals, a provenance manifest, and figures.
 The portable model includes notebook-defined classes and loads without the project's
 helper modules. The notebook export is separate from the backend's serving artifact.
 See [the application prediction contract](backend/PREDICTION.md) for API verification.
 
-The upgraded report compares CatBoost, XGBoost, regularized Extra Trees, and a
-supervised neural network against the previous baselines and soft vote. Two fixed
+The upgraded report compares CatBoost, XGBoost, LightGBM, regularized Extra Trees,
+an MLP neural network, and TabM against the previous baselines and soft vote. Two fixed
 new ensembles test whether combining the upgraded trees or trees and neural network
 improves validation recall enough to justify prediction cost. The neural classifier
 has ReLU hidden layers of 64 and 32 units, Adam optimization, and L2 regularization.
 Its normal-quantile preprocessing is fitted inside an inner grouped training split,
 whose monitoring loss chooses training duration. The fixed design is then refitted
 on all outer fit rows. Neural learning curves and a separate portable neural artifact are saved.
+
+LightGBM uses 800 histogram boosting rounds, up to 63 leaves and depth 8, with
+minimum leaf size 40 and L2 regularization. The official TabM implementation uses
+16 members sharing weights, two 64-unit hidden blocks, dropout 0.1, and AdamW.
+Each member receives its own binary training loss; inference averages member
+probabilities. Its inner grouped monitoring loss chooses the epoch count with
+patience 12 within 80 epochs, followed by a fresh refit on all fitting rows.
+Both neural designs use training-fitted normal-quantile preprocessing. TabM uses
+float32 CPU tensors for training, float64 tensors for final scoring, and no feature embeddings. These are fixed configuration
+comparisons, with no benchmark-driven tuning. Separate LightGBM and TabM exports
+and TabM learning curves are saved alongside the selected model.
 
 Earlier normal-reference Isolation Forest, novelty LOF, DBSCAN, reconstruction
 autoencoder, anomaly votes, and protocol-specific Isolation Forest remain optional
@@ -302,12 +314,19 @@ fit/validation split and each model's frozen validation threshold:
 | Model | Validation attack recall | Validation FPR | Benchmark attack recall | Benchmark FPR |
 | --- | ---: | ---: | ---: | ---: |
 | Previous soft vote | 79.00% | 1.00% | 86.51% | 2.96% |
-| Selected XGBoost | 80.22% | 0.99% | 87.27% | 2.89% |
-| Supervised neural network | 75.84% | 1.00% | 84.71% | 2.85% |
+| **XGBoost (selected)** | 80.22% | 0.99% | 87.27% | 2.89% |
+| LightGBM | 75.38% | 0.45% | 84.04% | 1.24% |
+| TabM | 70.48% | 0.36% | 81.12% | 0.71% |
+| MLP neural network | 75.84% | 1.00% | 84.71% | 2.85% |
 
-The neural network's inner monitoring selected 110 training epochs. It is exported
-separately for comparison. The 1% false-alarm budget applies to validation; the
-observed benchmark false-alarm rates exceed that budget.
+The MLP's inner monitoring selected 110 training epochs; TabM selected
+79. Both were refitted on all fitting rows. The selected model and the
+MLP, LightGBM, and TabM candidates are exported separately. All exports passed
+reload and single/batch prediction consistency checks.
+
+The 1% false-alarm budget applies to validation. Benchmark false-alarm rates are
+measured separately and can exceed that budget. This is a comparison of fixed
+configurations on one grouped validation split, without a new hyperparameter search.
 
 The benchmark is explicitly previously inspected. Feature equality does not prove
 connection identity or prospective independence.
